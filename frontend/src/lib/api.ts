@@ -1,6 +1,6 @@
 import type {
   ApiErrorBody,
-  ProcessResponse,
+  JobResponse,
   UploadResponse,
   TimelineLine,
   VideoTemplate,
@@ -84,14 +84,14 @@ export async function processVideo(payload: {
   voice_style: VoiceStyle
   mute_original_audio: boolean
   burn_subtitles: boolean
-}): Promise<ProcessResponse> {
+}): Promise<JobResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/video/process`, {
+    const response = await fetch(`${API_BASE_URL}/api/jobs/dubbing-ai`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
-    return parseResponse<ProcessResponse>(response)
+    return parseResponse<JobResponse>(response)
   } catch (error) {
     if (error instanceof TypeError) {
       throw backendConnectionError()
@@ -106,7 +106,7 @@ export async function processRecordings(payload: {
   recordings: Map<string, Blob>
   muteOriginalAudio: boolean
   burnSubtitles: boolean
-}): Promise<ProcessResponse> {
+}): Promise<JobResponse> {
   const formData = new FormData()
   const recordingIds = payload.timeline.map((line) => line.id)
   formData.append('video_id', payload.videoId)
@@ -122,17 +122,71 @@ export async function processRecordings(payload: {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/video/process-recordings`, {
+    const response = await fetch(`${API_BASE_URL}/api/jobs/dubbing-recordings`, {
       method: 'POST',
       body: formData,
     })
-    return parseResponse<ProcessResponse>(response)
+    return parseResponse<JobResponse>(response)
   } catch (error) {
     if (error instanceof TypeError) {
       throw backendConnectionError()
     }
     throw error
   }
+}
+
+export async function fetchJob(
+  jobId: string,
+  signal?: AbortSignal,
+): Promise<JobResponse> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/jobs/${encodeURIComponent(jobId)}`,
+      { signal },
+    )
+    return parseResponse<JobResponse>(response)
+  } catch (error) {
+    if (error instanceof TypeError && !signal?.aborted) {
+      throw backendConnectionError()
+    }
+    throw error
+  }
+}
+
+function pollingDelay(milliseconds: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      signal.removeEventListener('abort', abort)
+      resolve()
+    }, milliseconds)
+    const abort = () => {
+      window.clearTimeout(timeout)
+      reject(new DOMException('Polling iptal edildi.', 'AbortError'))
+    }
+    if (signal.aborted) {
+      abort()
+      return
+    }
+    signal.addEventListener('abort', abort, { once: true })
+  })
+}
+
+export async function waitForJobCompletion(
+  jobId: string,
+  onUpdate: (job: JobResponse) => void,
+  signal: AbortSignal,
+): Promise<JobResponse> {
+  const deadline = Date.now() + 5 * 60 * 1000
+  while (Date.now() < deadline) {
+    const job = await fetchJob(jobId, signal)
+    onUpdate(job)
+    if (job.status === 'completed') return job
+    if (job.status === 'failed') {
+      throw new Error(job.error || job.message || 'Export tamamlanamadı.')
+    }
+    await pollingDelay(1000, signal)
+  }
+  throw new Error('Export bekleme süresi aşıldı. Job durumunu tekrar kontrol edin.')
 }
 
 export function absoluteApiUrl(path: string): string {

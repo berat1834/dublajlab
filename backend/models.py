@@ -13,6 +13,13 @@ class VoiceStyle(str, Enum):
     ENERGETIC = "energetic"
 
 
+class JobStatus(str, Enum):
+    QUEUED = "queued"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 class HealthResponse(BaseModel):
     status: str
     app: str
@@ -49,6 +56,16 @@ class ProcessResponse(BaseModel):
     status: str
     output_video_id: str
     download_url: str
+
+
+class JobResponse(BaseModel):
+    job_id: str
+    status: JobStatus
+    progress: int = Field(ge=0, le=100)
+    message: str
+    output_video_id: str | None = None
+    download_url: str | None = None
+    error: str | None = None
 
 
 class DubbingLine(BaseModel):
