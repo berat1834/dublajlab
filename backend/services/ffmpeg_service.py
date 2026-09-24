@@ -38,6 +38,9 @@ class MediaProcessingError(RuntimeError):
 
 
 class FFmpegService:
+    process_timeout_seconds = 180
+    probe_timeout_seconds = 30
+
     def __init__(
         self,
         ffmpeg_binary: str = FFMPEG_BINARY,
@@ -107,7 +110,11 @@ class FFmpegService:
         return availability
 
     @staticmethod
-    def _run(command: list[str], failure_message: str) -> subprocess.CompletedProcess[str]:
+    def _run(
+        command: list[str],
+        failure_message: str,
+        timeout_seconds: int = 180,
+    ) -> subprocess.CompletedProcess[str]:
         try:
             return subprocess.run(
                 command,
@@ -116,6 +123,7 @@ class FFmpegService:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
+                timeout=timeout_seconds,
             )
         except FileNotFoundError as exc:
             raise MediaProcessingError(
@@ -125,6 +133,10 @@ class FFmpegService:
             diagnostic = (exc.stderr or "").strip().splitlines()
             detail = diagnostic[-1] if diagnostic else "Bilinmeyen FFmpeg hatası"
             raise MediaProcessingError(f"{failure_message} ({detail})") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise MediaProcessingError(
+                "Medya işlemi zaman aşımına uğradı. Daha kısa bir video ile tekrar deneyin."
+            ) from exc
 
     def probe(self, video_path: Path) -> VideoInfo:
         result = self._run(
@@ -139,6 +151,7 @@ class FFmpegService:
                 str(video_path),
             ],
             "Video dosyası okunamadı veya bozuk.",
+            timeout_seconds=self.probe_timeout_seconds,
         )
         try:
             payload = json.loads(result.stdout)

@@ -1,8 +1,25 @@
 # DublajLab — Kendi Sesinle Dublaj Studio
 
+[![CI](https://github.com/berat1834/dublajlab/actions/workflows/ci.yml/badge.svg)](https://github.com/berat1834/dublajlab/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-c7f464.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg)](https://www.python.org/)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
+
 Kısa videonu izle, zamanlanmış replikleri kendi mikrofonunla kaydet, altyazılı ve dublajlı MP4’ünü indir.
 
 DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı bir yaratıcı medya aracıdır. Ana deneyim **kullanıcının kendi sesiyle dublaj** yapmasıdır. İlk sürümdeki metinden sese üretim kaldırılmamış, arayüzde ikincil **AI ses** modu olarak korunmuştur.
+
+> Durum: Test edilebilir MVP. Production hardening çalışmaları küçük sprintlerle devam etmektedir.
+
+## Hızlı bağlantılar
+
+- [Kurulum](#backend-kurulumu)
+- [Mimari](#mimari)
+- [API endpointleri](#api-endpointleri)
+- [Test ve kalite kontrolleri](#test-ve-kalite-kontrolleri)
+- [Manuel smoke test](scripts/smoke_test.md)
+- [Teknik not](docs/TEKNIK_NOT.md)
+- [Roadmap](#roadmap)
 
 ## Demo amacı
 
@@ -64,6 +81,20 @@ Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS |
 | Test | Pytest, FastAPI TestClient, ESLint, TypeScript |
 
+## Mimari
+
+```mermaid
+flowchart LR
+    Browser[React + MediaRecorder] -->|Video / timeline / kayıtlar| API[FastAPI]
+    API --> Validation[Dosya ve timeline doğrulama]
+    Validation --> FFmpeg[FFmpeg / FFprobe]
+    FFmpeg --> Output[H.264 + AAC MP4]
+    API -. opsiyonel .-> TTS[Edge TTS]
+    Output --> Browser
+```
+
+Backend router'ları HTTP sözleşmesini, servisler ise dosya saklama, TTS, altyazı, FFmpeg ve temizlik sorumluluklarını taşır. FFmpeg komutları shell string'i yerine argüman listesiyle çalıştırılır. Ayrıntılar [teknik mimari notunda](docs/TEKNIK_NOT.md) bulunur.
+
 ## Proje yapısı
 
 ```text
@@ -73,10 +104,12 @@ Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının
 │   ├── config.py
 │   ├── models.py
 │   ├── routers/video.py
+│   ├── routers/maintenance.py
 │   ├── services/
 │   │   ├── ffmpeg_service.py
 │   │   ├── file_storage.py
 │   │   ├── subtitle_service.py
+│   │   ├── cleanup_service.py
 │   │   └── tts_service.py
 │   └── tests/test_video_api.py
 ├── frontend/
@@ -186,12 +219,14 @@ Arayüz: `http://localhost:5173`
 | Değişken | Varsayılan | Açıklama |
 | --- | --- | --- |
 | `ALLOWED_ORIGINS` | `http://localhost:5173` | Virgülle ayrılmış CORS origin listesi |
+| `APP_ENV` | `development` | `development`, `local`, `test` veya production ortam adı |
+| `MAINTENANCE_TOKEN` | boş | Production cleanup endpoint erişim anahtarı |
 | `FFMPEG_BINARY` | `ffmpeg` | FFmpeg komutu veya tam yolu |
 | `FFPROBE_BINARY` | `ffprobe` | FFprobe komutu veya tam yolu |
 | `MEDIA_ROOT` | `backend/data` | Kaynak, çıktı, metadata ve geçici kayıt klasörü |
 | `VITE_API_BASE_URL` | `http://localhost:8000` | Frontend’in çağıracağı API adresi |
 
-Örnek dosyalar: `backend/.env.example` ve `frontend/.env.example`. Backend `.env` dosyasını doğrudan yüklemez; değerleri terminal, IDE veya process manager üzerinden aktarın.
+Örnek dosyalar: `backend/.env.example` ve `frontend/.env.example`. Backend önce süreç ortamını korur, eksik değerleri `backend/.env` ve proje kökündeki `.env` dosyalarından okuyabilir. Gerçek token ve anahtarları Git'e eklemeyin.
 
 ## Timeline JSON yapısı
 
@@ -236,7 +271,25 @@ Kurallar:
 | `GET` | `/api/video/download/{output_video_id}` | İşlenmiş MP4’ü indirir |
 | `POST` | `/api/maintenance/cleanup?older_than_hours=24` | Eski runtime dosyalarını manuel temizler |
 
-Temizlik endpoint'i yalnızca bilinen `uploads`, `outputs`, `tmp`, `audio`, `subtitles`, `recordings` ve `metadata` klasörlerindeki eşikten eski dosyaları siler. En düşük eşik 1 saattir. Endpoint kimlik doğrulaması içermediği için internet ortamına açılacak dağıtımda korunmalıdır.
+Temizlik endpoint'i yalnızca bilinen `uploads`, `outputs`, `tmp`, `audio`, `subtitles`, `recordings` ve `metadata` klasörlerindeki eşikten eski dosyaları siler. En düşük eşik 1 saattir.
+
+- `MAINTENANCE_TOKEN` tanımlıysa her ortamda `X-Maintenance-Token` header'ı zorunludur.
+- Token yoksa endpoint yalnızca `development`, `dev`, `local` ve `test` ortamlarında çalışır.
+- Production ortamında token tanımlanmamışsa endpoint güvenli biçimde `503` döndürür.
+
+Production örneği:
+
+```powershell
+$env:APP_ENV = "production"
+$env:MAINTENANCE_TOKEN = "uzun-rastgele-bir-token"
+Invoke-RestMethod -Method Post `
+  -Uri "http://localhost:8000/api/maintenance/cleanup?older_than_hours=24" `
+  -Headers @{ "X-Maintenance-Token" = $env:MAINTENANCE_TOKEN }
+```
+
+Kaynak video ve çıktılar kalıcı depolama garantisi olmadan tutulur. Production ortamında bu endpoint'in zamanlanmış görev/cron tarafından düzenli çağrılması önerilir. Geçici ses, kayıt ve altyazı dosyaları başarılı ya da başarısız process sonunda ayrıca silinir.
+
+FFprobe çağrıları 30 saniye, FFmpeg export işlemleri 180 saniye ile sınırlıdır. Süre aşılırsa API kullanıcıya Türkçe hata döndürür ve sunucu çalışmaya devam eder.
 
 `process-recordings` isteği `multipart/form-data` kullanır:
 
@@ -264,7 +317,7 @@ AI modu için üstteki **AI ses** sekmesine geçip metin ve hazır stili seçin.
 
 ```powershell
 # Proje kökünde backend testleri
-.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m pytest backend/tests -q
 
 # Frontend
 cd frontend
@@ -275,6 +328,19 @@ npm run build
 Testler health, FFmpeg bulunabilirliği, video formatı, metin/stil validasyonu, timeline sınırları, multipart kayıt işleme, dosya temizliği ve FFmpeg kayıt geciktirme/miks komutunu kapsar. FFmpeg mevcutsa gerçek entegrasyon testi sentetik bir MP4 ile iki WebM/Opus kaydı üretir, altyazı gömer ve çıktıyı FFprobe ile doğrular; araçlar yoksa bu test atlanır. Mock testler komut ve uygulama kontrol akışını doğrular, gerçek test ise codec/filter binary'lerinin gerçekten çalıştığını kanıtlar.
 
 Ayrıntılı manuel kontrol için [uçtan uca smoke-test rehberine](scripts/smoke_test.md) bakın. Telifsiz yerel test videosu kuralları ve örnek timeline için [demo klasörü açıklamasını](demo/README.md) kullanın.
+
+## Sürekli entegrasyon
+
+GitHub Actions, `main`, `dev` ve `Berat` branch'lerine yapılan push'larda ve `main`/`dev` pull request'lerinde iki bağımsız job çalıştırır:
+
+- Backend: Python 3.12, FFmpeg kurulumu ve tüm Pytest paketi
+- Frontend: Node.js 22, `npm ci`, ESLint, production build ve yüksek önem seviyeli audit
+
+Workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+## Lisans
+
+Proje [MIT Lisansı](LICENSE) ile sunulur. Yüklenen veya demo amacıyla kullanılan üçüncü taraf medya dosyalarının lisansı ayrıca kontrol edilmelidir.
 
 ## Roadmap
 
@@ -326,7 +392,7 @@ Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vok
 ## Bilinen sınırlar
 
 - MVP işlemleri senkrondur; yoğun kullanım için job queue yoktur.
-- Kaynak ve çıktı videoları otomatik süre bazlı temizlenmez.
+- Kaynak ve çıktı videoları otomatik temizlenmez; manuel cleanup endpoint'i cron/zamanlanmış görevle çağrılmalıdır.
 - Mikrofon formatı tarayıcıya göre WebM/Opus veya MP4/AAC olabilir; FFmpeg’in ilgili decoder ile derlenmiş olması gerekir.
 - Bu geliştirme ortamında FFmpeg kurulu değilse gerçek medya smoke testi yapılamaz.
 - Replik zamanları form alanlarıyla düzenlenir; görsel sürükle-bırak timeline henüz yoktur.

@@ -3,8 +3,13 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 
 BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
+
 MEDIA_ROOT = Path(os.getenv("MEDIA_ROOT", BASE_DIR / "data")).resolve()
 UPLOAD_DIR = MEDIA_ROOT / "uploads"
 OUTPUT_DIR = MEDIA_ROOT / "outputs"
@@ -40,3 +45,12 @@ def ensure_media_directories() -> None:
 def allowed_origins() -> list[str]:
     raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
     return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
+
+def app_environment() -> str:
+    return os.getenv("APP_ENV", "development").strip().lower()
+
+
+def maintenance_token() -> str | None:
+    value = os.getenv("MAINTENANCE_TOKEN", "").strip()
+    return value or None

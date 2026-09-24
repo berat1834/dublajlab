@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from subprocess import CompletedProcess
 from uuid import uuid4
@@ -9,7 +10,11 @@ from fastapi.testclient import TestClient
 
 from backend.main import app
 from backend.routers import video as video_router
-from backend.services.ffmpeg_service import FFmpegService, VideoInfo
+from backend.services.ffmpeg_service import (
+    FFmpegService,
+    MediaProcessingError,
+    VideoInfo,
+)
 
 
 client = TestClient(app)
@@ -95,6 +100,22 @@ def test_ffmpeg_availability_reports_missing_tools(
 
     assert result.available is False
     assert "bulunamadı" in result.message
+
+
+def test_ffmpeg_timeout_returns_turkish_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def timeout(*_args, **_kwargs):
+        raise subprocess.TimeoutExpired(cmd="ffmpeg", timeout=180)
+
+    monkeypatch.setattr("backend.services.ffmpeg_service.subprocess.run", timeout)
+
+    with pytest.raises(MediaProcessingError, match="zaman aşımına uğradı"):
+        FFmpegService._run(
+            ["ffmpeg", "-version"],
+            "FFmpeg çalıştırılamadı.",
+            timeout_seconds=180,
+        )
 
 
 @pytest.mark.parametrize("text", ["", "   "])
