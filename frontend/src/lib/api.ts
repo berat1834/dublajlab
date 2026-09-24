@@ -3,6 +3,7 @@ import type {
   ProcessResponse,
   UploadResponse,
   TimelineLine,
+  VideoTemplate,
   VoiceStyle,
 } from '../types'
 
@@ -43,6 +44,32 @@ export async function uploadVideo(file: File): Promise<UploadResponse> {
       body: formData,
     })
     return parseResponse<UploadResponse>(response)
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw backendConnectionError()
+    }
+    throw error
+  }
+}
+
+export async function fetchTemplates(): Promise<VideoTemplate[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/templates`)
+    return parseResponse<VideoTemplate[]>(response)
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw backendConnectionError()
+    }
+    throw error
+  }
+}
+
+export async function fetchTemplate(templateId: string): Promise<VideoTemplate> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/api/templates/${encodeURIComponent(templateId)}`,
+    )
+    return parseResponse<VideoTemplate>(response)
   } catch (error) {
     if (error instanceof TypeError) {
       throw backendConnectionError()

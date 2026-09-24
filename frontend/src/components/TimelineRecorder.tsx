@@ -23,6 +23,9 @@ interface RecordedClip {
 interface TimelineRecorderProps {
   duration: number
   videoRef: RefObject<HTMLVideoElement | null>
+  initialLines?: TimelineLine[]
+  videoAvailable?: boolean
+  exportUnavailableReason?: string
   disabled?: boolean
   onError: (message: string) => void
   onProcess: (
@@ -33,7 +36,7 @@ interface TimelineRecorderProps {
   ) => Promise<void>
 }
 
-function initialLines(duration: number): TimelineLine[] {
+function createInitialLines(duration: number): TimelineLine[] {
   const count = duration >= 6 ? 3 : duration >= 2 ? 2 : 1
   const slot = duration / count
   return Array.from({ length: count }, (_, index) => ({
@@ -52,11 +55,18 @@ function supportedMimeType() {
 export function TimelineRecorder({
   duration,
   videoRef,
+  initialLines: providedLines,
+  videoAvailable = true,
+  exportUnavailableReason = '',
   disabled = false,
   onError,
   onProcess,
 }: TimelineRecorderProps) {
-  const [lines, setLines] = useState(() => initialLines(duration))
+  const [lines, setLines] = useState(() =>
+    providedLines?.length
+      ? providedLines.map((line) => ({ ...line }))
+      : createInitialLines(duration),
+  )
   const [clips, setClips] = useState<Map<string, RecordedClip>>(new Map())
   const [activeLineId, setActiveLineId] = useState<string | null>(null)
   const [muteOriginalAudio, setMuteOriginalAudio] = useState(true)
@@ -101,8 +111,10 @@ export function TimelineRecorder({
   )
   const missingCount = lines.length - completedCount
   const completionPercent = Math.round((completedCount / lines.length) * 100)
-  const exportBlockReason = disabled
-    ? 'Video işlenirken düzenleme geçici olarak kilitlenir.'
+  const exportBlockReason = exportUnavailableReason
+    ? exportUnavailableReason
+    : disabled
+      ? 'Video işlenirken düzenleme geçici olarak kilitlenir.'
     : activeLineId
       ? 'Devam etmek için aktif kaydı durdurun.'
       : invalidLineIds.size
@@ -285,6 +297,12 @@ export function TimelineRecorder({
         </div>
       </div>
 
+      {!videoAvailable && (
+        <div className="mb-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.05] p-3 text-xs leading-5 text-amber-100/80">
+          Demo video dosyası eklenmedi. Hazır replikleri düzenleyebilir ve mikrofon kayıt akışını deneyebilirsin; video önizleme ve MP4 export için kendi videonu yükle.
+        </div>
+      )}
+
       <div className="max-h-[590px] space-y-3 overflow-y-auto pr-1">
         {lines.map((line, index) => {
           const clip = clips.get(line.id)
@@ -323,7 +341,7 @@ export function TimelineRecorder({
                     type="button"
                     title="Sahneyi oynat"
                     onClick={() => previewLine(line)}
-                    disabled={disabled || Boolean(activeLineId)}
+                    disabled={disabled || Boolean(activeLineId) || !videoAvailable}
                     className="rounded-md p-1.5 text-zinc-500 transition hover:bg-white/5 hover:text-white disabled:opacity-40"
                   >
                     <Play className="h-3.5 w-3.5" />
@@ -456,7 +474,7 @@ export function TimelineRecorder({
       <button
         type="button"
         onClick={() => void submit()}
-        disabled={disabled || Boolean(activeLineId) || Boolean(invalidLineIds.size) || Boolean(missingCount)}
+        disabled={disabled || Boolean(activeLineId) || Boolean(invalidLineIds.size) || Boolean(missingCount) || Boolean(exportUnavailableReason)}
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3.5 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none"
       >
         <WandSparkles className="h-5 w-5" /> Kendi Sesimle Videoyu Oluştur

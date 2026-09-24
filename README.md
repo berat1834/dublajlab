@@ -41,6 +41,42 @@ Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının
 
 Görseller eklenirken yalnızca proje sahibinin kendi videosu veya açık lisanslı/telifsiz bir kaynak kullanılmalıdır. Telifli film, dizi ya da sosyal medya klibi repoya eklenmemelidir. Önerilen dosya konumları `docs/assets/dublajlab-editor.webp` ve `docs/assets/dublajlab-mobile.gif` şeklindedir.
 
+## Hazır video / template sistemi
+
+Hazır sahne sistemi, kullanıcıların kendi videosunu seçmeden önce örnek replik ve zaman çizelgesiyle kayıt deneyimini keşfetmesini sağlar. Katalog `backend/data/templates/templates.json` dosyasından okunur. Repoda yalnızca güvenli örnek metadata bulunur; gerçek demo videosu ve telifli medya bulunmaz.
+
+Bir template kartı seçildiğinde replikler timeline'a aktarılır. `video_url` boşsa kullanıcı metinleri düzenleyip mikrofon kayıt akışını deneyebilir fakat video önizleme ve MP4 export kapalı kalır. Daha sonra geçerli bir medya yolu eklendiğinde frontend dosyayı mevcut upload endpoint'ine otomatik aktarır; mevcut FFmpeg süreci aynen kullanılır.
+
+### Açık lisanslı video ekleme rehberi
+
+1. Yalnızca size ait, CC0/Public Domain veya yeniden dağıtıma ve türetilmiş çalışmaya açıkça izin veren bir video seçin.
+2. Lisans sayfasını ve asıl kaynak bağlantısını doğrulayın. “İnternette bulundu” geçerli bir kaynak değildir.
+3. En fazla 60 saniyelik MP4, MOV veya WEBM dosyasını örneğin `frontend/public/templates/ofis-surprizi.mp4` konumuna ekleyin.
+4. Metadata içindeki `video_url` değerini `/templates/ofis-surprizi.mp4` yapın.
+5. `license` alanına lisansın tam adını, `source` alanına kaynak sahibini ve doğrulanabilir bağlantıyı yazın.
+6. Tüm repliklerin video süresi içinde kaldığını doğrulayıp backend testleri ile frontend lint/build kontrollerini çalıştırın.
+
+Metadata örneği:
+
+```json
+{
+  "id": "ornek-sahne",
+  "title": "Örnek Sahne",
+  "category": "Komedi",
+  "description": "Açık lisanslı kısa sahne.",
+  "duration_seconds": 8.0,
+  "video_url": "/templates/ornek-sahne.mp4",
+  "license": "CC0-1.0",
+  "source": "Kaynak sahibi — https://ornek.test/video",
+  "lines": [
+    { "id": "line-1", "start": 0.4, "end": 3.2, "text": "İlk replik" },
+    { "id": "line-2", "start": 3.6, "end": 7.5, "text": "İkinci replik" }
+  ]
+}
+```
+
+Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman aralıkları, video süresi ile zorunlu `license`/`source` alanları doğrulanır. Lisansı belirsiz hiçbir medya repoya eklenmemelidir.
+
 ## Özellikler
 
 ### Ana mod — Kendi sesim
@@ -109,18 +145,22 @@ Backend router'ları HTTP sözleşmesini, servisler ise dosya saklama, TTS, alty
 │   ├── main.py
 │   ├── config.py
 │   ├── models.py
+│   ├── data/templates/templates.json
 │   ├── routers/video.py
+│   ├── routers/templates.py
 │   ├── routers/maintenance.py
 │   ├── services/
 │   │   ├── ffmpeg_service.py
 │   │   ├── file_storage.py
 │   │   ├── subtitle_service.py
 │   │   ├── cleanup_service.py
+│   │   ├── template_service.py
 │   │   └── tts_service.py
 │   └── tests/test_video_api.py
 ├── frontend/
 │   ├── src/
 │   │   ├── components/TimelineRecorder.tsx
+│   │   ├── components/TemplateGallery.tsx
 │   │   ├── components/UploadZone.tsx
 │   │   ├── lib/api.ts
 │   │   └── App.tsx
@@ -270,6 +310,8 @@ Kurallar:
 | --- | --- | --- |
 | `GET` | `/api/health` | Servis sağlık bilgisi |
 | `GET` | `/api/system/ffmpeg` | FFmpeg/FFprobe kullanılabilirlik ve sürüm bilgisi |
+| `GET` | `/api/templates` | Doğrulanmış hazır sahne kataloğunu listeler |
+| `GET` | `/api/templates/{template_id}` | Tek bir hazır sahnenin metadata ve repliklerini döndürür |
 | `POST` | `/api/video/upload` | `file` alanıyla video yükler ve doğrular |
 | `POST` | `/api/video/process-recordings` | Timeline + mikrofon kayıtlarından video üretir |
 | `POST` | `/api/video/process` | Opsiyonel AI TTS moduyla video üretir |
@@ -372,6 +414,16 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Güçlendirilmiş sonuç önizleme ve yeniden başlama aksiyonları
 - [x] Ekran görüntüsü/GIF alanı ve telifsiz medya notu
 
+### Faz 3 — Hazır Video / Template Sistemi
+
+- [x] JSON tabanlı, doğrulanan template kataloğu
+- [x] Template liste ve detay API endpoint'leri
+- [x] Kategori, süre, replik ve lisans bilgili hazır sahne kartları
+- [x] Template repliklerini düzenlenebilir timeline'a aktarma
+- [x] Medya dosyası olmayan template için açıklayıcı boş durum
+- [x] Gelecekte açık lisanslı dosyayı mevcut upload/export akışına bağlayan altyapı
+- [ ] Doğrulanmış açık lisanslı gerçek demo medya paketi
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
@@ -380,7 +432,7 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [ ] Video trim ve dikey/yatay export presetleri
 - [ ] Arka plan job queue ve otomatik dosya temizliği
 
-### Faz 3 — Müzik Pratik + Cover Studio
+### Faz 4 — Müzik Pratik + Cover Studio
 
 - [ ] Audio upload
 - [ ] Tempo ve pitch değiştirme
@@ -389,7 +441,7 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 
 Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vokal azalt, karaoke/pratik çıktısı al.”
 
-### Faz 4 — Kısa Video Altyazı + Dublaj
+### Faz 5 — Kısa Video Altyazı + Dublaj
 
 - [ ] Speech-to-text
 - [ ] Otomatik Türkçe altyazı

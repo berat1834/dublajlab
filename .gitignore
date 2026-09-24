@@ -11,6 +11,8 @@ pytest-cache-files-*/
 # Runtime media (directories are recreated automatically)
 backend/data/*
 !backend/data/.gitkeep
+!backend/data/templates/
+!backend/data/templates/templates.json
 
 # Frontend
 frontend/node_modules/

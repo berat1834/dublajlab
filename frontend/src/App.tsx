@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
   Bot,
@@ -17,19 +17,22 @@ import {
   WandSparkles,
 } from 'lucide-react'
 import { TimelineRecorder } from './components/TimelineRecorder'
+import { TemplateGallery } from './components/TemplateGallery'
 import { Toggle } from './components/Toggle'
 import { UploadZone } from './components/UploadZone'
 import { VoiceCards } from './components/VoiceCards'
 import {
   absoluteApiUrl,
+  fetchTemplate,
   processRecordings,
   processVideo,
   uploadVideo,
 } from './lib/api'
-import type { TimelineLine, UploadResponse, VoiceStyle } from './types'
+import type { TimelineLine, UploadResponse, VideoTemplate, VoiceStyle } from './types'
 
 type Stage = 'idle' | 'uploading' | 'ready' | 'processing' | 'completed'
 type DubbingMode = 'my-voice' | 'ai-voice'
+type SourceMode = 'upload' | 'templates'
 
 interface ErrorDetails {
   title: string
@@ -46,6 +49,19 @@ const progressMessages = [
 
 function formatBytes(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
+function templateAssetUrl(path: string) {
+  return path.startsWith('http://') || path.startsWith('https://')
+    ? path
+    : path.startsWith('/')
+      ? path
+      : `/${path}`
+}
+
+function templateFilename(template: VideoTemplate) {
+  const extension = template.video_url?.split(/[?#]/)[0].match(/\.(mp4|mov|webm)$/i)?.[0]
+  return `${template.id}${extension ?? '.mp4'}`
 }
 
 function explainError(message: string): ErrorDetails {
@@ -87,8 +103,11 @@ function App() {
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
   const [stage, setStage] = useState<Stage>('idle')
   const [mode, setMode] = useState<DubbingMode>('my-voice')
+  const [sourceMode, setSourceMode] = useState<SourceMode>('upload')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [upload, setUpload] = useState<UploadResponse | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<VideoTemplate | null>(null)
+  const [selectingTemplateId, setSelectingTemplateId] = useState('')
   const [text, setText] = useState('')
   const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>('dramatic')
   const [muteOriginal, setMuteOriginal] = useState(true)
@@ -127,6 +146,8 @@ function App() {
   }
 
   const handleFile = async (file: File) => {
+    setSourceMode('upload')
+    setSelectedTemplate(null)
     setSelectedFile(file)
     setUpload(null)
     setOutputUrl('')
@@ -145,6 +166,44 @@ function App() {
       )
       retryActionRef.current = () => handleFile(file)
       setRetryLabel('Yüklemeyi tekrar dene')
+    }
+  }
+
+  const handleTemplateSelect = async (templateId: string) => {
+    clearFeedback()
+    setSelectingTemplateId(templateId)
+    setOutputUrl('')
+    let loadedTemplate: VideoTemplate | null = null
+    try {
+      const template = await fetchTemplate(templateId)
+      loadedTemplate = template
+      setSelectedTemplate(template)
+      setSelectedFile(null)
+      setUpload(null)
+      setMode('my-voice')
+      if (template.video_url) {
+        setStage('uploading')
+        const mediaResponse = await fetch(templateAssetUrl(template.video_url))
+        if (!mediaResponse.ok) {
+          throw new Error('Template video dosyası yüklenemedi. Dosya yolunu ve lisans metadata’sını kontrol edin.')
+        }
+        const mediaBlob = await mediaResponse.blob()
+        const mediaFile = new File([mediaBlob], templateFilename(template), {
+          type: mediaBlob.type || 'video/mp4',
+        })
+        setSelectedFile(mediaFile)
+        setUpload(await uploadVideo(mediaFile))
+      }
+      setStage('ready')
+    } catch (templateError) {
+      setStage(loadedTemplate ? 'ready' : 'idle')
+      setError(
+        templateError instanceof Error
+          ? templateError.message
+          : 'Hazır sahne açılamadı.',
+      )
+    } finally {
+      setSelectingTemplateId('')
     }
   }
 
@@ -232,8 +291,11 @@ function App() {
 
   const reset = () => {
     setStage('idle')
+    setSourceMode('upload')
     setSelectedFile(null)
     setUpload(null)
+    setSelectedTemplate(null)
+    setSelectingTemplateId('')
     setText('')
     setOutputUrl('')
     setProgressIndex(0)
@@ -249,18 +311,28 @@ function App() {
     })
   }
 
-  const showEditorError = (message: string) => {
+  const showEditorError = useCallback((message: string) => {
     setError(message)
     if (message) {
       setRetryLabel('')
       retryActionRef.current = null
     }
+  }, [])
+
+  const changeSourceMode = (nextMode: SourceMode) => {
+    if (sourceMode === nextMode) return
+    reset()
+    setSourceMode(nextMode)
   }
 
   const busy = stage === 'uploading' || stage === 'processing'
+  const templatePreviewUrl = selectedTemplate?.video_url
+    ? templateAssetUrl(selectedTemplate.video_url)
+    : ''
   const inputPreview = upload
     ? absoluteApiUrl(upload.preview_url)
-    : localPreviewUrl
+    : templatePreviewUrl || localPreviewUrl
+  const projectReady = Boolean(upload || selectedTemplate)
 
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:py-10">
@@ -281,7 +353,7 @@ function App() {
             </div>
             <ol className="grid grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-panel/80 text-xs">
               {[
-                ['1', 'Videoyu yükle', Boolean(upload)],
+                ['1', 'Sahneyi seç', projectReady],
                 ['2', 'Replikleri kaydet', stage === 'processing' || stage === 'completed'],
                 ['3', 'MP4’ü indir', stage === 'completed'],
               ].map(([number, label, complete], index) => (
@@ -333,56 +405,123 @@ function App() {
                 </p>
                 <h2 className="mt-1 text-xl font-bold">Sahneni seç</h2>
               </div>
-              {selectedFile && (
+              {(selectedFile || selectedTemplate) && (
                 <button
                   type="button"
                   onClick={reset}
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:bg-white/5 hover:text-white disabled:opacity-40"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" /> Videoyu değiştir
+                  <RotateCcw className="h-3.5 w-3.5" /> Kaynağı değiştir
                 </button>
               )}
             </div>
 
-            {!selectedFile ? (
-              <UploadZone onFile={handleFile} disabled={busy} />
-            ) : (
-              <div>
-                <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black shadow-inner">
-                  <video
-                    ref={videoRef}
-                    key={inputPreview}
-                    className="aspect-video w-full object-contain"
-                    src={inputPreview}
-                    controls
-                    playsInline
-                  />
-                  {stage === 'uploading' && (
-                    <div className="absolute inset-0 grid place-items-center bg-black/70 backdrop-blur-sm">
-                      <div className="text-center">
-                        <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-lime" />
-                        <p className="mt-3 text-sm font-semibold text-white">Video doğrulanıyor</p>
-                        <p className="mt-1 text-xs text-zinc-500">Süre ve format kontrol ediliyor…</p>
+            <div className="mb-4 grid grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1 text-xs font-bold">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => changeSourceMode('upload')}
+                className={`rounded-lg px-3 py-2.5 transition ${sourceMode === 'upload' ? 'bg-white text-ink' : 'text-zinc-500 hover:text-white'}`}
+              >
+                Kendi videonu yükle
+              </button>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => changeSourceMode('templates')}
+                className={`rounded-lg px-3 py-2.5 transition ${sourceMode === 'templates' ? 'bg-violet text-white' : 'text-zinc-500 hover:text-white'}`}
+              >
+                Hazır sahne seç
+              </button>
+            </div>
+
+            {sourceMode === 'upload' ? (
+              !selectedFile ? (
+                <UploadZone onFile={handleFile} disabled={busy} />
+              ) : (
+                <div>
+                  <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black shadow-inner">
+                    <video
+                      ref={videoRef}
+                      key={inputPreview}
+                      className="aspect-video w-full object-contain"
+                      src={inputPreview}
+                      controls
+                      playsInline
+                    />
+                    {stage === 'uploading' && (
+                      <div className="absolute inset-0 grid place-items-center bg-black/70 backdrop-blur-sm">
+                        <div className="text-center">
+                          <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-lime" />
+                          <p className="mt-3 text-sm font-semibold text-white">Video doğrulanıyor</p>
+                          <p className="mt-1 text-xs text-zinc-500">Süre ve format kontrol ediliyor…</p>
+                        </div>
                       </div>
+                    )}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-xs">
+                    <span className="min-w-0 truncate font-medium text-zinc-300">
+                      {selectedFile.name}
+                    </span>
+                    <span className="shrink-0 text-zinc-600">
+                      {upload
+                        ? `${upload.duration_seconds.toFixed(1)} sn · ${formatBytes(upload.size_bytes)}`
+                        : formatBytes(selectedFile.size)}
+                    </span>
+                  </div>
+                  {upload && stage !== 'uploading' && (
+                    <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-400/10 bg-emerald-400/5 px-3 py-2.5 text-sm text-emerald-300">
+                      <CheckCircle2 className="h-4 w-4" /> Video kullanıma hazır
                     </div>
                   )}
                 </div>
-                <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-xs">
-                  <span className="min-w-0 truncate font-medium text-zinc-300">
-                    {selectedFile.name}
-                  </span>
-                  <span className="shrink-0 text-zinc-600">
-                    {upload
-                      ? `${upload.duration_seconds.toFixed(1)} sn · ${formatBytes(upload.size_bytes)}`
-                      : formatBytes(selectedFile.size)}
-                  </span>
-                </div>
-                {upload && stage !== 'uploading' && (
-                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-400/10 bg-emerald-400/5 px-3 py-2.5 text-sm text-emerald-300">
-                    <CheckCircle2 className="h-4 w-4" /> Video kullanıma hazır
+              )
+            ) : !selectedTemplate ? (
+              <TemplateGallery
+                selectingId={selectingTemplateId}
+                onSelect={(templateId) => void handleTemplateSelect(templateId)}
+                onError={showEditorError}
+              />
+            ) : (
+              <div>
+                {inputPreview ? (
+                  <div className="overflow-hidden rounded-xl border border-white/10 bg-black">
+                    <video
+                      ref={videoRef}
+                      key={inputPreview}
+                      className="aspect-video w-full object-contain"
+                      src={inputPreview}
+                      controls
+                      playsInline
+                    />
+                  </div>
+                ) : (
+                  <div className="grid aspect-video place-items-center rounded-xl border border-dashed border-amber-300/20 bg-amber-300/[0.035] p-6 text-center">
+                    <div>
+                      <Film className="mx-auto h-8 w-8 text-amber-200/60" />
+                      <p className="mt-3 text-sm font-bold text-amber-100">Demo video dosyası eklenmedi</p>
+                      <p className="mt-1 text-xs leading-5 text-zinc-500">
+                        Timeline ve kayıt akışını metadata üzerinden deneyebilirsin.
+                      </p>
+                    </div>
                   </div>
                 )}
+                <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.025] p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-white">{selectedTemplate.title}</p>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {selectedTemplate.category} · {selectedTemplate.duration_seconds.toFixed(1)} sn · {selectedTemplate.lines.length} replik
+                      </p>
+                    </div>
+                    <CheckCircle2 className="h-5 w-5 shrink-0 text-lime" />
+                  </div>
+                  <p className="mt-3 text-[11px] leading-5 text-zinc-500">
+                    Lisans: {selectedTemplate.license}<br />
+                    Kaynak: {selectedTemplate.source}
+                  </p>
+                </div>
               </div>
             )}
           </section>
@@ -413,7 +552,7 @@ function App() {
                     setMode('ai-voice')
                     clearFeedback()
                   }}
-                  disabled={busy}
+                  disabled={busy || Boolean(selectedTemplate && !upload)}
                   className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 transition ${mode === 'ai-voice' ? 'bg-violet text-white' : 'text-zinc-500 hover:text-white'}`}
                 >
                   <Bot className="h-3.5 w-3.5" /> AI ses
@@ -421,15 +560,15 @@ function App() {
               </div>
             </div>
 
-            {!upload ? (
+            {!projectReady ? (
               <div className="grid min-h-80 place-items-center rounded-2xl border border-dashed border-white/10 bg-black/10 px-6 text-center">
                 <div className="max-w-sm">
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/[0.03] text-zinc-600">
                     <Video className="h-7 w-7" />
                   </span>
-                  <p className="mt-4 font-bold text-zinc-300">Önce videonu yükle</p>
+                  <p className="mt-4 font-bold text-zinc-300">Önce bir kaynak seç</p>
                   <p className="mt-2 text-sm leading-6 text-zinc-600">
-                    Video hazır olduğunda replik zaman çizelgesi burada otomatik oluşacak.
+                    Kendi videonu yüklediğinde veya hazır bir sahne seçtiğinde replik zaman çizelgesi burada oluşacak.
                   </p>
                   <div className="mt-5 grid grid-cols-3 gap-2 text-[11px] text-zinc-600">
                     <span className="rounded-lg bg-white/[0.03] px-2 py-2">Metni düzenle</span>
@@ -440,9 +579,12 @@ function App() {
               </div>
             ) : mode === 'my-voice' ? (
               <TimelineRecorder
-                key={upload.video_id}
-                duration={upload.duration_seconds}
+                key={upload?.video_id ?? selectedTemplate?.id}
+                duration={upload?.duration_seconds ?? selectedTemplate?.duration_seconds ?? 0}
                 videoRef={videoRef}
+                initialLines={selectedTemplate?.lines}
+                videoAvailable={Boolean(inputPreview)}
+                exportUnavailableReason={upload ? '' : 'MP4 export için template video dosyasının projeye güvenli biçimde eklenmesi veya kendi videonun yüklenmesi gerekir.'}
                 disabled={busy}
                 onError={showEditorError}
                 onProcess={handleRecordingProcess}

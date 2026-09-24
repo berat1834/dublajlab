@@ -1,0 +1,56 @@
+[
+  {
+    "id": "ofis-surprizi",
+    "title": "Ofiste Beklenmedik An",
+    "category": "Komedi",
+    "description": "Kısa ve tempolu bir ofis sahnesi için üç repliklik örnek zaman çizelgesi.",
+    "duration_seconds": 9.0,
+    "video_url": null,
+    "license": "Medya yok — eklenecek dosya CC0 veya açık lisanslı olmalıdır",
+    "source": "DublajLab örnek metadata — video dosyası henüz eklenmedi",
+    "lines": [
+      {
+        "id": "ofis-1",
+        "start": 0.4,
+        "end": 2.7,
+        "text": "Toplantı gerçekten şimdi mi başlıyor?"
+      },
+      {
+        "id": "ofis-2",
+        "start": 3.0,
+        "end": 5.8,
+        "text": "Sunumu kim hazırlayacaktı?"
+      },
+      {
+        "id": "ofis-3",
+        "start": 6.1,
+        "end": 8.6,
+        "text": "Ben kahve almaya gidiyorum."
+      }
+    ]
+  },
+  {
+    "id": "uzay-gorevi",
+    "title": "Mini Uzay Görevi",
+    "category": "Bilim Kurgu",
+    "description": "İki karakterlik kısa bir uzay macerası için örnek replikler.",
+    "duration_seconds": 7.5,
+    "video_url": null,
+    "license": "Medya yok — eklenecek dosya CC0 veya açık lisanslı olmalıdır",
+    "source": "DublajLab örnek metadata — video dosyası henüz eklenmedi",
+    "lines": [
+      {
+        "id": "uzay-1",
+        "start": 0.5,
+        "end": 3.2,
+        "text": "Kaptan, rotamızda garip bir sinyal var."
+      },
+      {
+        "id": "uzay-2",
+        "start": 3.6,
+        "end": 7.0,
+        "text": "Sakin ol, sadece navigasyonu açmayı unuttuk."
+      }
+    ]
+  }
+]
