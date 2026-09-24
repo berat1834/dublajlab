@@ -22,7 +22,16 @@ async function parseResponse<T>(response: Response): Promise<T> {
     // The API may be offline or return a proxy error without JSON.
   }
   const validationMessage = body.errors?.map((error) => error.message).join(' ')
-  throw new Error(validationMessage || body.detail || 'Beklenmeyen bir hata oluştu.')
+  const statusMessage = response.status >= 500
+    ? 'Backend isteği tamamlayamadı. Sunucu terminalindeki hata mesajını kontrol edin.'
+    : 'İstek tamamlanamadı. Bilgileri kontrol edip tekrar deneyin.'
+  throw new Error(validationMessage || body.detail || statusMessage)
+}
+
+function backendConnectionError() {
+  return new Error(
+    'Sunucuya ulaşılamadı. Backend’i http://localhost:8000 adresinde başlatıp tekrar deneyin.',
+  )
 }
 
 export async function uploadVideo(file: File): Promise<UploadResponse> {
@@ -36,7 +45,7 @@ export async function uploadVideo(file: File): Promise<UploadResponse> {
     return parseResponse<UploadResponse>(response)
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error('Sunucuya ulaşılamadı. Backend’in çalıştığını kontrol edin.')
+      throw backendConnectionError()
     }
     throw error
   }
@@ -58,7 +67,7 @@ export async function processVideo(payload: {
     return parseResponse<ProcessResponse>(response)
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error('Sunucuya ulaşılamadı. Backend’in çalıştığını kontrol edin.')
+      throw backendConnectionError()
     }
     throw error
   }
@@ -93,7 +102,7 @@ export async function processRecordings(payload: {
     return parseResponse<ProcessResponse>(response)
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error('Sunucuya ulaşılamadı. Backend’in çalıştığını kontrol edin.')
+      throw backendConnectionError()
     }
     throw error
   }

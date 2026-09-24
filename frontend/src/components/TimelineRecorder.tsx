@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  CheckCircle2,
   CircleStop,
   Clock3,
   Headphones,
   Mic,
   Play,
   Plus,
+  Radio,
   RotateCcw,
   Trash2,
   WandSparkles,
@@ -82,6 +84,32 @@ export function TimelineRecorder({
     () => lines.filter((line) => clips.has(line.id)).length,
     [clips, lines],
   )
+  const invalidLineIds = useMemo(
+    () =>
+      new Set(
+        lines
+          .filter(
+            (line) =>
+              !line.text.trim() ||
+              line.start < 0 ||
+              line.end <= line.start ||
+              line.end > duration + 0.05,
+          )
+          .map((line) => line.id),
+      ),
+    [duration, lines],
+  )
+  const missingCount = lines.length - completedCount
+  const completionPercent = Math.round((completedCount / lines.length) * 100)
+  const exportBlockReason = disabled
+    ? 'Video işlenirken düzenleme geçici olarak kilitlenir.'
+    : activeLineId
+      ? 'Devam etmek için aktif kaydı durdurun.'
+      : invalidLineIds.size
+        ? `${invalidLineIds.size} repliğin metnini veya zaman aralığını düzeltin.`
+        : missingCount
+          ? `Export için ${missingCount} repliği daha kaydedin.`
+          : ''
 
   const updateLine = (id: string, patch: Partial<TimelineLine>) => {
     setLines((current) =>
@@ -167,8 +195,16 @@ export function TimelineRecorder({
         stopRecording,
         Math.max(250, (line.end - line.start) * 1000),
       )
-    } catch {
-      onError('Mikrofon açılamadı. Tarayıcı iznini kontrol edip tekrar deneyin.')
+    } catch (error) {
+      if (error instanceof DOMException && ['NotAllowedError', 'SecurityError'].includes(error.name)) {
+        onError('Mikrofon izni reddedildi. Adres çubuğundaki kilit simgesinden mikrofon iznini açıp tekrar deneyin.')
+      } else if (error instanceof DOMException && error.name === 'NotFoundError') {
+        onError('Kullanılabilir mikrofon bulunamadı. Mikrofon bağlantısını ve Windows ses ayarlarını kontrol edin.')
+      } else if (error instanceof DOMException && error.name === 'NotReadableError') {
+        onError('Mikrofon başka bir uygulama tarafından kullanılıyor. Diğer uygulamayı kapatıp tekrar deneyin.')
+      } else {
+        onError('Mikrofon açılamadı. Tarayıcı iznini ve ses aygıtını kontrol edip tekrar deneyin.')
+      }
     }
   }
 
@@ -204,14 +240,7 @@ export function TimelineRecorder({
   }
 
   const submit = async () => {
-    const invalid = lines.some(
-      (line) =>
-        !line.text.trim() ||
-        line.start < 0 ||
-        line.end <= line.start ||
-        line.end > duration + 0.05,
-    )
-    if (invalid) {
+    if (invalidLineIds.size) {
       onError('Tüm replik metinlerini ve zaman aralıklarını kontrol edin.')
       return
     }
@@ -226,11 +255,11 @@ export function TimelineRecorder({
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-zinc-100">Replik zaman çizelgesi</p>
           <p className="mt-1 text-xs text-zinc-500">
-            {completedCount}/{lines.length} kayıt hazır
+            Her repliği kendi zaman aralığında seslendir.
           </p>
         </div>
         <button
@@ -243,25 +272,52 @@ export function TimelineRecorder({
         </button>
       </div>
 
+      <div className="mb-4 rounded-xl border border-white/8 bg-black/15 p-3">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-semibold text-zinc-300">Kayıt ilerlemesi</span>
+          <span className="tabular-nums text-zinc-500">{completedCount}/{lines.length} tamamlandı</span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
+          <div
+            className="h-full rounded-full bg-lime transition-all duration-300"
+            style={{ width: `${completionPercent}%` }}
+          />
+        </div>
+      </div>
+
       <div className="max-h-[590px] space-y-3 overflow-y-auto pr-1">
         {lines.map((line, index) => {
           const clip = clips.get(line.id)
           const isRecording = activeLineId === line.id
+          const isInvalid = invalidLineIds.has(line.id)
           return (
             <article
               key={line.id}
-              className={`rounded-xl border p-3 transition ${
+              className={`rounded-xl border p-3 transition-all ${
                 isRecording
-                  ? 'border-red-400/50 bg-red-400/5'
+                  ? 'border-red-400/70 bg-red-400/[0.08] shadow-[0_0_0_3px_rgba(248,113,113,0.08)]'
+                  : isInvalid
+                    ? 'border-amber-400/30 bg-amber-400/[0.035]'
                   : clip
                     ? 'border-lime/25 bg-lime/[0.035]'
                     : 'border-white/8 bg-black/15'
               }`}
             >
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                  Replik {index + 1}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 place-items-center rounded-lg bg-white/5 text-[11px] font-bold text-zinc-400">
+                    {index + 1}
+                  </span>
+                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold ${isRecording ? 'text-red-300' : clip ? 'text-lime' : 'text-zinc-500'}`}>
+                    {isRecording ? (
+                      <><Radio className="h-3.5 w-3.5 animate-pulse" /> Kayıt devam ediyor</>
+                    ) : clip ? (
+                      <><CheckCircle2 className="h-3.5 w-3.5" /> Kayıt tamamlandı</>
+                    ) : (
+                      <><span className="h-1.5 w-1.5 rounded-full bg-zinc-600" /> Kayıt bekliyor</>
+                    )}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
@@ -284,20 +340,19 @@ export function TimelineRecorder({
                 </div>
               </div>
               <textarea
+                aria-label={`Replik ${index + 1} metni`}
                 value={line.text}
                 maxLength={300}
                 rows={2}
                 disabled={disabled || Boolean(activeLineId)}
                 onChange={(event) => updateLine(line.id, { text: event.target.value })}
-                className="w-full resize-none rounded-lg border border-white/8 bg-black/25 px-3 py-2 text-sm leading-5 text-zinc-100 outline-none focus:border-lime/40 disabled:opacity-60"
+                className={`w-full resize-none rounded-lg border bg-black/25 px-3 py-2 text-sm leading-5 text-zinc-100 outline-none disabled:opacity-60 ${isInvalid ? 'border-amber-400/30 focus:border-amber-300/60' : 'border-white/8 focus:border-lime/40'}`}
               />
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1 text-[11px] text-zinc-600">
-                  <Clock3 className="h-3.5 w-3.5" />
-                </span>
-                <label className="flex items-center gap-1 text-[11px] text-zinc-500">
-                  Başlangıç
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                <label className="text-[11px] font-medium text-zinc-500">
+                  <span className="mb-1 flex items-center gap-1"><Clock3 className="h-3 w-3" /> Başlangıç</span>
                   <input
+                    aria-label={`Replik ${index + 1} başlangıç zamanı`}
                     type="number"
                     min="0"
                     max={duration}
@@ -307,12 +362,13 @@ export function TimelineRecorder({
                     onChange={(event) =>
                       updateLine(line.id, { start: Number(event.target.value) })
                     }
-                    className="w-16 rounded-md border border-white/10 bg-black/30 px-2 py-1 text-zinc-200 outline-none focus:border-lime/40"
+                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm tabular-nums text-zinc-200 outline-none focus:border-lime/40"
                   />
                 </label>
-                <label className="flex items-center gap-1 text-[11px] text-zinc-500">
-                  Bitiş
+                <label className="text-[11px] font-medium text-zinc-500">
+                  <span className="mb-1 block">Bitiş</span>
                   <input
+                    aria-label={`Replik ${index + 1} bitiş zamanı`}
                     type="number"
                     min="0"
                     max={duration}
@@ -322,13 +378,19 @@ export function TimelineRecorder({
                     onChange={(event) =>
                       updateLine(line.id, { end: Number(event.target.value) })
                     }
-                    className="w-16 rounded-md border border-white/10 bg-black/30 px-2 py-1 text-zinc-200 outline-none focus:border-lime/40"
+                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm tabular-nums text-zinc-200 outline-none focus:border-lime/40"
                   />
                 </label>
-                <span className="ml-auto text-[10px] tabular-nums text-zinc-700">
-                  {(line.end - line.start).toFixed(1)} sn
+                <span className="col-span-2 rounded-lg bg-white/[0.03] px-3 py-2 text-center text-[11px] tabular-nums text-zinc-500 sm:col-span-1">
+                  {Math.max(0, line.end - line.start).toFixed(1)} sn
                 </span>
               </div>
+
+              {isInvalid && (
+                <p className="mt-2 text-xs text-amber-300">
+                  Metin boş olmamalı; bitiş, başlangıçtan sonra ve video süresi içinde olmalı.
+                </p>
+              )}
 
               <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
                 <button
@@ -359,7 +421,7 @@ export function TimelineRecorder({
                 )}
                 {isRecording && (
                   <span className="flex items-center gap-2 text-xs font-semibold text-red-300">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" /> Kayıtta
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" /> Süre bitince otomatik durur
                   </span>
                 )}
               </div>
@@ -394,11 +456,18 @@ export function TimelineRecorder({
       <button
         type="button"
         onClick={() => void submit()}
-        disabled={disabled || Boolean(activeLineId) || completedCount !== lines.length}
+        disabled={disabled || Boolean(activeLineId) || Boolean(invalidLineIds.size) || Boolean(missingCount)}
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3.5 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none"
       >
         <WandSparkles className="h-5 w-5" /> Kendi Sesimle Videoyu Oluştur
       </button>
+      {exportBlockReason ? (
+        <p className="mt-2 text-center text-xs text-zinc-500">{exportBlockReason}</p>
+      ) : (
+        <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-lime">
+          <CheckCircle2 className="h-3.5 w-3.5" /> Tüm replikler hazır; videonu oluşturabilirsin.
+        </p>
+      )}
     </div>
   )
 }

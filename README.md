@@ -35,6 +35,12 @@ Bu MVP tarayıcı ve medya backend’i arasında uçtan uca bir prodüksiyon ak�
 
 Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının kendi videosunu yüklemesini destekler.
 
+## Ekran görüntüsü ve demo GIF
+
+> Görsel placeholder: Profesyonel iki kolonlu editörün masaüstü ekran görüntüsü ve mobil kayıt akışını gösteren kısa bir GIF, gerçek ürün demosu tamamlandığında bu bölüme eklenecektir.
+
+Görseller eklenirken yalnızca proje sahibinin kendi videosu veya açık lisanslı/telifsiz bir kaynak kullanılmalıdır. Telifli film, dizi ya da sosyal medya klibi repoya eklenmemelidir. Önerilen dosya konumları `docs/assets/dublajlab-editor.webp` ve `docs/assets/dublajlab-mobile.gif` şeklindedir.
+
 ## Özellikler
 
 ### Ana mod — Kendi sesim
@@ -357,7 +363,16 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] MP4 preview ve download
 - [x] Opsiyonel AI ses modu
 
-### Faz 2 — Gelişmiş Dublaj Editörü
+### Faz 2 — Profesyonel Kullanıcı Deneyimi
+
+- [x] Masaüstünde iki kolon, mobilde tek kolon ürün akışı
+- [x] Açıklayıcı empty/loading/error/success durumları
+- [x] Belirgin aktif kayıt ve replik tamamlanma durumları
+- [x] Export engel nedeni ve hata sonrası tekrar deneme
+- [x] Güçlendirilmiş sonuç önizleme ve yeniden başlama aksiyonları
+- [x] Ekran görüntüsü/GIF alanı ve telifsiz medya notu
+
+### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
 - [ ] Hazır, açık lisanslı demo video paketi
