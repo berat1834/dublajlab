@@ -32,3 +32,12 @@ Thumbs.db
 # Local demo media; keep only its documentation
 demo/*
 !demo/README.md
+!demo/input/
+demo/input/*
+!demo/input/.gitkeep
+!demo/output/
+demo/output/*
+!demo/output/.gitkeep
+!demo/metadata/
+demo/metadata/*
+!demo/metadata/template.example.json

@@ -1,0 +1,24 @@
+{
+  "id": "my-demo-scene",
+  "title": "Kendi Demo Sahnem",
+  "category": "Portföy",
+  "description": "Proje sahibi tarafından üretilen kısa demo videosu.",
+  "duration_seconds": 8.0,
+  "video_url": "/templates/my-demo-scene.mp4",
+  "license": "All rights reserved — proje sahibinin kendi üretimi",
+  "source": "Berat — özgün demo çekimi — 2026-09-24",
+  "lines": [
+    {
+      "id": "my-demo-scene-1",
+      "start": 0.5,
+      "end": 3.4,
+      "text": "Bu repliği kendi sesimle kaydediyorum."
+    },
+    {
+      "id": "my-demo-scene-2",
+      "start": 4.0,
+      "end": 7.5,
+      "text": "DublajLab çıktıyı benim için hazırlıyor."
+    }
+  ]
+}

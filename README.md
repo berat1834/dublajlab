@@ -18,6 +18,7 @@ DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı
 - [API endpointleri](#api-endpointleri)
 - [Test ve kalite kontrolleri](#test-ve-kalite-kontrolleri)
 - [Manuel smoke test](scripts/smoke_test.md)
+- [Demo ve portföy rehberi](docs/DEMO_GUIDE.md)
 - [Teknik not](docs/TEKNIK_NOT.md)
 - [Roadmap](#roadmap)
 
@@ -35,11 +36,27 @@ Bu MVP tarayıcı ve medya backend’i arasında uçtan uca bir prodüksiyon ak�
 
 Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının kendi videosunu yüklemesini destekler.
 
-## Ekran görüntüsü ve demo GIF
+## Live Demo / Screenshots / Demo GIF
 
-> Görsel placeholder: Profesyonel iki kolonlu editörün masaüstü ekran görüntüsü ve mobil kayıt akışını gösteren kısa bir GIF, gerçek ürün demosu tamamlandığında bu bölüme eklenecektir.
+**Live demo:** Henüz herkese açık bir deployment bulunmuyor. Yerel demo için [kurulum](#backend-kurulumu) ve [demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
 
-Görseller eklenirken yalnızca proje sahibinin kendi videosu veya açık lisanslı/telifsiz bir kaynak kullanılmalıdır. Telifli film, dizi ya da sosyal medya klibi repoya eklenmemelidir. Önerilen dosya konumları `docs/assets/dublajlab-editor.webp` ve `docs/assets/dublajlab-mobile.gif` şeklindedir.
+Portföy görselleri için sabit hedefler hazırdır:
+
+| İçerik | Dosya yolu | Durum |
+| --- | --- | --- |
+| Masaüstü editör | `docs/assets/dublajlab-editor.webp` | Çekim bekliyor |
+| Template galerisi | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
+| Mobil demo GIF | `docs/assets/dublajlab-mobile.gif` | Kayıt bekliyor |
+
+[Görsel hazırlama kuralları ve dosya manifesti](docs/assets/README.md)
+
+Gerçek dosyalar eklendiğinde aşağıdaki hazır Markdown satırları yorumdan çıkarılabilir:
+
+<!-- ![DublajLab masaüstü editörü](docs/assets/dublajlab-editor.webp) -->
+<!-- ![DublajLab template galerisi](docs/assets/dublajlab-template-gallery.webp) -->
+<!-- ![DublajLab mobil demo akışı](docs/assets/dublajlab-mobile.gif) -->
+
+Görseller yalnızca proje sahibinin kendi videosu veya doğrulanmış açık lisanslı/telifsiz bir kaynakla hazırlanmalıdır. Telifli film, dizi, meme ya da sosyal medya klibi repoya eklenmemelidir.
 
 ## Hazır video / template sistemi
 
@@ -423,6 +440,15 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Medya dosyası olmayan template için açıklayıcı boş durum
 - [x] Gelecekte açık lisanslı dosyayı mevcut upload/export akışına bağlayan altyapı
 - [ ] Doğrulanmış açık lisanslı gerçek demo medya paketi
+
+### Faz 3.5 — Demo Paketi ve Portföy Sunumu
+
+- [x] Güvenli yerel demo klasör yapısı ve metadata örneği
+- [x] Demo/lisans/source/template bağlantı rehberi
+- [x] Sabit screenshot ve GIF hedef yolları
+- [x] Comedy, dramatic ve product demo metadata örnekleri
+- [x] GitHub/LinkedIn/CV sunumu için README demo alanı
+- [ ] Gerçek ekran görüntüsü, GIF ve açık lisanslı demo videosu
 
 ### Sonraki teknik geliştirmeler
 

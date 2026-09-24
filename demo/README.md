@@ -1,6 +1,15 @@
-# Yerel demo videosu
+# Yerel demo paketi
 
-Bu klasöre DublajLab'ı test etmek için kendi çektiğiniz veya açık lisansla kullanma hakkına sahip olduğunuz kısa bir video koyabilirsiniz.
+Bu klasör DublajLab'ı test etmek için kendi çektiğiniz veya açık lisansla kullanma hakkına sahip olduğunuz kısa videoların yerel çalışma alanıdır. Medya ve üretilen çıktılar Git'e eklenmez.
+
+```text
+demo/
+├── input/                       # Kendi kaynak videonuzu buraya koyun
+├── output/                      # Manuel test çıktılarını burada tutabilirsiniz
+├── metadata/
+│   └── template.example.json   # Template metadata başlangıç örneği
+└── README.md
+```
 
 Kurallar:
 
@@ -8,7 +17,8 @@ Kurallar:
 - Gerçek kişileri yanıltıcı biçimde taklit etmek için kullanmayın.
 - Repo herkese açık olacaksa video sahibinin yayın iznini kontrol edin.
 - Önerilen test dosyası: 5–15 saniye, MP4/H.264, 720p veya daha düşük, 50 MB altında.
-- Video dosyaları Git'e eklenmez; `.gitignore` bu klasörde README dışındaki dosyaları hariç tutar.
+- `input/` ve `output/` içindeki medya dosyaları Git'e eklenmez; yalnızca klasör iskeleti ile güvenli metadata örneği sürümlenir.
+- Template olarak yayınlanacak doğrulanmış medya, test bittikten sonra `frontend/public/templates/` altına ayrıca ve bilinçli biçimde eklenmelidir.
 
 Örnek timeline:
 
@@ -31,3 +41,4 @@ Kurallar:
 
 Bu JSON'u ayrıca yüklemeniz gerekmez; aynı değerleri frontend'deki replik editörüne girin.
 
+Template kataloğuna bağlama, lisans/source yazımı ve portföy ekran görüntüsü hazırlama adımları için [Demo ve Portföy Rehberi](../docs/DEMO_GUIDE.md) dosyasını okuyun.
