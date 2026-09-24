@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { FileVideo2, UploadCloud } from 'lucide-react'
+import { AlertCircle, FileVideo2, UploadCloud } from 'lucide-react'
 
 interface UploadZoneProps {
   onFile: (file: File) => void
@@ -40,6 +40,7 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
     <div>
       <button
         type="button"
+        aria-label="Yüklenecek video dosyasını seç"
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
         onDragEnter={(event) => {
@@ -53,7 +54,7 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
           setIsDragging(false)
           acceptFile(event.dataTransfer.files[0])
         }}
-        className={`group flex min-h-52 w-full flex-col items-center justify-center rounded-2xl border border-dashed px-6 text-center transition disabled:cursor-not-allowed disabled:opacity-60 ${
+        className={`group flex min-h-64 w-full flex-col items-center justify-center rounded-2xl border border-dashed px-6 py-8 text-center transition disabled:cursor-not-allowed disabled:opacity-60 ${
           isDragging
             ? 'border-lime bg-lime/10'
             : 'border-zinc-700 bg-black/20 hover:border-zinc-500 hover:bg-white/[0.025]'
@@ -62,10 +63,14 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
         <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/5 text-lime transition group-hover:scale-105">
           {isDragging ? <FileVideo2 /> : <UploadCloud />}
         </span>
-        <span className="font-semibold text-zinc-100">Videonu buraya bırak</span>
-        <span className="mt-1 text-sm text-zinc-500">veya seçmek için tıkla</span>
-        <span className="mt-5 rounded-full bg-white/5 px-3 py-1 text-[11px] uppercase tracking-widest text-zinc-500">
-          MP4 · MOV · WEBM / En fazla 50 MB · 60 sn
+        <span className="font-bold text-zinc-100">
+          {isDragging ? 'Videoyu bırak, başlayalım' : 'Videonu buraya sürükle'}
+        </span>
+        <span className="mt-1 text-sm text-zinc-500">veya bilgisayarından seçmek için tıkla</span>
+        <span className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+          <span className="rounded-full bg-white/5 px-2.5 py-1">MP4 · MOV · WEBM</span>
+          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla 50 MB</span>
+          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla 60 sn</span>
         </span>
       </button>
       <input
@@ -78,8 +83,11 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
           event.target.value = ''
         }}
       />
-      {localError && <p className="mt-3 text-sm text-red-300">{localError}</p>}
+      {localError && (
+        <p role="alert" className="mt-3 flex items-center gap-2 rounded-xl border border-red-400/15 bg-red-400/[0.06] px-3 py-2.5 text-sm text-red-300">
+          <AlertCircle className="h-4 w-4 shrink-0" /> {localError}
+        </p>
+      )}
     </div>
   )
 }
-

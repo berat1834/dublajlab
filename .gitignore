@@ -11,6 +11,8 @@ pytest-cache-files-*/
 # Runtime media (directories are recreated automatically)
 backend/data/*
 !backend/data/.gitkeep
+!backend/data/templates/
+!backend/data/templates/templates.json
 
 # Frontend
 frontend/node_modules/
@@ -30,3 +32,12 @@ Thumbs.db
 # Local demo media; keep only its documentation
 demo/*
 !demo/README.md
+!demo/input/
+demo/input/*
+!demo/input/.gitkeep
+!demo/output/
+demo/output/*
+!demo/output/.gitkeep
+!demo/metadata/
+demo/metadata/*
+!demo/metadata/template.example.json

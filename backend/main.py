@@ -13,6 +13,7 @@ from fastapi.responses import JSONResponse
 from backend.config import allowed_origins, ensure_media_directories
 from backend.models import HealthResponse
 from backend.routers.maintenance import router as maintenance_router
+from backend.routers.templates import router as templates_router
 from backend.routers.video import ffmpeg_service, router as video_router
 
 
@@ -45,6 +46,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(video_router)
+app.include_router(templates_router)
 app.include_router(maintenance_router)
 
 

@@ -31,3 +31,15 @@ export interface TimelineLine {
   end: number
   text: string
 }
+
+export interface VideoTemplate {
+  id: string
+  title: string
+  category: string
+  description: string
+  duration_seconds: number
+  video_url: string | null
+  license: string
+  source: string
+  lines: TimelineLine[]
+}

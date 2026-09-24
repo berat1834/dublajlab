@@ -1,0 +1,140 @@
+[
+  {
+    "id": "ofis-surprizi",
+    "title": "Ofiste Beklenmedik An",
+    "category": "Komedi",
+    "description": "Kısa ve tempolu bir ofis sahnesi için üç repliklik örnek zaman çizelgesi.",
+    "duration_seconds": 9.0,
+    "video_url": null,
+    "license": "Medya yok — eklenecek dosya CC0 veya açık lisanslı olmalıdır",
+    "source": "DublajLab örnek metadata — video dosyası henüz eklenmedi",
+    "lines": [
+      {
+        "id": "ofis-1",
+        "start": 0.4,
+        "end": 2.7,
+        "text": "Toplantı gerçekten şimdi mi başlıyor?"
+      },
+      {
+        "id": "ofis-2",
+        "start": 3.0,
+        "end": 5.8,
+        "text": "Sunumu kim hazırlayacaktı?"
+      },
+      {
+        "id": "ofis-3",
+        "start": 6.1,
+        "end": 8.6,
+        "text": "Ben kahve almaya gidiyorum."
+      }
+    ]
+  },
+  {
+    "id": "uzay-gorevi",
+    "title": "Mini Uzay Görevi",
+    "category": "Bilim Kurgu",
+    "description": "İki karakterlik kısa bir uzay macerası için örnek replikler.",
+    "duration_seconds": 7.5,
+    "video_url": null,
+    "license": "Medya yok — eklenecek dosya CC0 veya açık lisanslı olmalıdır",
+    "source": "DublajLab örnek metadata — video dosyası henüz eklenmedi",
+    "lines": [
+      {
+        "id": "uzay-1",
+        "start": 0.5,
+        "end": 3.2,
+        "text": "Kaptan, rotamızda garip bir sinyal var."
+      },
+      {
+        "id": "uzay-2",
+        "start": 3.6,
+        "end": 7.0,
+        "text": "Sakin ol, sadece navigasyonu açmayı unuttuk."
+      }
+    ]
+  },
+  {
+    "id": "comedy-reaction",
+    "title": "Komik Tepki",
+    "category": "Komedi",
+    "description": "Şaşırtıcı bir ana verilen hızlı tepkileri seslendirmek için kısa bir sahne taslağı.",
+    "duration_seconds": 8.0,
+    "video_url": null,
+    "license": "Medya yok — eklenecek dosya CC0, Public Domain veya proje sahibine ait olmalıdır",
+    "source": "DublajLab portföy metadata örneği — video dosyası henüz eklenmedi",
+    "lines": [
+      {
+        "id": "comedy-reaction-1",
+        "start": 0.3,
+        "end": 2.2,
+        "text": "Bir dakika, gerçekten bunu mu yaptın?"
+      },
+      {
+        "id": "comedy-reaction-2",
+        "start": 2.6,
+        "end": 5.0,
+        "text": "Ben hiçbir şey görmedim sayıyorum."
+      },
+      {
+        "id": "comedy-reaction-3",
+        "start": 5.4,
+        "end": 7.7,
+        "text": "Tamam, şimdi baştan anlat."
+      }
+    ]
+  },
+  {
+    "id": "dramatic-line",
+    "title": "Dramatik Karar",
+    "category": "Dram",
+    "description": "Duygulu tonlama ve kısa duraklamalarla çalışmak için iki repliklik sahne taslağı.",
+    "duration_seconds": 10.0,
+    "video_url": null,
+    "license": "Medya yok — eklenecek dosya CC0, Public Domain veya proje sahibine ait olmalıdır",
+    "source": "DublajLab portföy metadata örneği — video dosyası henüz eklenmedi",
+    "lines": [
+      {
+        "id": "dramatic-line-1",
+        "start": 0.8,
+        "end": 4.5,
+        "text": "Bazen doğru yolu bulmak için kaybolmak gerekir."
+      },
+      {
+        "id": "dramatic-line-2",
+        "start": 5.1,
+        "end": 9.4,
+        "text": "Ama bu kez geri dönmeyeceğim."
+      }
+    ]
+  },
+  {
+    "id": "product-demo",
+    "title": "Ürün Tanıtımı",
+    "category": "Tanıtım",
+    "description": "Kendi ürününüzü veya portföy projenizi anlatabileceğiniz nötr bir demo akışı.",
+    "duration_seconds": 12.0,
+    "video_url": null,
+    "license": "Medya yok — proje sahibi tarafından üretilecek özgün ekran kaydı önerilir",
+    "source": "DublajLab portföy metadata örneği — video dosyası henüz eklenmedi",
+    "lines": [
+      {
+        "id": "product-demo-1",
+        "start": 0.4,
+        "end": 3.5,
+        "text": "DublajLab ile videonu birkaç adımda seslendir."
+      },
+      {
+        "id": "product-demo-2",
+        "start": 4.0,
+        "end": 7.8,
+        "text": "Replikleri düzenle ve kendi sesinle kaydet."
+      },
+      {
+        "id": "product-demo-3",
+        "start": 8.2,
+        "end": 11.6,
+        "text": "Sonucu altyazılı MP4 olarak indir."
+      }
+    ]
+  }
+]
