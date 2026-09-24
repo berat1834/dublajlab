@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+pytest-cache-files-*/
+.test-tmp/
+.tmp/
+.coverage
+.venv/
+
+# Runtime media (directories are recreated automatically)
+backend/data/*
+!backend/data/.gitkeep
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Local development / agent artifacts
+log.txt
+AI-Creator-Tools-Agent-Prompt.md
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local demo media; keep only its documentation
+demo/*
+!demo/README.md
