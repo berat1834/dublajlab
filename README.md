@@ -146,13 +146,16 @@ Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman
 flowchart LR
     Browser[React + MediaRecorder] -->|Video / timeline / kayıtlar| API[FastAPI]
     API --> Validation[Dosya ve timeline doğrulama]
-    Validation --> FFmpeg[FFmpeg / FFprobe]
+    Validation --> Registry[Memory job registry]
+    Registry --> Worker[Arka plan dubbing worker]
+    Browser -->|GET /api/jobs/job_id polling| Registry
+    Worker --> FFmpeg[FFmpeg / FFprobe]
+    Worker -. opsiyonel .-> TTS[Edge TTS]
     FFmpeg --> Output[H.264 + AAC MP4]
-    API -. opsiyonel .-> TTS[Edge TTS]
     Output --> Browser
 ```
 
-Backend router'ları HTTP sözleşmesini, servisler ise dosya saklama, TTS, altyazı, FFmpeg ve temizlik sorumluluklarını taşır. FFmpeg komutları shell string'i yerine argüman listesiyle çalıştırılır. Ayrıntılar [teknik mimari notunda](docs/TEKNIK_NOT.md) bulunur.
+Backend router'ları HTTP sözleşmesini; servisler ise job registry/worker, dosya saklama, TTS, altyazı, FFmpeg ve temizlik sorumluluklarını taşır. Yeni frontend export isteğinde `202` ve `job_id` alır, gerçek backend aşamalarını polling ile izler. Eski senkron video endpoint'leri geriye uyumluluk için korunur. FFmpeg komutları shell string'i yerine argüman listesiyle çalıştırılır. Ayrıntılar [teknik mimari notunda](docs/TEKNIK_NOT.md) bulunur.
 
 ## Proje yapısı
 
@@ -164,6 +167,7 @@ Backend router'ları HTTP sözleşmesini, servisler ise dosya saklama, TTS, alty
 │   ├── models.py
 │   ├── data/templates/templates.json
 │   ├── routers/video.py
+│   ├── routers/jobs.py
 │   ├── routers/templates.py
 │   ├── routers/maintenance.py
 │   ├── services/
@@ -171,9 +175,12 @@ Backend router'ları HTTP sözleşmesini, servisler ise dosya saklama, TTS, alty
 │   │   ├── file_storage.py
 │   │   ├── subtitle_service.py
 │   │   ├── cleanup_service.py
+│   │   ├── job_service.py
 │   │   ├── template_service.py
 │   │   └── tts_service.py
-│   └── tests/test_video_api.py
+│   └── tests/
+│       ├── test_video_api.py
+│       └── test_jobs_api.py
 ├── frontend/
 │   ├── src/
 │   │   ├── components/TimelineRecorder.tsx
@@ -330,8 +337,11 @@ Kurallar:
 | `GET` | `/api/templates` | Doğrulanmış hazır sahne kataloğunu listeler |
 | `GET` | `/api/templates/{template_id}` | Tek bir hazır sahnenin metadata ve repliklerini döndürür |
 | `POST` | `/api/video/upload` | `file` alanıyla video yükler ve doğrular |
-| `POST` | `/api/video/process-recordings` | Timeline + mikrofon kayıtlarından video üretir |
-| `POST` | `/api/video/process` | Opsiyonel AI TTS moduyla video üretir |
+| `POST` | `/api/jobs/dubbing-recordings` | Mikrofon kayıtları için job oluşturur ve `202` döndürür |
+| `POST` | `/api/jobs/dubbing-ai` | AI ses export job'ı oluşturur ve `202` döndürür |
+| `GET` | `/api/jobs/{job_id}` | Job durumu, gerçek işlem aşaması ve sonucu döndürür |
+| `POST` | `/api/video/process-recordings` | Geriye uyumlu senkron mikrofon export endpoint'i |
+| `POST` | `/api/video/process` | Geriye uyumlu senkron AI TTS endpoint'i |
 | `GET` | `/api/video/preview/{video_id}` | Kaynak videoyu tarayıcıya aktarır |
 | `GET` | `/api/video/download/{output_video_id}` | İşlenmiş MP4’ü indirir |
 | `POST` | `/api/maintenance/cleanup?older_than_hours=24` | Eski runtime dosyalarını manuel temizler |
@@ -356,7 +366,7 @@ Kaynak video ve çıktılar kalıcı depolama garantisi olmadan tutulur. Product
 
 FFprobe çağrıları 30 saniye, FFmpeg export işlemleri 180 saniye ile sınırlıdır. Süre aşılırsa API kullanıcıya Türkçe hata döndürür ve sunucu çalışmaya devam eder.
 
-`process-recordings` isteği `multipart/form-data` kullanır:
+`/api/jobs/dubbing-recordings` ve geriye uyumlu `process-recordings` isteği `multipart/form-data` kullanır:
 
 - `video_id`: yükleme sonucundaki UUID
 - `timeline`: JSON string
@@ -364,6 +374,22 @@ FFprobe çağrıları 30 saniye, FFmpeg export işlemleri 180 saniye ile sınır
 - `recordings`: tekrarlanan ses dosyası alanları
 - `mute_original_audio`: `true` / `false`
 - `burn_subtitles`: `true` / `false`
+
+Job oluşturma yanıtı:
+
+```json
+{
+  "job_id": "0e2d38d0-5f8f-4bcb-b591-21bed88d74b1",
+  "status": "queued",
+  "progress": 0,
+  "message": "Mikrofon kayıtları export sırasına alındı.",
+  "output_video_id": null,
+  "download_url": null,
+  "error": null
+}
+```
+
+Frontend `GET /api/jobs/{job_id}` endpoint'ini bir saniyelik aralıklarla sorgular. Backend doğrulama, ses/altyazı hazırlığı, FFmpeg işleme ve çıktı kaydı tamamlandıkça `status`, `progress` ve `message` alanlarını günceller. `completed` durumunda `download_url`, `failed` durumunda kullanıcıya gösterilecek `error` döner.
 
 ## Kullanım akışı
 
@@ -373,8 +399,8 @@ FFprobe çağrıları 30 saniye, FFmpeg export işlemleri 180 saniye ile sınır
 4. Her satırda **Kaydı başlat** düğmesine basın; tarayıcı mikrofon iznini onaylayın.
 5. Kaydı dinleyin, gerekirse **Yeniden kaydet** ile değiştirin.
 6. Orijinal sesi kapatma ve altyazı seçeneklerini belirleyin.
-7. **Kendi Sesimle Videoyu Oluştur** düğmesine basın.
-8. Sonucu izleyin ve MP4 olarak indirin.
+7. **Kendi Sesimle Videoyu Oluştur** düğmesine basın; job durumu ve yüzdesini izleyin.
+8. Job tamamlandığında sonucu izleyin ve MP4 olarak indirin.
 
 AI modu için üstteki **AI ses** sekmesine geçip metin ve hazır stili seçin.
 
@@ -390,7 +416,7 @@ npm run lint
 npm run build
 ```
 
-Testler health, FFmpeg bulunabilirliği, video formatı, metin/stil validasyonu, timeline sınırları, multipart kayıt işleme, dosya temizliği ve FFmpeg kayıt geciktirme/miks komutunu kapsar. FFmpeg mevcutsa gerçek entegrasyon testi sentetik bir MP4 ile iki WebM/Opus kaydı üretir, altyazı gömer ve çıktıyı FFprobe ile doğrular; araçlar yoksa bu test atlanır. Mock testler komut ve uygulama kontrol akışını doğrular, gerçek test ise codec/filter binary'lerinin gerçekten çalıştığını kanıtlar.
+Testler health, FFmpeg bulunabilirliği, video formatı, metin/stil validasyonu, timeline sınırları, multipart kayıt işleme, job oluşturma/polling/completed/failed durumları, worker temizliği, dosya temizliği ve FFmpeg kayıt geciktirme/miks komutunu kapsar. FFmpeg mevcutsa gerçek entegrasyon testi sentetik bir MP4 ile iki WebM/Opus kaydı üretir, altyazı gömer ve çıktıyı FFprobe ile doğrular; araçlar yoksa bu test atlanır. Mock testler komut ve uygulama kontrol akışını doğrular, gerçek test ise codec/filter binary'lerinin gerçekten çalıştığını kanıtlar.
 
 Ayrıntılı manuel kontrol için [uçtan uca smoke-test rehberine](scripts/smoke_test.md) bakın. Telifsiz yerel test videosu kuralları ve örnek timeline için [demo klasörü açıklamasını](demo/README.md) kullanın.
 
@@ -450,15 +476,25 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] GitHub/LinkedIn/CV sunumu için README demo alanı
 - [ ] Gerçek ekran görüntüsü, GIF ve açık lisanslı demo videosu
 
+### Faz 4 — Job Queue ve Gerçek Progress
+
+- [x] Thread-safe memory job registry ve ayrı worker servis katmanı
+- [x] Mikrofon ve AI dublaj için job oluşturma endpoint'leri
+- [x] Queued, processing, completed ve failed durumları
+- [x] Backend işlem aşamalarına bağlı 0–100 progress ve Türkçe mesajlar
+- [x] Frontend status polling, gerçek progress çubuğu ve hata sonrası retry
+- [x] Eski senkron endpointlerle geriye uyumluluk
+- [ ] Redis/Celery veya RQ ile kalıcı dağıtık queue
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
 - [ ] Hazır, açık lisanslı demo video paketi
 - [ ] Kayıt ses seviyesi ve gürültü azaltma kontrolleri
 - [ ] Video trim ve dikey/yatay export presetleri
-- [ ] Arka plan job queue ve otomatik dosya temizliği
+- [ ] Kalıcı job queue ve otomatik dosya temizliği
 
-### Faz 4 — Müzik Pratik + Cover Studio
+### Faz 5 — Müzik Pratik + Cover Studio
 
 - [ ] Audio upload
 - [ ] Tempo ve pitch değiştirme
@@ -467,7 +503,7 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 
 Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vokal azalt, karaoke/pratik çıktısı al.”
 
-### Faz 5 — Kısa Video Altyazı + Dublaj
+### Faz 6 — Kısa Video Altyazı + Dublaj
 
 - [ ] Speech-to-text
 - [ ] Otomatik Türkçe altyazı
@@ -484,7 +520,8 @@ Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vok
 
 ## Bilinen sınırlar
 
-- MVP işlemleri senkrondur; yoğun kullanım için job queue yoktur.
+- Export istekleri arka plan job'ına alınır; ancak registry process belleğindedir. Backend yeniden başlarsa job durumları kaybolur ve birden fazla worker arasında paylaşılmaz.
+- BackgroundTasks tabanlı worker aynı uygulama sürecinde çalışır; yoğun production kullanımı için Redis/Celery veya RQ, retry politikası ve concurrency limiti gerekir.
 - Kaynak ve çıktı videoları otomatik temizlenmez; manuel cleanup endpoint'i cron/zamanlanmış görevle çağrılmalıdır.
 - Mikrofon formatı tarayıcıya göre WebM/Opus veya MP4/AAC olabilir; FFmpeg’in ilgili decoder ile derlenmiş olması gerekir.
 - Bu geliştirme ortamında FFmpeg kurulu değilse gerçek medya smoke testi yapılamaz.

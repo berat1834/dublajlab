@@ -27,8 +27,9 @@ import {
   processRecordings,
   processVideo,
   uploadVideo,
+  waitForJobCompletion,
 } from './lib/api'
-import type { TimelineLine, UploadResponse, VideoTemplate, VoiceStyle } from './types'
+import type { JobResponse, TimelineLine, UploadResponse, VideoTemplate, VoiceStyle } from './types'
 
 type Stage = 'idle' | 'uploading' | 'ready' | 'processing' | 'completed'
 type DubbingMode = 'my-voice' | 'ai-voice'
@@ -40,12 +41,6 @@ interface ErrorDetails {
   hint: string
   icon: typeof AlertCircle
 }
-
-const progressMessages = [
-  'Ses kayıtları zaman çizelgesine yerleştiriliyor…',
-  'Altyazılar videoya gömülüyor…',
-  'Mobil uyumlu MP4 hazırlanıyor…',
-]
 
 function formatBytes(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
@@ -101,6 +96,7 @@ function explainError(message: string): ErrorDetails {
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
+  const activeJobControllerRef = useRef<AbortController | null>(null)
   const [stage, setStage] = useState<Stage>('idle')
   const [mode, setMode] = useState<DubbingMode>('my-voice')
   const [sourceMode, setSourceMode] = useState<SourceMode>('upload')
@@ -115,7 +111,8 @@ function App() {
   const [outputUrl, setOutputUrl] = useState('')
   const [error, setError] = useState('')
   const [retryLabel, setRetryLabel] = useState('')
-  const [progressIndex, setProgressIndex] = useState(0)
+  const [jobProgress, setJobProgress] = useState(0)
+  const [jobMessage, setJobMessage] = useState('')
 
   const localPreviewUrl = useMemo(
     () => (selectedFile ? URL.createObjectURL(selectedFile) : ''),
@@ -130,14 +127,8 @@ function App() {
   }, [localPreviewUrl])
 
   useEffect(() => {
-    if (stage !== 'processing') return
-    const timer = window.setInterval(() => {
-      setProgressIndex((current) =>
-        Math.min(current + 1, progressMessages.length - 1),
-      )
-    }, 4500)
-    return () => window.clearInterval(timer)
-  }, [stage])
+    return () => activeJobControllerRef.current?.abort()
+  }, [])
 
   const clearFeedback = () => {
     setError('')
@@ -208,15 +199,20 @@ function App() {
   }
 
   const beginProcessing = () => {
+    activeJobControllerRef.current?.abort()
+    activeJobControllerRef.current = null
     setError('')
     setRetryLabel('')
     retryActionRef.current = null
     setOutputUrl('')
-    setProgressIndex(0)
+    setJobProgress(0)
+    setJobMessage('Export isteği hazırlanıyor.')
     setStage('processing')
   }
 
   const completeProcessing = (downloadUrl: string) => {
+    setJobProgress(100)
+    setJobMessage('Dublaj videosu hazır.')
     setOutputUrl(absoluteApiUrl(downloadUrl))
     setStage('completed')
   }
@@ -235,6 +231,30 @@ function App() {
     setRetryLabel('Export’u tekrar dene')
   }
 
+  const monitorJob = async (createdJob: JobResponse): Promise<JobResponse> => {
+    const controller = new AbortController()
+    activeJobControllerRef.current = controller
+    setJobProgress(createdJob.progress)
+    setJobMessage(createdJob.message)
+    try {
+      return await waitForJobCompletion(
+        createdJob.job_id,
+        (job) => {
+          setJobProgress(job.progress)
+          setJobMessage(job.message)
+        },
+        controller.signal,
+      )
+    } finally {
+      if (activeJobControllerRef.current === controller) {
+        activeJobControllerRef.current = null
+      }
+    }
+  }
+
+  const isPollingAbort = (value: unknown) =>
+    value instanceof DOMException && value.name === 'AbortError'
+
   const handleRecordingProcess = async (
     lines: TimelineLine[],
     recordings: Map<string, Blob>,
@@ -251,15 +271,20 @@ function App() {
       )
     beginProcessing()
     try {
-      const result = await processRecordings({
+      const createdJob = await processRecordings({
         videoId: upload.video_id,
         timeline: lines,
         recordings,
         muteOriginalAudio,
         burnSubtitles: shouldBurnSubtitles,
       })
-      completeProcessing(result.download_url)
+      const completedJob = await monitorJob(createdJob)
+      if (!completedJob.download_url) {
+        throw new Error('Job tamamlandı ancak çıktı bağlantısı alınamadı.')
+      }
+      completeProcessing(completedJob.download_url)
     } catch (processError) {
+      if (isPollingAbort(processError)) return
       failProcessing(processError, retry)
     }
   }
@@ -276,20 +301,27 @@ function App() {
     const retry = () => handleAiProcess()
     beginProcessing()
     try {
-      const result = await processVideo({
+      const createdJob = await processVideo({
         video_id: upload.video_id,
         text: text.trim(),
         voice_style: voiceStyle,
         mute_original_audio: muteOriginal,
         burn_subtitles: burnSubtitles,
       })
-      completeProcessing(result.download_url)
+      const completedJob = await monitorJob(createdJob)
+      if (!completedJob.download_url) {
+        throw new Error('Job tamamlandı ancak çıktı bağlantısı alınamadı.')
+      }
+      completeProcessing(completedJob.download_url)
     } catch (processError) {
+      if (isPollingAbort(processError)) return
       failProcessing(processError, retry)
     }
   }
 
   const reset = () => {
+    activeJobControllerRef.current?.abort()
+    activeJobControllerRef.current = null
     setStage('idle')
     setSourceMode('upload')
     setSelectedFile(null)
@@ -298,7 +330,8 @@ function App() {
     setSelectingTemplateId('')
     setText('')
     setOutputUrl('')
-    setProgressIndex(0)
+    setJobProgress(0)
+    setJobMessage('')
     clearFeedback()
   }
 
@@ -650,20 +683,25 @@ function App() {
 
             {stage === 'processing' && (
               <div className="mt-4 rounded-xl border border-lime/20 bg-lime/5 p-4">
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-lime/60">
-                  Tahmini işlem adımı
-                </p>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-lime/60">
+                    Gerçek job durumu
+                  </p>
+                  <span className="text-xs font-bold tabular-nums text-lime">%{jobProgress}</span>
+                </div>
                 <div className="flex items-center gap-3 text-sm font-semibold text-lime">
                   <LoaderCircle className="h-5 w-5 animate-spin" />
-                  {progressMessages[progressIndex]}
+                  {jobMessage || 'Export sırasına alınıyor…'}
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5">
                   <div
                     className="h-full rounded-full bg-lime transition-all duration-700"
-                    style={{ width: `${35 + progressIndex * 30}%` }}
+                    style={{ width: `${jobProgress}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-zinc-600">Bu sırada sayfayı kapatmayın.</p>
+                <p className="mt-2 text-xs text-zinc-600">
+                  Durum backend job servisinden düzenli olarak güncelleniyor.
+                </p>
               </div>
             )}
           </section>

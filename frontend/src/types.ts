@@ -20,6 +20,18 @@ export interface ProcessResponse {
   download_url: string
 }
 
+export type JobStatus = 'queued' | 'processing' | 'completed' | 'failed'
+
+export interface JobResponse {
+  job_id: string
+  status: JobStatus
+  progress: number
+  message: string
+  output_video_id: string | null
+  download_url: string | null
+  error: string | null
+}
+
 export interface ApiErrorBody {
   detail?: string
   errors?: Array<{ field: string; message: string }>
