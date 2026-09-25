@@ -6,7 +6,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 
-from backend.config import app_environment, maintenance_token
+from backend.config import app_environment, maintenance_token, public_demo_policy
 from backend.services.cleanup_service import CleanupService
 
 
@@ -41,12 +41,18 @@ def verify_maintenance_access(
 
 @router.post("/cleanup")
 async def cleanup_files(
-    older_than_hours: int = Query(default=24, ge=1, le=8760),
+    older_than_hours: int | None = Query(default=None, ge=1, le=8760),
     _: None = Depends(verify_maintenance_access),
 ) -> dict[str, int | str]:
+    policy = public_demo_policy()
+    effective_hours = (
+        older_than_hours
+        if older_than_hours is not None
+        else policy.media_ttl_hours if policy.enabled else 24
+    )
     result = await asyncio.to_thread(
         cleanup_service.cleanup_old_files,
-        older_than_hours,
+        effective_hours,
     )
     return {
         "status": "completed",

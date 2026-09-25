@@ -1,18 +1,24 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
+  ArrowRight,
   Bot,
   Check,
   CheckCircle2,
+  Clock3,
   Download,
   Film,
+  Layers,
   LoaderCircle,
   Mic2,
+  Play,
   RefreshCw,
   RotateCcw,
   ServerCrash,
+  ShieldAlert,
   ShieldCheck,
   Sparkles,
+  Subtitles,
   Video,
   WandSparkles,
 } from 'lucide-react'
@@ -23,13 +29,21 @@ import { UploadZone } from './components/UploadZone'
 import { VoiceCards } from './components/VoiceCards'
 import {
   absoluteApiUrl,
+  fetchDemoPolicy,
   fetchTemplate,
   processRecordings,
   processVideo,
   uploadVideo,
   waitForJobCompletion,
 } from './lib/api'
-import type { JobResponse, TimelineLine, UploadResponse, VideoTemplate, VoiceStyle } from './types'
+import type {
+  DemoPolicy,
+  JobResponse,
+  TimelineLine,
+  UploadResponse,
+  VideoTemplate,
+  VoiceStyle,
+} from './types'
 
 type Stage = 'idle' | 'uploading' | 'ready' | 'processing' | 'completed'
 type DubbingMode = 'my-voice' | 'ai-voice'
@@ -61,6 +75,25 @@ function templateFilename(template: VideoTemplate) {
 
 function explainError(message: string): ErrorDetails {
   const normalized = message.toLocaleLowerCase('tr-TR')
+  if (normalized.includes('günlük export sınırı') || normalized.includes('çok fazla istek')) {
+    return {
+      title: 'Günlük demo limiti doldu',
+      message,
+      hint: 'Public demo kotası UTC gün başlangıcında yenilenir. Daha sonra tekrar deneyin.',
+      icon: ShieldCheck,
+    }
+  }
+  if (
+    normalized.includes('en fazla')
+    && (normalized.includes('mb') || normalized.includes('saniye'))
+  ) {
+    return {
+      title: 'Public demo limiti aşıldı',
+      message,
+      hint: 'Daha küçük veya daha kısa bir video/kayıt seçip yeniden deneyin.',
+      icon: AlertCircle,
+    }
+  }
   if (normalized.includes('sunucuya ulaşılamadı') || normalized.includes('backend')) {
     return {
       title: 'Backend bağlantısı kurulamadı',
@@ -93,6 +126,22 @@ function explainError(message: string): ErrorDetails {
   }
 }
 
+/* ── Mock preview lines used in the hero & empty editor state ── */
+const MOCK_LINES = [
+  { text: 'Toplantı beş dakika sürecek dediler…', time: '0:00 – 0:03' },
+  { text: 'Tüm gün süren o toplantı…', time: '0:03 – 0:06' },
+  { text: 'Neyse, kahve molası…', time: '0:06 – 0:09' },
+]
+
+/* ── Feature strip items ── */
+const FEATURES = [
+  { icon: Mic2, label: 'Kendi sesim' },
+  { icon: Layers, label: 'Timeline replik' },
+  { icon: Video, label: 'MP4 export' },
+  { icon: Subtitles, label: 'Altyazı gömme' },
+  { icon: ShieldCheck, label: 'Telif bilinci' },
+] as const
+
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
@@ -113,6 +162,7 @@ function App() {
   const [retryLabel, setRetryLabel] = useState('')
   const [jobProgress, setJobProgress] = useState(0)
   const [jobMessage, setJobMessage] = useState('')
+  const [demoPolicy, setDemoPolicy] = useState<DemoPolicy | null>(null)
 
   const localPreviewUrl = useMemo(
     () => (selectedFile ? URL.createObjectURL(selectedFile) : ''),
@@ -128,6 +178,20 @@ function App() {
 
   useEffect(() => {
     return () => activeJobControllerRef.current?.abort()
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void fetchDemoPolicy()
+      .then((policy) => {
+        if (active) setDemoPolicy(policy)
+      })
+      .catch(() => {
+        // Upload/process requests already surface backend connectivity errors.
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
   const clearFeedback = () => {
@@ -176,7 +240,7 @@ function App() {
         setStage('uploading')
         const mediaResponse = await fetch(templateAssetUrl(template.video_url))
         if (!mediaResponse.ok) {
-          throw new Error('Template video dosyası yüklenemedi. Dosya yolunu ve lisans metadata’sını kontrol edin.')
+          throw new Error('Template video dosyası yüklenemedi. Dosya yolunu ve lisans metadata\u2019sını kontrol edin.')
         }
         const mediaBlob = await mediaResponse.blob()
         const mediaFile = new File([mediaBlob], templateFilename(template), {
@@ -228,7 +292,7 @@ function App() {
         : 'Video işlenirken bir hata oluştu.',
     )
     retryActionRef.current = retryAction
-    setRetryLabel('Export’u tekrar dene')
+    setRetryLabel('Export\u2019u tekrar dene')
   }
 
   const monitorJob = async (createdJob: JobResponse): Promise<JobResponse> => {
@@ -368,42 +432,128 @@ function App() {
   const projectReady = Boolean(upload || selectedTemplate)
 
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 lg:py-10">
+    <main className="min-h-screen px-3 py-5 sm:px-6 sm:py-6 lg:py-10">
       <div className="mx-auto max-w-[1440px]">
-        <header className="mb-7 border-b border-white/10 pb-7">
+        {/* ═══════════════════════════ HERO SECTION ═══════════════════════════ */}
+        <header className="mb-8 border-b border-white/10 pb-8">
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-            <div>
+            <div className="min-w-0">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-lime/20 bg-lime/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-lime">
-                <Sparkles className="h-3.5 w-3.5" /> Kendi sesinle dublaj stüdyosu
+                <Sparkles className="h-3.5 w-3.5" /> Tarayıcı tabanlı dublaj stüdyosu
               </div>
-              <h1 className="text-4xl font-extrabold tracking-[-0.045em] text-white sm:text-5xl">
-                Dublaj<span className="text-lime">Lab</span>
+              <h1 className="break-words text-[1.85rem] font-black leading-[1.08] tracking-[-0.035em] text-white sm:text-5xl sm:tracking-[-0.04em] lg:text-[3.4rem]">
+                Kendi sesinle komik
+                <br className="hidden sm:block" />{' '}
+                <span className="bg-gradient-to-r from-lime via-lime to-emerald-300 bg-clip-text text-transparent">
+                  dublaj videoları
+                </span>{' '}
+                oluştur
               </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-zinc-400 sm:text-lg">
-                Videonu yükle, sahneleri kendi sesinle canlandır ve paylaşmaya hazır
-                MP4’ünü birkaç adımda oluştur.
+              <p className="mt-4 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg">
+                Hazır sahne seç ya da kendi videonu yükle, repliği oku,{' '}
+                <span className="font-semibold text-zinc-300">altyazılı MP4</span> olarak indir.
               </p>
-            </div>
-            <ol className="grid grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-panel/80 text-xs">
-              {[
-                ['1', 'Sahneyi seç', projectReady],
-                ['2', 'Replikleri kaydet', stage === 'processing' || stage === 'completed'],
-                ['3', 'MP4’ü indir', stage === 'completed'],
-              ].map(([number, label, complete], index) => (
-                <li
-                  key={String(number)}
-                  className={`flex items-center gap-2 px-3 py-3 sm:px-4 ${index ? 'border-l border-white/10' : ''}`}
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => changeSourceMode('templates')}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] sm:w-auto"
                 >
-                  <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full font-bold ${complete ? 'bg-lime text-ink' : 'bg-white/5 text-zinc-500'}`}>
-                    {complete ? <Check className="h-3.5 w-3.5" /> : number}
-                  </span>
-                  <span className="hidden whitespace-nowrap text-zinc-400 sm:block">{label}</span>
-                </li>
-              ))}
-            </ol>
+                  <Play className="h-4 w-4" /> Hazır sahne ile başla
+                </button>
+                <button
+                  type="button"
+                  onClick={() => changeSourceMode('upload')}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:bg-white/10 sm:w-auto"
+                >
+                  Kendi videonu yükle <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* ── Steps indicator + mock preview ── */}
+            <div className="flex w-full flex-col items-stretch gap-4 lg:w-auto lg:items-end">
+              <ol className="grid w-full grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-panel/80 text-xs lg:w-auto">
+                {[
+                  ['1', 'Sahneyi seç', projectReady],
+                  ['2', 'Replikleri kaydet', stage === 'processing' || stage === 'completed'],
+                  ['3', 'MP4\u2019ü indir', stage === 'completed'],
+                ].map(([number, label, complete], index) => (
+                  <li
+                    key={String(number)}
+                    className={`flex min-w-0 flex-col items-center justify-center gap-1.5 overflow-hidden px-1.5 py-3 text-center sm:flex-row sm:gap-2 sm:px-4 ${index ? 'border-l border-white/10' : ''}`}
+                  >
+                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full font-bold ${complete ? 'bg-lime text-ink' : 'bg-white/5 text-zinc-500'}`}>
+                      {complete ? <Check className="h-3.5 w-3.5" /> : number}
+                    </span>
+                    <span className="w-full break-words text-[10px] leading-3 text-zinc-400 sm:w-auto sm:whitespace-nowrap sm:text-xs sm:leading-normal">{label as string}</span>
+                  </li>
+                ))}
+              </ol>
+
+              {/* Mock preview card — visible only before source is chosen */}
+              {!projectReady && stage === 'idle' && (
+                <div className="w-full max-w-sm self-center overflow-hidden rounded-2xl border border-white/10 bg-surface/80 shadow-card lg:w-72 lg:self-auto">
+                  <div className="relative flex aspect-video items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-900">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-full border-2 border-lime/30 bg-lime/10 grid place-items-center">
+                        <Play className="h-5 w-5 text-lime" />
+                      </div>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
+                      <p className="text-[10px] font-bold text-lime">Çıktı örneği</p>
+                      <p className="text-[10px] text-zinc-400">Repliğini oku → MP4 indir</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 p-3">
+                    {MOCK_LINES.map((line, i) => (
+                      <div key={i} className="flex items-center gap-2 rounded-lg bg-white/[0.03] px-2.5 py-1.5">
+                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-violet/15 text-[9px] font-bold text-violet">
+                          {i + 1}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-zinc-400">{line.text}</span>
+                        <span className="shrink-0 text-[9px] tabular-nums text-zinc-500">{line.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
+        {/* ═══════════════════════════ FEATURE STRIP ═══════════════════════════ */}
+        <div className="mb-6 flex flex-wrap justify-center gap-2 sm:gap-3">
+          {FEATURES.map(({ icon: Icon, label }) => (
+            <span
+              key={label}
+              className="feature-strip-item inline-flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.025] px-3.5 py-2 text-xs font-semibold text-zinc-400 transition hover:border-white/15 hover:text-zinc-200"
+            >
+              <Icon className="h-3.5 w-3.5 text-lime" /> {label}
+            </span>
+          ))}
+        </div>
+
+        {/* ═══════════════════════════ DEMO POLICY BANNER ═══════════════════════════ */}
+        {demoPolicy?.enabled && (
+          <aside className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-sm text-amber-50">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+            <div>
+              <p className="font-bold">Public demo sınırları etkin</p>
+              <p className="mt-1 leading-6 text-zinc-400">
+                En fazla {demoPolicy.max_file_size_mb} MB / {demoPolicy.max_video_duration_seconds} saniye video,
+                replik başına {demoPolicy.max_recording_size_mb} MB kayıt ve IP başına günde{' '}
+                {demoPolicy.max_exports_per_ip_per_day} export kullanılabilir.
+              </p>
+              <p className="mt-1 text-xs leading-5 text-amber-200/80">
+                Bu public demo dosyalarınızı kalıcı olarak saklamaz. Medya temizleme politikası{' '}
+                {demoPolicy.media_ttl_hours} saatliktir.
+              </p>
+            </div>
+          </aside>
+        )}
+
+        {/* ═══════════════════════════ ERROR BANNER ═══════════════════════════ */}
         {errorDetails && (
           <div
             role="alert"
@@ -414,8 +564,8 @@ function App() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-red-200">{errorDetails.title}</p>
-              <p className="mt-1 text-sm text-red-100/90">{errorDetails.message}</p>
-              <p className="mt-1 text-xs leading-5 text-zinc-500">{errorDetails.hint}</p>
+              <p className="mt-1 break-words text-sm text-red-100/90">{errorDetails.message}</p>
+              <p className="mt-1 break-words text-xs leading-5 text-zinc-400">{errorDetails.hint}</p>
             </div>
             {retryLabel && (
               <button
@@ -429,11 +579,13 @@ function App() {
           </div>
         )}
 
+        {/* ═══════════════════════════ MAIN TWO-COLUMN LAYOUT ═══════════════════════════ */}
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-          <section className="h-fit rounded-2xl border border-white/10 bg-panel/95 p-4 shadow-2xl shadow-black/25 sm:p-5 lg:sticky lg:top-5">
+          {/* ── LEFT: Source panel ── */}
+          <section className="glass-panel h-fit rounded-2xl border border-white/10 p-4 shadow-card sm:p-5 lg:sticky lg:top-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
                   01 / Kaynak video
                 </p>
                 <h2 className="mt-1 text-xl font-bold">Sahneni seç</h2>
@@ -471,7 +623,12 @@ function App() {
 
             {sourceMode === 'upload' ? (
               !selectedFile ? (
-                <UploadZone onFile={handleFile} disabled={busy} />
+                <UploadZone
+                  onFile={handleFile}
+                  disabled={busy}
+                  maxFileSizeMb={demoPolicy?.enabled ? demoPolicy.max_file_size_mb : 50}
+                  maxDurationSeconds={demoPolicy?.enabled ? demoPolicy.max_video_duration_seconds : 60}
+                />
               ) : (
                 <div>
                   <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black shadow-inner">
@@ -493,11 +650,11 @@ function App() {
                       </div>
                     )}
                   </div>
-                  <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-xs">
+                  <div className="mt-3 flex flex-col items-start gap-1.5 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-xs sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                     <span className="min-w-0 truncate font-medium text-zinc-300">
                       {selectedFile.name}
                     </span>
-                    <span className="shrink-0 text-zinc-600">
+                    <span className="shrink-0 text-zinc-500">
                       {upload
                         ? `${upload.duration_seconds.toFixed(1)} sn · ${formatBytes(upload.size_bytes)}`
                         : formatBytes(selectedFile.size)}
@@ -514,7 +671,6 @@ function App() {
               <TemplateGallery
                 selectingId={selectingTemplateId}
                 onSelect={(templateId) => void handleTemplateSelect(templateId)}
-                onError={showEditorError}
               />
             ) : (
               <div>
@@ -530,27 +686,29 @@ function App() {
                     />
                   </div>
                 ) : (
-                  <div className="grid aspect-video place-items-center rounded-xl border border-dashed border-amber-300/20 bg-amber-300/[0.035] p-6 text-center">
+                  <div className="grid aspect-video place-items-center rounded-xl border border-dashed border-violet/25 bg-violet/[0.04] p-6 text-center">
                     <div>
-                      <Film className="mx-auto h-8 w-8 text-amber-200/60" />
-                      <p className="mt-3 text-sm font-bold text-amber-100">Demo video dosyası eklenmedi</p>
-                      <p className="mt-1 text-xs leading-5 text-zinc-500">
-                        Timeline ve kayıt akışını metadata üzerinden deneyebilirsin.
+                      <Film className="mx-auto h-8 w-8 text-violet/60" />
+                      <p className="mt-3 text-sm font-bold text-zinc-300">Demo medya yakında</p>
+                      <p className="mt-1 text-xs leading-5 text-zinc-400">
+                        Replikleri düzenle ve mikrofon kayıt akışını dene.
+                        <br />
+                        Kendi videonu bağlayarak tam export alabilirsin.
                       </p>
                     </div>
                   </div>
                 )}
                 <div className="mt-3 rounded-xl border border-white/8 bg-white/[0.025] p-3">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-bold text-white">{selectedTemplate.title}</p>
+                    <div className="min-w-0">
+                      <p className="break-words text-sm font-bold text-white">{selectedTemplate.title}</p>
                       <p className="mt-1 text-xs text-zinc-500">
                         {selectedTemplate.category} · {selectedTemplate.duration_seconds.toFixed(1)} sn · {selectedTemplate.lines.length} replik
                       </p>
                     </div>
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-lime" />
                   </div>
-                  <p className="mt-3 text-[11px] leading-5 text-zinc-500">
+                  <p className="mt-3 break-all text-[11px] leading-5 text-zinc-400">
                     Lisans: {selectedTemplate.license}<br />
                     Kaynak: {selectedTemplate.source}
                   </p>
@@ -559,15 +717,16 @@ function App() {
             )}
           </section>
 
-          <section className="rounded-2xl border border-white/10 bg-panel/95 p-4 shadow-2xl shadow-black/25 sm:p-5">
+          {/* ── RIGHT: Editor panel ── */}
+          <section className="glass-panel rounded-2xl border border-white/10 p-4 shadow-card sm:p-5">
             <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-600">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
                   02 / Dublaj
                 </p>
                 <h2 className="mt-1 text-xl font-bold">Sahneyi seslendir</h2>
               </div>
-              <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1 text-xs font-semibold">
+              <div className="grid w-full grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1 text-xs font-semibold sm:w-auto">
                 <button
                   type="button"
                   onClick={() => {
@@ -594,19 +753,40 @@ function App() {
             </div>
 
             {!projectReady ? (
-              <div className="grid min-h-80 place-items-center rounded-2xl border border-dashed border-white/10 bg-black/10 px-6 text-center">
-                <div className="max-w-sm">
-                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/[0.03] text-zinc-600">
+              <div className="grid min-h-72 place-items-center rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-6 text-center sm:min-h-80 sm:px-6">
+                <div className="min-w-0 max-w-sm">
+                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/[0.03] text-zinc-500">
                     <Video className="h-7 w-7" />
                   </span>
-                  <p className="mt-4 font-bold text-zinc-300">Önce bir kaynak seç</p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600">
-                    Kendi videonu yüklediğinde veya hazır bir sahne seçtiğinde replik zaman çizelgesi burada oluşacak.
+                  <p className="mt-4 text-lg font-bold text-zinc-300">Önce bir kaynak seç</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">
+                    Hazır sahne seçtiğinde veya videonu yüklediğinde replik zaman çizelgesi burada oluşacak.
                   </p>
-                  <div className="mt-5 grid grid-cols-3 gap-2 text-[11px] text-zinc-600">
-                    <span className="rounded-lg bg-white/[0.03] px-2 py-2">Metni düzenle</span>
-                    <span className="rounded-lg bg-white/[0.03] px-2 py-2">Sesini kaydet</span>
-                    <span className="rounded-lg bg-white/[0.03] px-2 py-2">MP4 oluştur</span>
+                  {/* Mini preview lines */}
+                  <div className="mt-5 space-y-2">
+                    {MOCK_LINES.map((line, i) => (
+                      <div key={i} className="flex min-w-0 items-center gap-2 rounded-lg border border-white/[0.04] bg-white/[0.025] px-3 py-2 text-left">
+                        <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-violet/10 text-[9px] font-bold text-violet">{i + 1}</span>
+                        <span className="min-w-0 flex-1 break-words text-xs text-zinc-400">{line.text}</span>
+                        <Clock3 className="h-3 w-3 shrink-0 text-zinc-500" />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex flex-col justify-center gap-2 sm:flex-row">
+                    <button
+                      type="button"
+                      onClick={() => changeSourceMode('templates')}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-violet/15 px-3 py-2 text-xs font-bold text-violet transition hover:bg-violet/25"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" /> Hazır sahne seç
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => changeSourceMode('upload')}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs font-bold text-zinc-400 transition hover:bg-white/10"
+                    >
+                      Video yükle
+                    </button>
                   </div>
                 </div>
               </div>
@@ -699,7 +879,7 @@ function App() {
                     style={{ width: `${jobProgress}%` }}
                   />
                 </div>
-                <p className="mt-2 text-xs text-zinc-600">
+                <p className="mt-2 text-xs text-zinc-500">
                   Durum backend job servisinden düzenli olarak güncelleniyor.
                 </p>
               </div>
@@ -707,8 +887,9 @@ function App() {
           </section>
         </div>
 
+        {/* ═══════════════════════════ OUTPUT SECTION ═══════════════════════════ */}
         {outputUrl && (
-          <section className="mt-5 overflow-hidden rounded-2xl border border-lime/25 bg-panel/95 shadow-glow">
+          <section className="mt-5 overflow-hidden rounded-2xl border border-lime/25 bg-panel/95 shadow-glow-lg">
             <div className="flex flex-col justify-between gap-4 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-lime text-ink">
@@ -724,7 +905,7 @@ function App() {
               <a
                 href={outputUrl}
                 download
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-extrabold text-ink transition hover:bg-[#d5ff78]"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-extrabold text-ink transition hover:bg-[#d5ff78] shadow-glow"
               >
                 <Download className="h-4 w-4" /> MP4 indir
               </a>
@@ -762,18 +943,35 @@ function App() {
           </section>
         )}
 
-        <aside className="mt-5 flex items-start gap-3 rounded-2xl border border-white/8 bg-white/[0.025] p-4 text-xs leading-5 text-zinc-500">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-violet" />
-          <p>
-            Bu uygulama eğlence, parodi ve portföy amaçlıdır. Gerçek kişileri taklit
-            etmek, yanıltıcı içerik üretmek veya telifli içerikleri izinsiz dağıtmak
-            kullanıcının sorumluluğundadır. Mikrofon kayıtları yalnızca video işlenirken
-            kullanılır ve işlem sonrası geçici sunucu kopyaları silinir.
-          </p>
+        {/* ═══════════════════════════ ETHICS NOTICE ═══════════════════════════ */}
+        <aside className="mt-8 rounded-2xl border border-white/[0.06] bg-gradient-to-r from-white/[0.02] to-transparent p-5">
+          <div className="flex items-start gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-violet/10 text-violet">
+              <ShieldAlert className="h-[18px] w-[18px]" />
+            </span>
+            <div>
+              <p className="text-xs font-bold text-zinc-300">Etik ve telif bilinci</p>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">
+                Bu uygulama eğlence, parodi ve portföy amaçlıdır. Gerçek kişileri taklit
+                etmek, yanıltıcı içerik üretmek veya telifli içerikleri izinsiz dağıtmak
+                kullanıcının sorumluluğundadır. Mikrofon kayıtları yalnızca video işlenirken
+                kullanılır ve işlem sonrası geçici sunucu kopyaları silinir.
+              </p>
+            </div>
+          </div>
         </aside>
 
-        <footer className="py-8 text-center text-xs text-zinc-700">
-          Kendi videonu kullan · Kimseyi taklit etme · Kendi sesinle üret
+        {/* ═══════════════════════════ FOOTER ═══════════════════════════ */}
+        <footer className="mt-6 border-t border-white/[0.06] pt-6 pb-4">
+          <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+            <p className="text-xs font-bold text-zinc-500">
+              Dublaj<span className="text-lime/50">Lab</span>{' '}
+              <span className="font-normal text-zinc-500">— Kendi sesinle dublaj stüdyosu</span>
+            </p>
+            <p className="text-[10px] text-zinc-500">
+              Kendi videonu kullan · Kimseyi taklit etme · Kendi sesinle üret
+            </p>
+          </div>
         </footer>
       </div>
     </main>

@@ -26,6 +26,16 @@ class HealthResponse(BaseModel):
     version: str
 
 
+class DemoPolicyResponse(BaseModel):
+    enabled: bool
+    max_file_size_mb: int
+    max_video_duration_seconds: float
+    max_recording_size_mb: int
+    max_exports_per_ip_per_day: int
+    media_ttl_hours: int
+    files_are_temporary: bool = True
+
+
 class UploadResponse(BaseModel):
     video_id: str
     original_filename: str

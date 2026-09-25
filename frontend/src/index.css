@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -21,13 +21,15 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
-    radial-gradient(circle at 15% 0%, rgba(199, 244, 100, 0.055), transparent 30rem),
-    radial-gradient(circle at 85% 10%, rgba(167, 139, 250, 0.05), transparent 28rem),
-    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(199, 244, 100, 0.07), transparent),
+    radial-gradient(ellipse 70% 45% at 85% 8%, rgba(167, 139, 250, 0.065), transparent),
+    radial-gradient(ellipse 50% 35% at 50% 60%, rgba(139, 92, 246, 0.03), transparent),
+    linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
     #09090b;
-  background-size: 36px 36px;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px, 100% 100%;
 }
 
 button,
@@ -65,6 +67,68 @@ video {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.14);
   background-clip: padding-box;
+}
+
+/* ── Card & panel glass effect ── */
+
+.glass-panel {
+  background: linear-gradient(135deg, rgba(17, 17, 21, 0.95), rgba(17, 17, 21, 0.85));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* ── Template thumbnail placeholder gradients ── */
+
+.thumb-comedy {
+  background: linear-gradient(135deg, #fbbf24 0%, #f97316 50%, #ef4444 100%);
+}
+
+.thumb-drama {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+}
+
+.thumb-product {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 50%, #6366f1 100%);
+}
+
+.thumb-scifi {
+  background: linear-gradient(135deg, #10b981 0%, #06b6d4 50%, #3b82f6 100%);
+}
+
+.thumb-default {
+  background: linear-gradient(135deg, #71717a 0%, #52525b 50%, #3f3f46 100%);
+}
+
+/* ── Feature strip highlight ── */
+
+.feature-strip-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-strip-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.035), transparent 80%);
+  pointer-events: none;
+}
+
+@media (max-width: 639px) {
+  body {
+    background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, 100% 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

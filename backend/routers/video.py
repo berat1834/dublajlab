@@ -5,14 +5,15 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import TypeAdapter, ValidationError
 
-from backend.config import MAX_VIDEO_DURATION
+from backend.config import active_max_video_duration_seconds
 from backend.models import DubbingLine, ProcessRequest, ProcessResponse, UploadResponse
 from backend.services.ffmpeg_service import FFmpegService, MediaProcessingError
 from backend.services.file_storage import FileStorageService
+from backend.services.rate_limit_service import enforce_public_demo_export_limit
 from backend.services.subtitle_service import SubtitleService
 from backend.services.tts_service import TTSService
 
@@ -38,13 +39,14 @@ def ensure_media_tools() -> None:
 @router.post("/upload", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
 async def upload_video(file: UploadFile = File(...)) -> UploadResponse:
     ensure_media_tools()
+    max_duration = active_max_video_duration_seconds()
     video_id, path, size, original_filename = await storage_service.save_upload(file)
     try:
         info = await asyncio.to_thread(ffmpeg_service.probe, path)
-        if info.duration_seconds > MAX_VIDEO_DURATION:
+        if info.duration_seconds > max_duration:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="Video süresi en fazla 60 saniye olabilir.",
+                detail=f"Video süresi en fazla {max_duration:g} saniye olabilir.",
             )
         storage_service.save_video_metadata(
             video_id,
@@ -73,10 +75,11 @@ async def upload_video(file: UploadFile = File(...)) -> UploadResponse:
 
 
 @router.post("/process", response_model=ProcessResponse)
-async def process_video(payload: ProcessRequest) -> ProcessResponse:
+async def process_video(request: Request, payload: ProcessRequest) -> ProcessResponse:
     ensure_media_tools()
     video_path = storage_service.get_video_path(payload.video_id)
     metadata = storage_service.get_video_metadata(payload.video_id)
+    enforce_public_demo_export_limit(request)
     job_id = str(uuid4())
     audio_path = storage_service.audio_path(job_id)
     subtitle_path = storage_service.subtitle_path(job_id)
@@ -130,6 +133,7 @@ async def process_video(payload: ProcessRequest) -> ProcessResponse:
 
 @router.post("/process-recordings", response_model=ProcessResponse)
 async def process_recordings(
+    request: Request,
     video_id: str = Form(...),
     timeline: str = Form(...),
     recording_ids: str = Form(...),
@@ -178,6 +182,7 @@ async def process_recordings(
                 detail="Replik zamanları video süresini aşamaz.",
             )
 
+    enforce_public_demo_export_limit(request)
     job_id = str(uuid4())
     subtitle_path = storage_service.subtitle_path(job_id)
     output_id, output_path = storage_service.new_output_path()

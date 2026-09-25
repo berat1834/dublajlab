@@ -15,12 +15,15 @@ DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı
 
 - [Kurulum](#backend-kurulumu)
 - [Docker ile çalıştırma](#docker-ile-local-production-kurulumu)
+- [Public Demo Deployment](#public-demo-deployment)
+- [Public demo güvenliği](#public-demo-güvenliği)
 - [Mimari](#mimari)
 - [API endpointleri](#api-endpointleri)
 - [Test ve kalite kontrolleri](#test-ve-kalite-kontrolleri)
 - [Manuel smoke test](scripts/smoke_test.md)
 - [Demo ve portföy rehberi](docs/DEMO_GUIDE.md)
 - [Teknik not](docs/TEKNIK_NOT.md)
+- [Proje Raporu ve Durumu](RAPOR.md)
 - [Roadmap](#roadmap)
 
 ## Demo amacı
@@ -41,23 +44,37 @@ Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının
 
 **Live demo:** Henüz herkese açık bir deployment bulunmuyor. Yerel demo için [kurulum](#backend-kurulumu) ve [demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
 
-Portföy görselleri için sabit hedefler hazırdır:
+### Screenshots
 
-| İçerik | Dosya yolu | Durum |
-| --- | --- | --- |
-| Masaüstü editör | `docs/assets/dublajlab-editor.webp` | Çekim bekliyor |
-| Template galerisi | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
-| Mobil demo GIF | `docs/assets/dublajlab-mobile.gif` | Kayıt bekliyor |
+GitHub, LinkedIn ve CV sunumunda kullanılacak beş temel ekran için sabit placeholder yolları hazırdır. Gerçek dosyalar henüz repoya eklenmediği için bağlantılar bozuk görsel oluşturmaması amacıyla aşağıda yorum içinde tutulur.
 
-[Görsel hazırlama kuralları ve dosya manifesti](docs/assets/README.md)
+| Ekran | Portföyde göstereceği değer | Placeholder yolu | Durum |
+| --- | --- | --- | --- |
+| Landing / hero | Ürün vaadi, üç adım, CTA ve çıktı mock'u | `docs/assets/dublajlab-landing-hero.webp` | Çekim bekliyor |
+| Template gallery | CSS placeholder kartlar, kategori, süre, replik ve zorluk bilgileri | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
+| Recording timeline | Zamanlanmış replikler, mikrofon kaydı ve kayıt ilerlemesi | `docs/assets/dublajlab-recording-timeline.webp` | Çekim bekliyor |
+| Export result | Sonuç video önizlemesi, MP4 indirme ve yeniden deneme aksiyonları | `docs/assets/dublajlab-export-result.webp` | Çekim bekliyor |
+| Mobile view | Tek kolon hero, kaynak seçimi ve kayıt paneli | `docs/assets/dublajlab-mobile.webp` | Çekim bekliyor |
 
-Gerçek dosyalar eklendiğinde aşağıdaki hazır Markdown satırları yorumdan çıkarılabilir:
+```markdown
+<!-- ![DublajLab landing ve hero](docs/assets/dublajlab-landing-hero.webp) -->
+<!-- ![DublajLab hazır sahne galerisi](docs/assets/dublajlab-template-gallery.webp) -->
+<!-- ![DublajLab replik kayıt timeline'ı](docs/assets/dublajlab-recording-timeline.webp) -->
+<!-- ![DublajLab MP4 export sonucu](docs/assets/dublajlab-export-result.webp) -->
+<!-- ![DublajLab mobil görünümü](docs/assets/dublajlab-mobile.webp) -->
+```
 
-<!-- ![DublajLab masaüstü editörü](docs/assets/dublajlab-editor.webp) -->
-<!-- ![DublajLab template galerisi](docs/assets/dublajlab-template-gallery.webp) -->
-<!-- ![DublajLab mobil demo akışı](docs/assets/dublajlab-mobile.gif) -->
+### Demo GIF
 
-Görseller yalnızca proje sahibinin kendi videosu veya doğrulanmış açık lisanslı/telifsiz bir kaynakla hazırlanmalıdır. Telifli film, dizi, meme ya da sosyal medya klibi repoya eklenmemelidir.
+Kısa demo GIF'i kaynak seçimi → replik kaydı → export sonucu akışını göstermelidir. Hedef yol:
+
+```markdown
+<!-- ![DublajLab uçtan uca demo akışı](docs/assets/dublajlab-demo.gif) -->
+```
+
+GIF 15 saniyeden kısa, okunabilir ve tekrarlı izlemeye uygun hazırlanmalıdır. Ayrıntılı kadraj, boyut, optimizasyon ve yayın öncesi kontrol listesi için [görsel hazırlama kuralları ve dosya manifestine](docs/assets/README.md) bakın.
+
+> Telif güvenliği: Çekimlerde yalnızca proje sahibinin ürettiği medya veya lisansı doğrulanmış açık lisanslı/telifsiz içerik kullanılmalıdır. Film, dizi, reklam, müzik klibi, meme veya sosyal medya kesiti repoya eklenmemelidir. Faz 7 template thumbnail'ları gerçek görsel değil, CSS ile üretilmiş güvenli placeholder'lardır.
 
 ## Hazır video / template sistemi
 
@@ -128,7 +145,8 @@ Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman
 - Yalnızca kullanma hakkına sahip olduğunuz videoları yükleyin.
 - Ünlü/gerçek kişi ses klonlama, deepfake ve sosyal medya bağlantısından video indirme desteklenmez.
 - Mikrofon kayıtları frontend’de blob olarak tutulur, export sırasında backend’e gönderilir ve FFmpeg işlemi bittiğinde geçici sunucu kopyaları silinir.
-- Kalıcı çıktılar ve kaynak videolar MVP’de `backend/data` altında tutulur; süre bazlı temizlik roadmap kapsamındadır.
+- Kaynak ve çıktı dosyaları local modda `backend/data`, Docker modunda media volume içinde tutulur; kalıcı saklama garantisi verilmez.
+- Public demo modunda TTL cleanup politikası gösterilir ve dosyalar harici cron/zamanlanmış görevle düzenli temizlenmelidir.
 
 ## Teknoloji yığını
 
@@ -147,7 +165,8 @@ Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman
 flowchart LR
     Browser[React + MediaRecorder] -->|Video / timeline / kayıtlar| API[FastAPI]
     API --> Validation[Dosya ve timeline doğrulama]
-    Validation --> Registry[Memory job registry]
+    Validation --> Limit[Public demo IP / medya limitleri]
+    Limit --> Registry[Memory job registry]
     Registry --> Worker[Arka plan dubbing worker]
     Browser -->|GET /api/jobs/job_id polling| Registry
     Worker --> FFmpeg[FFmpeg / FFprobe]
@@ -177,6 +196,7 @@ Backend router'ları HTTP sözleşmesini; servisler ise job registry/worker, dos
 │   │   ├── file_storage.py
 │   │   ├── subtitle_service.py
 │   │   ├── cleanup_service.py
+│   │   ├── rate_limit_service.py
 │   │   ├── job_service.py
 │   │   ├── template_service.py
 │   │   └── tts_service.py
@@ -193,10 +213,14 @@ Backend router'ları HTTP sözleşmesini; servisler ise job registry/worker, dos
 │   │   ├── lib/api.ts
 │   │   └── App.tsx
 │   └── package.json
+├── docs/
+├── demo/
 ├── docker-compose.yml
 ├── .dockerignore
 ├── .env.docker.example
-└── README.md
+├── README.md
+├── RAPOR.md
+└── DEPLOYMENT_PLAN.md
 ```
 
 ## Gereksinimler
@@ -323,6 +347,8 @@ docker compose --env-file .env.docker ps
 
 3000 veya 8000 portu başka bir uygulama tarafından kullanılıyorsa `.env.docker` içine örneğin `FRONTEND_PORT=13000`, `BACKEND_PORT=18000`, `ALLOWED_ORIGINS=http://localhost:13000` ve tarayıcıya gömülecek adres için `VITE_API_BASE_URL=http://localhost:18000` yazıp imajları yeniden build edebilirsiniz. Varsayılanlar yine 3000/8000'dir.
 
+Public demo güvenlik sınırlarını açmak için `.env.docker` içinde `PUBLIC_DEMO_MODE=true` yapın. Örnek dosyadaki 20 MB video, 30 saniye süre, replik başına 5 MB kayıt, IP başına günlük 5 export ve 24 saat medya TTL değerleri başlangıç ayarıdır; canlı ortam kapasitesine göre daha düşük değerlere çekilebilir.
+
 Logları izlemek ve servisleri durdurmak için:
 
 ```powershell
@@ -367,7 +393,7 @@ Compose backend'i `APP_ENV=production`, `MEDIA_ROOT=/app/media` ve `ALLOWED_ORIG
 ```powershell
 $headers = @{ "X-Maintenance-Token" = "KENDI_TOKEN_DEGERINIZ" }
 Invoke-RestMethod -Method Post `
-  -Uri "http://localhost:8000/api/maintenance/cleanup?older_than_hours=24" `
+  -Uri "http://localhost:8000/api/maintenance/cleanup" `
   -Headers $headers
 ```
 
@@ -379,6 +405,31 @@ docker compose --env-file .env.docker down --volumes
 
 Volume bilgisini silmeden incelemek için `docker volume inspect dublajlab_media` kullanılabilir.
 
+## Public Demo Deployment
+
+Canlı public demo için önerilen hedef mimari **Vercel üzerinde statik React/Vite frontend + Railway üzerinde tek replik Docker/FastAPI backend + `/app/media` persistent volume** yapısıdır.
+
+- Frontend upload isteklerini Vercel Function üzerinden geçirmek yerine doğrudan backend API domain'ine gönderir.
+- Backend tek replica/worker olarak kalır; mevcut job registry ve rate limiter process belleğindedir.
+- Public demo için Railway uyku modu başlangıçta kapalı, medya TTL'i kısa ve cleanup saatlik olmalıdır.
+- Railway volume mount path mevcut Dockerfile ve Compose yapısıyla uyumlu olacak şekilde kesin olarak `/app/media` olmalıdır.
+- Örnek production eşleşmesi: frontend `https://dublajlab.vercel.app`, API `https://api-domain.railway.app`.
+- Railway'de `ALLOWED_ORIGINS=https://dublajlab.vercel.app`; Vercel'de `VITE_API_BASE_URL=https://api-domain.railway.app` kullanılır.
+- `VITE_API_BASE_URL` build sırasında public frontend bundle'ına yazılır; secret içermez ve değişince frontend yeniden deploy edilir.
+- Düşük trafikte beklenen başlangıç maliyeti domain hariç yaklaşık 5–15 USD/aydır.
+
+Render, Railway, Fly.io, VPS ve Vercel + ayrı backend karşılaştırması; environment değişkenleri, domain, cleanup, risk ve ilk yayın adımları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın. Bu aşamada provider konfigürasyonu veya secret repoya eklenmemiştir.
+
+Token korumalı cleanup çağrısı placeholder ile şu şekilde doğrulanabilir:
+
+```bash
+curl --fail-with-body --request POST \
+  --header "X-Maintenance-Token: <MAINTENANCE_TOKEN_PLACEHOLDER>" \
+  "https://api-domain.railway.app/api/maintenance/cleanup?older_than_hours=6"
+```
+
+Gerçek maintenance token repoya, README'ye, frontend environment'ına veya komut geçmişine yazılmamalıdır.
+
 ## Ortam değişkenleri
 
 | Değişken | Varsayılan | Açıklama |
@@ -386,12 +437,43 @@ Volume bilgisini silmeden incelemek için `docker volume inspect dublajlab_media
 | `ALLOWED_ORIGINS` | `http://localhost:5173` | Virgülle ayrılmış CORS origin listesi |
 | `APP_ENV` | `development` | `development`, `local`, `test` veya production ortam adı |
 | `MAINTENANCE_TOKEN` | boş | Production cleanup endpoint erişim anahtarı |
+| `PUBLIC_DEMO_MODE` | `false` | Public demo medya ve export limitlerini etkinleştirir |
+| `DEMO_MAX_FILE_SIZE_MB` | `20` | Public demo video dosyası üst sınırı; normal 50 MB sınırını aşamaz |
+| `DEMO_MAX_VIDEO_DURATION_SECONDS` | `30` | Public demo video süresi; normal 60 saniye sınırını aşamaz |
+| `DEMO_MAX_RECORDING_SIZE_MB` | `5` | Public demo replik kaydı üst sınırı; normal 10 MB sınırını aşamaz |
+| `DEMO_MAX_EXPORTS_PER_IP_PER_DAY` | `5` | IP başına UTC takvim günündeki export kotası |
+| `DEMO_MEDIA_TTL_HOURS` | `24` | Public demo cleanup isteğinde query verilmezse kullanılan eşik |
+| `TRUST_PROXY_HEADERS` | `false` | Güvenilir reverse proxy arkasında `X-Forwarded-For` okumayı etkinleştirir |
 | `FFMPEG_BINARY` | `ffmpeg` | FFmpeg komutu veya tam yolu |
 | `FFPROBE_BINARY` | `ffprobe` | FFprobe komutu veya tam yolu |
 | `MEDIA_ROOT` | `backend/data` | Kaynak, çıktı, metadata ve geçici kayıt klasörü |
 | `VITE_API_BASE_URL` | `http://localhost:8000` | Frontend’in çağıracağı API adresi |
 
 Örnek dosyalar: `backend/.env.example` ve `frontend/.env.example`. Backend önce süreç ortamını korur, eksik değerleri `backend/.env` ve proje kökündeki `.env` dosyalarından okuyabilir. Gerçek token ve anahtarları Git'e eklemeyin.
+
+## Public demo güvenliği
+
+`PUBLIC_DEMO_MODE=true` olduğunda backend aynı policy'yi upload, mikrofon kaydı ve export başlangıcında uygular. Frontend `/api/system/demo-policy` endpoint'inden etkin değerleri okuyup bilgi panelinde ve yükleme alanında gösterir. Demo paneli kullanıcıya dosyaların kalıcı saklanmadığını açıkça bildirir.
+
+Varsayılan public demo politikası:
+
+- En fazla 20 MB ve 30 saniyelik video
+- Her replik için en fazla 5 MB ses kaydı
+- IP başına UTC takvim gününde en fazla 5 export
+- Query verilmeden çağrılan cleanup için 24 saat medya TTL
+- Büyük video veya kayıt için Türkçe `413`, günlük export kotası için Türkçe `429` ve `Retry-After` header'ı
+
+Public demo değerleri normal uygulamanın 50 MB video, 60 saniye süre ve 10 MB kayıt sınırlarını yükseltemez. `PUBLIC_DEMO_MODE=false` olduğunda mevcut normal limitler ve export davranışı korunur.
+
+### IP ve reverse proxy güvenliği
+
+Rate limiter varsayılan olarak doğrudan bağlantının IP adresini kullanır ve istemcinin gönderdiği `X-Forwarded-For` header'ına güvenmez. Uygulama Nginx, Caddy, Cloudflare veya başka bir reverse proxy arkasında çalışıyorsa:
+
+1. Proxy'nin dışarıdan gelen `X-Forwarded-For` değerini temizleyip kendi doğruladığı client IP zinciriyle yeniden yazdığından emin olun.
+2. Backend'e doğrudan internet erişimini ağ/firewall seviyesinde kapatın.
+3. Yalnızca bu koşullardan sonra `TRUST_PROXY_HEADERS=true` yapın.
+
+Memory tabanlı limiter tek uygulama process'i için geçerlidir. Backend yeniden başlarsa sayaçlar sıfırlanır; birden fazla worker/container kendi sayacını tutar. Çoklu instance public deployment için Redis gibi ortak ve atomik bir rate-limit deposu gerekir. Bu sprintte Redis/Celery eklenmemiştir.
 
 ## Timeline JSON yapısı
 
@@ -421,7 +503,7 @@ Kurallar:
 - `start >= 0`, `end > start` olmalı
 - `end` video süresini aşmamalı
 - Her replik için aynı sırada bir ses dosyası gönderilmeli
-- Her kayıt en fazla 10 MB olabilir
+- Her kayıt normal modda en fazla 10 MB olabilir; public demo modunda policy değeri uygulanır
 
 ## API endpointleri
 
@@ -429,6 +511,7 @@ Kurallar:
 | --- | --- | --- |
 | `GET` | `/api/health` | Servis sağlık bilgisi |
 | `GET` | `/api/system/ffmpeg` | FFmpeg/FFprobe kullanılabilirlik ve sürüm bilgisi |
+| `GET` | `/api/system/demo-policy` | Etkin public demo limitlerini frontend'e döndürür |
 | `GET` | `/api/templates` | Doğrulanmış hazır sahne kataloğunu listeler |
 | `GET` | `/api/templates/{template_id}` | Tek bir hazır sahnenin metadata ve repliklerini döndürür |
 | `POST` | `/api/video/upload` | `file` alanıyla video yükler ve doğrular |
@@ -439,9 +522,9 @@ Kurallar:
 | `POST` | `/api/video/process` | Geriye uyumlu senkron AI TTS endpoint'i |
 | `GET` | `/api/video/preview/{video_id}` | Kaynak videoyu tarayıcıya aktarır |
 | `GET` | `/api/video/download/{output_video_id}` | İşlenmiş MP4’ü indirir |
-| `POST` | `/api/maintenance/cleanup?older_than_hours=24` | Eski runtime dosyalarını manuel temizler |
+| `POST` | `/api/maintenance/cleanup` | Eski runtime dosyalarını manuel temizler; query isteğe bağlıdır |
 
-Temizlik endpoint'i yalnızca bilinen `uploads`, `outputs`, `tmp`, `audio`, `subtitles`, `recordings` ve `metadata` klasörlerindeki eşikten eski dosyaları siler. En düşük eşik 1 saattir.
+Temizlik endpoint'i yalnızca bilinen `uploads`, `outputs`, `tmp`, `audio`, `subtitles`, `recordings` ve `metadata` klasörlerindeki eşikten eski dosyaları siler. En düşük eşik 1 saattir. `older_than_hours` verilmezse public demo modunda `DEMO_MEDIA_TTL_HOURS`, normal modda 24 saat kullanılır. Query parametresi açıkça verilirse bu varsayılanı ezer.
 
 - `MAINTENANCE_TOKEN` tanımlıysa her ortamda `X-Maintenance-Token` header'ı zorunludur.
 - Token yoksa endpoint yalnızca `development`, `dev`, `local` ve `test` ortamlarında çalışır.
@@ -453,11 +536,19 @@ Production örneği:
 $env:APP_ENV = "production"
 $env:MAINTENANCE_TOKEN = "uzun-rastgele-bir-token"
 Invoke-RestMethod -Method Post `
-  -Uri "http://localhost:8000/api/maintenance/cleanup?older_than_hours=24" `
+  -Uri "http://localhost:8000/api/maintenance/cleanup" `
   -Headers @{ "X-Maintenance-Token" = $env:MAINTENANCE_TOKEN }
 ```
 
 Kaynak video ve çıktılar kalıcı depolama garantisi olmadan tutulur. Production ortamında bu endpoint'in zamanlanmış görev/cron tarafından düzenli çağrılması önerilir. Geçici ses, kayıt ve altyazı dosyaları başarılı ya da başarısız process sonunda ayrıca silinir.
+
+Linux cron örneği (token'ı repoda değil, yalnızca root tarafından okunabilen `/etc/dublajlab-cleanup.env` dosyasında `MAINTENANCE_TOKEN=...` olarak saklayın):
+
+```cron
+0 * * * * . /etc/dublajlab-cleanup.env && /usr/bin/curl --fail --silent --show-error --request POST http://127.0.0.1:8000/api/maintenance/cleanup --header "X-Maintenance-Token: ${MAINTENANCE_TOKEN}"
+```
+
+Bu çağrı public demo modunda `DEMO_MEDIA_TTL_HOURS` değerini otomatik kullanır. Docker named volume container yeniden oluşturulunca korunur; uygulama-level cleanup volume içindeki eski dosyaları güvenli klasör listesine göre temizler. Tüm volume'u geri alınamayacak şekilde silmek farklı bir işlemdir ve yalnızca bilinçli olarak `docker compose down --volumes` komutuyla yapılmalıdır.
 
 FFprobe çağrıları 30 saniye, FFmpeg export işlemleri 180 saniye ile sınırlıdır. Süre aşılırsa API kullanıcıya Türkçe hata döndürür ve sunucu çalışmaya devam eder.
 
@@ -590,6 +681,29 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Healthcheck, Docker ignore kuralları ve local production kullanım rehberi
 - [ ] Kalıcı/dağıtık queue, çoklu worker ve gerçek hosting ortamı
 
+### Faz 6 — Public Demo Safety + Rate Limit + Cleanup Policy
+
+- [x] Ortam değişkenleriyle public demo medya, export ve TTL limitleri
+- [x] Thread-safe, memory tabanlı IP/gün export limiter servisi
+- [x] Upload, kayıt ve senkron/job export endpoint'lerinde limit uygulaması
+- [x] Güvenli reverse proxy ve `X-Forwarded-For` politikası
+- [x] Frontend public demo paneli ve anlaşılır 413/429 mesajları
+- [x] Tokenlı scheduled cleanup ve Docker volume saklama rehberi
+- [ ] Çoklu worker için ortak Redis rate-limit deposu
+
+### Faz 7 — Product Polish + Demo Content UX
+
+- [x] Gradient hero alanı, net CTA başlığı ve alt metin
+- [x] Mock preview kartı ile çıktı örneği (kaynak seçilmeden önce görünür)
+- [x] Feature strip: Kendi sesim, Timeline replik, MP4 export, Altyazı gömme, Telif bilinci
+- [x] Template galerisi grid layout, renkli placeholder thumbnail, zorluk ve kategori badge
+- [x] Boş sağ panelde mock replik preview ve hızlı aksiyon butonları
+- [x] CSS micro-animasyonlar, glassmorphism panel, card hover efekti
+- [x] Premium etik uyarı ve profesyonel footer
+- [x] Template medya yokken "demo medya yakında" olumlu mesajı
+- [x] Renk ve spacing iyileştirmeleri, mobil uyumluluk korundu
+- [ ] Gerçek ekran görüntüleri ve GIF
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
@@ -626,7 +740,8 @@ Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vok
 
 - Export istekleri arka plan job'ına alınır; ancak registry process belleğindedir. Backend yeniden başlarsa job durumları kaybolur ve birden fazla worker arasında paylaşılmaz.
 - BackgroundTasks tabanlı worker aynı uygulama sürecinde çalışır; yoğun production kullanımı için Redis/Celery veya RQ, retry politikası ve concurrency limiti gerekir.
-- Kaynak ve çıktı videoları otomatik temizlenmez; manuel cleanup endpoint'i cron/zamanlanmış görevle çağrılmalıdır.
+- Kaynak ve çıktı videoları uygulama içinde otomatik zamanlanmaz; TTL policy'li cleanup endpoint'i cron/zamanlanmış görevle çağrılmalıdır.
+- Public demo export limiter process belleğindedir; restart durumunda sıfırlanır ve çoklu worker/container arasında paylaşılmaz.
 - Mikrofon formatı tarayıcıya göre WebM/Opus veya MP4/AAC olabilir; FFmpeg’in ilgili decoder ile derlenmiş olması gerekir.
 - Bu geliştirme ortamında FFmpeg kurulu değilse gerçek medya smoke testi yapılamaz.
 - Replik zamanları form alanlarıyla düzenlenir; görsel sürükle-bırak timeline henüz yoktur.
