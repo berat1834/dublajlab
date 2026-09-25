@@ -15,7 +15,7 @@ DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı
 
 - [Kurulum](#backend-kurulumu)
 - [Docker ile çalıştırma](#docker-ile-local-production-kurulumu)
-- [Deployment planı](#deployment-planı)
+- [Public Demo Deployment](#public-demo-deployment)
 - [Public demo güvenliği](#public-demo-güvenliği)
 - [Mimari](#mimari)
 - [API endpointleri](#api-endpointleri)
@@ -23,6 +23,7 @@ DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı
 - [Manuel smoke test](scripts/smoke_test.md)
 - [Demo ve portföy rehberi](docs/DEMO_GUIDE.md)
 - [Teknik not](docs/TEKNIK_NOT.md)
+- [Proje Raporu ve Durumu](RAPOR.md)
 - [Roadmap](#roadmap)
 
 ## Demo amacı
@@ -212,10 +213,14 @@ Backend router'ları HTTP sözleşmesini; servisler ise job registry/worker, dos
 │   │   ├── lib/api.ts
 │   │   └── App.tsx
 │   └── package.json
+├── docs/
+├── demo/
 ├── docker-compose.yml
 ├── .dockerignore
 ├── .env.docker.example
-└── README.md
+├── README.md
+├── RAPOR.md
+└── DEPLOYMENT_PLAN.md
 ```
 
 ## Gereksinimler
@@ -400,17 +405,30 @@ docker compose --env-file .env.docker down --volumes
 
 Volume bilgisini silmeden incelemek için `docker volume inspect dublajlab_media` kullanılabilir.
 
-## Deployment planı
+## Public Demo Deployment
 
 Canlı public demo için önerilen hedef mimari **Vercel üzerinde statik React/Vite frontend + Railway üzerinde tek replik Docker/FastAPI backend + `/app/media` persistent volume** yapısıdır.
 
 - Frontend upload isteklerini Vercel Function üzerinden geçirmek yerine doğrudan backend API domain'ine gönderir.
 - Backend tek replica/worker olarak kalır; mevcut job registry ve rate limiter process belleğindedir.
 - Public demo için Railway uyku modu başlangıçta kapalı, medya TTL'i kısa ve cleanup saatlik olmalıdır.
-- Gerçek domain yapısı `dublajlab.example` ve `api.dublajlab.example` biçiminde ayrılır; CORS yalnızca frontend origin'ine açılır.
+- Railway volume mount path mevcut Dockerfile ve Compose yapısıyla uyumlu olacak şekilde kesin olarak `/app/media` olmalıdır.
+- Örnek production eşleşmesi: frontend `https://dublajlab.vercel.app`, API `https://api-domain.railway.app`.
+- Railway'de `ALLOWED_ORIGINS=https://dublajlab.vercel.app`; Vercel'de `VITE_API_BASE_URL=https://api-domain.railway.app` kullanılır.
+- `VITE_API_BASE_URL` build sırasında public frontend bundle'ına yazılır; secret içermez ve değişince frontend yeniden deploy edilir.
 - Düşük trafikte beklenen başlangıç maliyeti domain hariç yaklaşık 5–15 USD/aydır.
 
 Render, Railway, Fly.io, VPS ve Vercel + ayrı backend karşılaştırması; environment değişkenleri, domain, cleanup, risk ve ilk yayın adımları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın. Bu aşamada provider konfigürasyonu veya secret repoya eklenmemiştir.
+
+Token korumalı cleanup çağrısı placeholder ile şu şekilde doğrulanabilir:
+
+```bash
+curl --fail-with-body --request POST \
+  --header "X-Maintenance-Token: <MAINTENANCE_TOKEN_PLACEHOLDER>" \
+  "https://api-domain.railway.app/api/maintenance/cleanup?older_than_hours=6"
+```
+
+Gerçek maintenance token repoya, README'ye, frontend environment'ına veya komut geçmişine yazılmamalıdır.
 
 ## Ortam değişkenleri
 

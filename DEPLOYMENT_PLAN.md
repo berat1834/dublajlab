@@ -164,11 +164,11 @@ Vercel üzerinde ayrı proje:
 - Install command: `npm ci`
 - Build command: `npm run build`
 - Output directory: `dist`
-- Environment: `VITE_API_BASE_URL=https://api.dublajlab.example`
+- Environment: `VITE_API_BASE_URL=https://api-domain.railway.app`
 - Upload ve polling doğrudan API domain'ine gider.
 - Vercel Function/API proxy eklenmez.
 
-`dublajlab.example` placeholder'dır ve gerçek domain ile değiştirilmelidir.
+`dublajlab.vercel.app` ve `api-domain.railway.app` bu plandaki güvenli örnek domain'lerdir; provider'ın projeye verdiği gerçek domain'lerle değiştirilmelidir.
 
 ### 4.2 Backend
 
@@ -193,33 +193,66 @@ Memory job registry nedeniyle ikinci replica açılmamalıdır. Aksi halde expor
 - Başlangıçta 5 GB yeterlidir; %70 dolulukta cleanup/quota kontrolü yapılır.
 - Hassas medya gereksiz süre snapshot veya backup içinde tutulmaz.
 
+Mount yolu mevcut runtime yapısıyla doğrulanmıştır:
+
+- `backend/Dockerfile`, `MEDIA_ROOT=/app/media` tanımlar, `/app/media` klasörünü oluşturur ve aynı yolu `VOLUME` olarak işaretler.
+- `docker-compose.yml`, `dublajlab_media:/app/media` mount'unu kullanır.
+- Railway dashboard'da volume mount path kesin olarak `/app/media` girilmelidir; `/app`, `/media` veya repository içindeki `backend/data` kullanılmamalıdır.
+- Deploy sonrasında `/api/health` kontrolüne ek olarak upload → restart → metadata erişimi smoke testiyle volume kalıcılığı doğrulanmalıdır.
+
 ### 4.4 Environment değişkenleri
 
 #### Railway backend
 
-| Değişken | Önerilen değer | Not |
-| --- | --- | --- |
-| `APP_ENV` | `production` | Production davranışı |
-| `MEDIA_ROOT` | `/app/media` | Volume mount noktası |
-| `ALLOWED_ORIGINS` | `https://dublajlab.example` | Kesin origin; wildcard kullanma |
-| `MAINTENANCE_TOKEN` | Provider secret | Uzun ve rastgele; Git'e yazılmaz |
-| `PUBLIC_DEMO_MODE` | `true` | Demo limitlerini açar |
-| `DEMO_MAX_FILE_SIZE_MB` | `20` | İlk yayın upload limiti |
-| `DEMO_MAX_VIDEO_DURATION_SECONDS` | `30` | CPU/bekleme sınırı |
-| `DEMO_MAX_RECORDING_SIZE_MB` | `5` | Replik başına kayıt limiti |
-| `DEMO_MAX_EXPORTS_PER_IP_PER_DAY` | `5` | İlk demo kotası |
-| `DEMO_MEDIA_TTL_HOURS` | `6` | Kısa saklama önerisi |
-| `TRUST_PROXY_HEADERS` | Başlangıçta `false` | Proxy davranışı doğrulanınca değerlendir |
+| Değişken | Production örneği | Zorunlu | Açıklama |
+| --- | --- | --- | --- |
+| `APP_ENV` | `production` | Evet | Production maintenance güvenliğini etkinleştirir |
+| `MEDIA_ROOT` | `/app/media` | Evet | Railway volume mount noktasıyla birebir aynı olmalı |
+| `ALLOWED_ORIGINS` | `https://dublajlab.vercel.app` | Evet | Tarayıcının geldiği frontend origin'i; API adresi değildir |
+| `MAINTENANCE_TOKEN` | `<RAILWAY_SECRET_PLACEHOLDER>` | Evet | Railway secret olarak üretilir; repoya veya frontend'e yazılmaz |
+| `PUBLIC_DEMO_MODE` | `true` | Evet | Public demo limitlerini açar |
+| `DEMO_MAX_FILE_SIZE_MB` | `20` | Evet | Video upload üst sınırı |
+| `DEMO_MAX_VIDEO_DURATION_SECONDS` | `30` | Evet | CPU ve export süresi sınırı |
+| `DEMO_MAX_RECORDING_SIZE_MB` | `5` | Evet | Replik başına kayıt üst sınırı |
+| `DEMO_MAX_EXPORTS_PER_IP_PER_DAY` | `5` | Evet | UTC gününde IP başına export kotası |
+| `DEMO_MEDIA_TTL_HOURS` | `6` | Evet | Cleanup için önerilen geçici medya ömrü |
+| `TRUST_PROXY_HEADERS` | `false` | Evet | Railway proxy header davranışı doğrulanana kadar açılmaz |
+
+Railway build/deploy ayarları environment secret değildir ancak servis ayarlarında ayrıca doğrulanmalıdır:
+
+| Ayar | Değer |
+| --- | --- |
+| Dockerfile path | `backend/Dockerfile` |
+| Build context | Repository root |
+| Volume mount path | `/app/media` |
+| Replica | `1` |
+| Serverless/App Sleeping | İlk public demoda kapalı |
+| Healthcheck path | `/api/health` |
 
 FFmpeg ve FFprobe image PATH'inde bulunduğundan özel binary yolu gerekmedikçe tanımlanmaz.
 
 #### Vercel frontend
 
-| Değişken | Önerilen değer | Not |
-| --- | --- | --- |
-| `VITE_API_BASE_URL` | `https://api.dublajlab.example` | Build sırasında bundle'a yazılır |
+| Değişken | Production örneği | Ortam | Açıklama |
+| --- | --- | --- | --- |
+| `VITE_API_BASE_URL` | `https://api-domain.railway.app` | Production | Frontend'in doğrudan çağıracağı Railway HTTPS origin'i |
+| `VITE_API_BASE_URL` | `https://api-domain.railway.app` | Preview | Preview deploy'larının aynı public demo backend'ini kullanması isteniyorsa ayrıca tanımlanır |
 
 Backend secret'ları frontend environment'ına eklenmez.
+
+`VITE_` önekli değerler Vite build sırasında tarayıcı bundle'ına yazılır ve kullanıcı tarafından görülebilir. Bu nedenle `VITE_API_BASE_URL` yalnızca public API origin'i içermelidir; token, parola veya maintenance secret içermemelidir. Değer değiştirildiğinde mevcut deployment runtime'da kendiliğinden güncellenmez, frontend yeniden build/deploy edilmelidir.
+
+Production CORS/API eşleşmesi:
+
+```dotenv
+# Railway backend
+ALLOWED_ORIGINS=https://dublajlab.vercel.app
+
+# Vercel frontend
+VITE_API_BASE_URL=https://api-domain.railway.app
+```
+
+`ALLOWED_ORIGINS` içine `https://api-domain.railway.app` yazılmaz; CORS origin, API'yi çağıran frontend adresidir. Birden fazla izinli frontend gerekiyorsa backend'in desteklediği biçimde virgülle ayrılır ve wildcard kullanılmaz.
 
 ### 4.5 Domain ve TLS
 
@@ -246,6 +279,16 @@ api.dublajlab.example   → Railway backend
 - Scheduler: Railway cron service veya güvenilir harici cron
 
 Cron backend volume'una bağlanmaz; yalnızca HTTPS maintenance endpoint'ini çağırır. Dosyaları backend process'i kendi volume'undan siler.
+
+Manuel veya scheduler smoke testi için placeholder kullanan `curl` örneği:
+
+```bash
+curl --fail-with-body --request POST \
+  --header "X-Maintenance-Token: <MAINTENANCE_TOKEN_PLACEHOLDER>" \
+  "https://api-domain.railway.app/api/maintenance/cleanup?older_than_hours=6"
+```
+
+Gerçek token shell geçmişine yazılmamalıdır. Otomasyonda token provider secret'ından okunmalı; loglara header veya token değeri basılmamalıdır.
 
 - Cleanup sonucu loglarda izlenir.
 - Volume %70 dolulukta manuel cleanup yapılır.
@@ -349,4 +392,3 @@ VPS'e geçmeden önce Redis job queue, concurrency sınırı, merkezi log, backu
 **İlk public demo: Vercel frontend + Railway backend + Railway volume.**
 
 Bu mimari mevcut tek-process job yapısına, Dockerfile'a ve public demo limitlerine en az müdahaleyle uyar. İlk hafta gerçek kullanım ölçülür. Demo ilgi görür veya maliyet artarsa ilk teknik adım VPS'e taşınmak değil, kalıcı queue ve concurrency kontrolünü eklemek olmalıdır.
-
