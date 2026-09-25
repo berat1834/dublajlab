@@ -7,6 +7,9 @@ pytest-cache-files-*/
 .tmp/
 .coverage
 .venv/
+.env
+.env.docker
+backend/.env
 
 # Runtime media (directories are recreated automatically)
 backend/data/*
