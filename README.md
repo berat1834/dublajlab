@@ -46,8 +46,8 @@ Portföy görselleri için sabit hedefler hazırdır:
 
 | İçerik | Dosya yolu | Durum |
 | --- | --- | --- |
-| Masaüstü editör | `docs/assets/dublajlab-editor.webp` | Çekim bekliyor |
-| Template galerisi | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
+| Hero + polish edilmiş editör | `docs/assets/dublajlab-editor.webp` | Çekim bekliyor |
+| Template galerisi (grid kartlar) | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
 | Mobil demo GIF | `docs/assets/dublajlab-mobile.gif` | Kayıt bekliyor |
 
 [Görsel hazırlama kuralları ve dosya manifesti](docs/assets/README.md)
@@ -59,6 +59,8 @@ Gerçek dosyalar eklendiğinde aşağıdaki hazır Markdown satırları yorumdan
 <!-- ![DublajLab mobil demo akışı](docs/assets/dublajlab-mobile.gif) -->
 
 Görseller yalnızca proje sahibinin kendi videosu veya doğrulanmış açık lisanslı/telifsiz bir kaynakla hazırlanmalıdır. Telifli film, dizi, meme ya da sosyal medya klibi repoya eklenmemelidir.
+
+Not: Faz 7 sonrası template galerisinde kullanılan thumbnail görselleri CSS gradientleridir; repoda telifli görsel veya medya dosyası bulunmaz.
 
 ## Hazır video / template sistemi
 
@@ -645,6 +647,19 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Frontend public demo paneli ve anlaşılır 413/429 mesajları
 - [x] Tokenlı scheduled cleanup ve Docker volume saklama rehberi
 - [ ] Çoklu worker için ortak Redis rate-limit deposu
+
+### Faz 7 — Product Polish + Demo Content UX
+
+- [x] Gradient hero alanı, net CTA başlığı ve alt metin
+- [x] Mock preview kartı ile çıktı örneği (kaynak seçilmeden önce görünür)
+- [x] Feature strip: Kendi sesim, Timeline replik, MP4 export, Altyazı gömme, Telif bilinci
+- [x] Template galerisi grid layout, renkli placeholder thumbnail, zorluk ve kategori badge
+- [x] Boş sağ panelde mock replik preview ve hızlı aksiyon butonları
+- [x] CSS micro-animasyonlar, glassmorphism panel, card hover efekti
+- [x] Premium etik uyarı ve profesyonel footer
+- [x] Template medya yokken "demo medya yakında" olumlu mesajı
+- [x] Renk ve spacing iyileştirmeleri, mobil uyumluluk korundu
+- [ ] Gerçek ekran görüntüleri ve GIF
 
 ### Sonraki teknik geliştirmeler
 
