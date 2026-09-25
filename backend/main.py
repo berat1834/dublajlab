@@ -10,8 +10,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from backend.config import allowed_origins, ensure_media_directories
-from backend.models import HealthResponse
+from backend.config import allowed_origins, ensure_media_directories, public_demo_policy
+from backend.models import DemoPolicyResponse, HealthResponse
 from backend.routers.jobs import router as jobs_router
 from backend.routers.maintenance import router as maintenance_router
 from backend.routers.templates import router as templates_router
@@ -24,6 +24,14 @@ logger = logging.getLogger("dublajlab")
 @asynccontextmanager
 async def lifespan(application: FastAPI) -> AsyncIterator[None]:
     ensure_media_directories()
+    demo_policy = public_demo_policy()
+    application.state.demo_policy = demo_policy
+    if demo_policy.enabled:
+        logger.warning(
+            "Public demo modu etkin: IP başına günlük %s export, medya TTL %s saat.",
+            demo_policy.max_exports_per_ip_per_day,
+            demo_policy.media_ttl_hours,
+        )
     ffmpeg_status = await asyncio.to_thread(ffmpeg_service.check_availability)
     application.state.ffmpeg_status = ffmpeg_status.as_dict()
     if ffmpeg_status.available:
@@ -87,3 +95,20 @@ async def health() -> HealthResponse:
 async def ffmpeg_status() -> dict[str, str | bool | None]:
     status_result = await asyncio.to_thread(ffmpeg_service.check_availability)
     return status_result.as_dict()
+
+
+@app.get(
+    "/api/system/demo-policy",
+    response_model=DemoPolicyResponse,
+    tags=["system"],
+)
+async def demo_policy() -> DemoPolicyResponse:
+    policy = public_demo_policy()
+    return DemoPolicyResponse(
+        enabled=policy.enabled,
+        max_file_size_mb=policy.max_file_size_mb,
+        max_video_duration_seconds=policy.max_video_duration_seconds,
+        max_recording_size_mb=policy.max_recording_size_mb,
+        max_exports_per_ip_per_day=policy.max_exports_per_ip_per_day,
+        media_ttl_hours=policy.media_ttl_hours,
+    )

@@ -11,14 +11,15 @@ from fastapi import HTTPException, UploadFile, status
 from backend.config import (
     ALLOWED_EXTENSIONS,
     AUDIO_DIR,
-    MAX_FILE_SIZE,
-    MAX_RECORDING_SIZE,
+    MEGABYTE,
     METADATA_DIR,
     OUTPUT_DIR,
     RECORDING_DIR,
     SUBTITLE_DIR,
     UPLOAD_DIR,
     ALLOWED_RECORDING_EXTENSIONS,
+    active_max_file_size_bytes,
+    active_max_recording_size_bytes,
     ensure_media_directories,
 )
 
@@ -50,15 +51,19 @@ class FileStorageService:
 
         video_id = str(uuid4())
         destination = UPLOAD_DIR / f"{video_id}{extension}"
+        max_file_size = active_max_file_size_bytes()
         size = 0
         try:
             with destination.open("wb") as output:
                 while chunk := await upload.read(self.chunk_size):
                     size += len(chunk)
-                    if size > MAX_FILE_SIZE:
+                    if size > max_file_size:
                         raise HTTPException(
                             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            detail="Video en fazla 50 MB olabilir.",
+                            detail=(
+                                "Video en fazla "
+                                f"{max_file_size // MEGABYTE} MB olabilir."
+                            ),
                         )
                     output.write(chunk)
         except Exception:
@@ -132,6 +137,7 @@ class FileStorageService:
             )
 
         saved_paths: list[Path] = []
+        max_recording_size = active_max_recording_size_bytes()
         try:
             for index, (upload, recording_id) in enumerate(zip(uploads, recording_ids)):
                 extension = Path(upload.filename or "recording.webm").suffix.lower()
@@ -150,10 +156,13 @@ class FileStorageService:
                 with destination.open("wb") as output:
                     while chunk := await upload.read(self.chunk_size):
                         size += len(chunk)
-                        if size > MAX_RECORDING_SIZE:
+                        if size > max_recording_size:
                             raise HTTPException(
                                 status_code=413,
-                                detail="Her ses kaydı en fazla 10 MB olabilir.",
+                                detail=(
+                                    "Her ses kaydı en fazla "
+                                    f"{max_recording_size // MEGABYTE} MB olabilir."
+                                ),
                             )
                         output.write(chunk)
                 await upload.close()

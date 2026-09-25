@@ -23,13 +23,21 @@ import { UploadZone } from './components/UploadZone'
 import { VoiceCards } from './components/VoiceCards'
 import {
   absoluteApiUrl,
+  fetchDemoPolicy,
   fetchTemplate,
   processRecordings,
   processVideo,
   uploadVideo,
   waitForJobCompletion,
 } from './lib/api'
-import type { JobResponse, TimelineLine, UploadResponse, VideoTemplate, VoiceStyle } from './types'
+import type {
+  DemoPolicy,
+  JobResponse,
+  TimelineLine,
+  UploadResponse,
+  VideoTemplate,
+  VoiceStyle,
+} from './types'
 
 type Stage = 'idle' | 'uploading' | 'ready' | 'processing' | 'completed'
 type DubbingMode = 'my-voice' | 'ai-voice'
@@ -61,6 +69,25 @@ function templateFilename(template: VideoTemplate) {
 
 function explainError(message: string): ErrorDetails {
   const normalized = message.toLocaleLowerCase('tr-TR')
+  if (normalized.includes('günlük export sınırı') || normalized.includes('çok fazla istek')) {
+    return {
+      title: 'Günlük demo limiti doldu',
+      message,
+      hint: 'Public demo kotası UTC gün başlangıcında yenilenir. Daha sonra tekrar deneyin.',
+      icon: ShieldCheck,
+    }
+  }
+  if (
+    normalized.includes('en fazla')
+    && (normalized.includes('mb') || normalized.includes('saniye'))
+  ) {
+    return {
+      title: 'Public demo limiti aşıldı',
+      message,
+      hint: 'Daha küçük veya daha kısa bir video/kayıt seçip yeniden deneyin.',
+      icon: AlertCircle,
+    }
+  }
   if (normalized.includes('sunucuya ulaşılamadı') || normalized.includes('backend')) {
     return {
       title: 'Backend bağlantısı kurulamadı',
@@ -113,6 +140,7 @@ function App() {
   const [retryLabel, setRetryLabel] = useState('')
   const [jobProgress, setJobProgress] = useState(0)
   const [jobMessage, setJobMessage] = useState('')
+  const [demoPolicy, setDemoPolicy] = useState<DemoPolicy | null>(null)
 
   const localPreviewUrl = useMemo(
     () => (selectedFile ? URL.createObjectURL(selectedFile) : ''),
@@ -128,6 +156,20 @@ function App() {
 
   useEffect(() => {
     return () => activeJobControllerRef.current?.abort()
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    void fetchDemoPolicy()
+      .then((policy) => {
+        if (active) setDemoPolicy(policy)
+      })
+      .catch(() => {
+        // Upload/process requests already surface backend connectivity errors.
+      })
+    return () => {
+      active = false
+    }
   }, [])
 
   const clearFeedback = () => {
@@ -404,6 +446,24 @@ function App() {
           </div>
         </header>
 
+        {demoPolicy?.enabled && (
+          <aside className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-sm text-amber-50">
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+            <div>
+              <p className="font-bold">Public demo sınırları etkin</p>
+              <p className="mt-1 leading-6 text-zinc-400">
+                En fazla {demoPolicy.max_file_size_mb} MB / {demoPolicy.max_video_duration_seconds} saniye video,
+                replik başına {demoPolicy.max_recording_size_mb} MB kayıt ve IP başına günde{' '}
+                {demoPolicy.max_exports_per_ip_per_day} export kullanılabilir.
+              </p>
+              <p className="mt-1 text-xs leading-5 text-amber-200/80">
+                Bu public demo dosyalarınızı kalıcı olarak saklamaz. Medya temizleme politikası{' '}
+                {demoPolicy.media_ttl_hours} saatliktir.
+              </p>
+            </div>
+          </aside>
+        )}
+
         {errorDetails && (
           <div
             role="alert"
@@ -471,7 +531,12 @@ function App() {
 
             {sourceMode === 'upload' ? (
               !selectedFile ? (
-                <UploadZone onFile={handleFile} disabled={busy} />
+                <UploadZone
+                  onFile={handleFile}
+                  disabled={busy}
+                  maxFileSizeMb={demoPolicy?.enabled ? demoPolicy.max_file_size_mb : 50}
+                  maxDurationSeconds={demoPolicy?.enabled ? demoPolicy.max_video_duration_seconds : 60}
+                />
               ) : (
                 <div>
                   <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black shadow-inner">

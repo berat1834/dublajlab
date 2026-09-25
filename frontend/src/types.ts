@@ -32,6 +32,16 @@ export interface JobResponse {
   error: string | null
 }
 
+export interface DemoPolicy {
+  enabled: boolean
+  max_file_size_mb: number
+  max_video_duration_seconds: number
+  max_recording_size_mb: number
+  max_exports_per_ip_per_day: number
+  media_ttl_hours: number
+  files_are_temporary: boolean
+}
+
 export interface ApiErrorBody {
   detail?: string
   errors?: Array<{ field: string; message: string }>

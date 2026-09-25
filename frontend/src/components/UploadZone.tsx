@@ -4,6 +4,8 @@ import { AlertCircle, FileVideo2, UploadCloud } from 'lucide-react'
 interface UploadZoneProps {
   onFile: (file: File) => void
   disabled?: boolean
+  maxFileSizeMb?: number
+  maxDurationSeconds?: number
 }
 
 const extensions = ['mp4', 'mov', 'webm']
@@ -13,7 +15,12 @@ function isSupported(file: File) {
   return extension ? extensions.includes(extension) : false
 }
 
-export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
+export function UploadZone({
+  onFile,
+  disabled = false,
+  maxFileSizeMb = 50,
+  maxDurationSeconds = 60,
+}: UploadZoneProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [localError, setLocalError] = useState('')
@@ -29,8 +36,8 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
       setLocalError('Boş video dosyası yüklenemez.')
       return
     }
-    if (file.size > 50 * 1024 * 1024) {
-      setLocalError('Video en fazla 50 MB olabilir.')
+    if (file.size > maxFileSizeMb * 1024 * 1024) {
+      setLocalError(`Video en fazla ${maxFileSizeMb} MB olabilir.`)
       return
     }
     onFile(file)
@@ -69,8 +76,8 @@ export function UploadZone({ onFile, disabled = false }: UploadZoneProps) {
         <span className="mt-1 text-sm text-zinc-500">veya bilgisayarından seçmek için tıkla</span>
         <span className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
           <span className="rounded-full bg-white/5 px-2.5 py-1">MP4 · MOV · WEBM</span>
-          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla 50 MB</span>
-          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla 60 sn</span>
+          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla {maxFileSizeMb} MB</span>
+          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla {maxDurationSeconds} sn</span>
         </span>
       </button>
       <input

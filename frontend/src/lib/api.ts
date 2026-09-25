@@ -1,5 +1,6 @@
 import type {
   ApiErrorBody,
+  DemoPolicy,
   JobResponse,
   UploadResponse,
   TimelineLine,
@@ -70,6 +71,18 @@ export async function fetchTemplate(templateId: string): Promise<VideoTemplate> 
       `${API_BASE_URL}/api/templates/${encodeURIComponent(templateId)}`,
     )
     return parseResponse<VideoTemplate>(response)
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw backendConnectionError()
+    }
+    throw error
+  }
+}
+
+export async function fetchDemoPolicy(): Promise<DemoPolicy> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/system/demo-policy`)
+    return parseResponse<DemoPolicy>(response)
   } catch (error) {
     if (error instanceof TypeError) {
       throw backendConnectionError()
