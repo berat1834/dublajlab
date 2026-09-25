@@ -14,6 +14,7 @@ DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı
 ## Hızlı bağlantılar
 
 - [Kurulum](#backend-kurulumu)
+- [Docker ile çalıştırma](#docker-ile-local-production-kurulumu)
 - [Mimari](#mimari)
 - [API endpointleri](#api-endpointleri)
 - [Test ve kalite kontrolleri](#test-ve-kalite-kontrolleri)
@@ -162,6 +163,7 @@ Backend router'ları HTTP sözleşmesini; servisler ise job registry/worker, dos
 ```text
 .
 ├── backend/
+│   ├── Dockerfile
 │   ├── main.py
 │   ├── config.py
 │   ├── models.py
@@ -182,6 +184,8 @@ Backend router'ları HTTP sözleşmesini; servisler ise job registry/worker, dos
 │       ├── test_video_api.py
 │       └── test_jobs_api.py
 ├── frontend/
+│   ├── Dockerfile
+│   ├── nginx.conf
 │   ├── src/
 │   │   ├── components/TimelineRecorder.tsx
 │   │   ├── components/TemplateGallery.tsx
@@ -189,6 +193,9 @@ Backend router'ları HTTP sözleşmesini; servisler ise job registry/worker, dos
 │   │   ├── lib/api.ts
 │   │   └── App.tsx
 │   └── package.json
+├── docker-compose.yml
+├── .dockerignore
+├── .env.docker.example
 └── README.md
 ```
 
@@ -283,6 +290,94 @@ npm run dev
 ```
 
 Arayüz: `http://localhost:5173`
+
+## Docker ile local production kurulumu
+
+Docker kurulumu, backend ve frontend'i production benzeri iki ayrı container içinde çalıştırır. Backend imajında **FFmpeg ve FFprobe hazır gelir**; host Windows sistemine ayrıca FFmpeg kurmanız gerekmez. Frontend Vite ile build edilir ve Nginx üzerinden `http://localhost:3000` adresinde sunulur.
+
+Gereksinimler:
+
+- Docker Desktop veya Docker Engine
+- Docker Compose v2 (`docker compose`)
+
+İlk çalıştırmada proje kökünde örnek environment dosyasını kopyalayın:
+
+```powershell
+Copy-Item .env.docker.example .env.docker
+notepad .env.docker
+```
+
+`.env.docker` içindeki `MAINTENANCE_TOKEN` placeholder değerini uzun ve rastgele bir token ile değiştirin. Bu dosya Git tarafından yok sayılır; gerçek token'ı commit etmeyin. Ardından:
+
+```powershell
+docker compose --env-file .env.docker config
+docker compose --env-file .env.docker build
+docker compose --env-file .env.docker up -d
+docker compose --env-file .env.docker ps
+```
+
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8000`
+- Swagger: `http://localhost:8000/docs`
+- Sağlık kontrolü: `http://localhost:8000/api/health`
+
+3000 veya 8000 portu başka bir uygulama tarafından kullanılıyorsa `.env.docker` içine örneğin `FRONTEND_PORT=13000`, `BACKEND_PORT=18000`, `ALLOWED_ORIGINS=http://localhost:13000` ve tarayıcıya gömülecek adres için `VITE_API_BASE_URL=http://localhost:18000` yazıp imajları yeniden build edebilirsiniz. Varsayılanlar yine 3000/8000'dir.
+
+Logları izlemek ve servisleri durdurmak için:
+
+```powershell
+docker compose --env-file .env.docker logs -f
+docker compose --env-file .env.docker down
+```
+
+Tek tek imaj doğrulaması yapmak isterseniz:
+
+```powershell
+docker build --file backend/Dockerfile --tag dublajlab-backend .
+docker build --file frontend/Dockerfile --build-arg VITE_API_BASE_URL=http://localhost:8000 --tag dublajlab-frontend .
+```
+
+### Vite API adresi
+
+`VITE_API_BASE_URL` bir Vite **build-time** değişkenidir. Değer JavaScript bundle'ına build sırasında yazılır; container başladıktan sonra environment değerini değiştirmek yeterli değildir. API adresini değiştirirseniz frontend imajını yeniden build edin:
+
+```powershell
+docker compose --env-file .env.docker build --no-cache frontend
+docker compose --env-file .env.docker up -d frontend
+```
+
+Tarayıcı container içindeki servis adını değil, kendi erişebildiği adresi kullanır. Bu nedenle lokal varsayılan `http://localhost:8000` değeridir.
+
+### Local development ve Docker farkı
+
+| Konu | Local development | Docker Compose |
+| --- | --- | --- |
+| Frontend | Vite dev server, `localhost:5173`, hot reload | Nginx static serve, `localhost:3000` |
+| Backend | Uvicorn `--reload`, host Python ortamı | Production ayarlarıyla tek Uvicorn worker |
+| FFmpeg | Host PATH'inde kurulmalı | Backend imajında kurulu |
+| Medya | `backend/data` | `dublajlab_media` named volume |
+| Amaç | Hızlı kod geliştirme | Tekrarlanabilir local production smoke testi |
+
+Memory job registry birden fazla process arasında paylaşılmadığı için backend container bu sprintte bilinçli olarak **tek worker** ile çalışır. Kalıcı/dağıtık queue bu fazın kapsamında değildir.
+
+### Maintenance token ve medya volume temizliği
+
+Compose backend'i `APP_ENV=production`, `MEDIA_ROOT=/app/media` ve `ALLOWED_ORIGINS=http://localhost:3000` ile başlatır. Manuel cleanup çağrısında `.env.docker` içinde belirlediğiniz token'ı `X-Maintenance-Token` header'ıyla gönderin:
+
+```powershell
+$headers = @{ "X-Maintenance-Token" = "KENDI_TOKEN_DEGERINIZ" }
+Invoke-RestMethod -Method Post `
+  -Uri "http://localhost:8000/api/maintenance/cleanup?older_than_hours=24" `
+  -Headers $headers
+```
+
+`docker compose down` named volume'u korur. Medya verisini geri alınamayacak şekilde silmek için yalnızca gerçekten istediğinizde şu komutu kullanın:
+
+```powershell
+docker compose --env-file .env.docker down --volumes
+```
+
+Volume bilgisini silmeden incelemek için `docker volume inspect dublajlab_media` kullanılabilir.
 
 ## Ortam değişkenleri
 
@@ -486,6 +581,15 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Eski senkron endpointlerle geriye uyumluluk
 - [ ] Redis/Celery veya RQ ile kalıcı dağıtık queue
 
+### Faz 5 — Docker + Local Production Setup
+
+- [x] FFmpeg/FFprobe içeren Python slim backend imajı
+- [x] Vite build + Nginx static serve frontend imajı
+- [x] Backend/frontend servisleri ve kalıcı medya volume'u içeren Docker Compose
+- [x] Production CORS, maintenance token ve build-time API URL ayarları
+- [x] Healthcheck, Docker ignore kuralları ve local production kullanım rehberi
+- [ ] Kalıcı/dağıtık queue, çoklu worker ve gerçek hosting ortamı
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
@@ -494,7 +598,7 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [ ] Video trim ve dikey/yatay export presetleri
 - [ ] Kalıcı job queue ve otomatik dosya temizliği
 
-### Faz 5 — Müzik Pratik + Cover Studio
+### Sonraki ürün — Müzik Pratik + Cover Studio
 
 - [ ] Audio upload
 - [ ] Tempo ve pitch değiştirme
@@ -503,7 +607,7 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 
 Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vokal azalt, karaoke/pratik çıktısı al.”
 
-### Faz 6 — Kısa Video Altyazı + Dublaj
+### Sonraki ürün — Kısa Video Altyazı + Dublaj
 
 - [ ] Speech-to-text
 - [ ] Otomatik Türkçe altyazı
