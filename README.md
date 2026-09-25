@@ -745,3 +745,4 @@ Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vok
 - Mikrofon formatı tarayıcıya göre WebM/Opus veya MP4/AAC olabilir; FFmpeg’in ilgili decoder ile derlenmiş olması gerekir.
 - Bu geliştirme ortamında FFmpeg kurulu değilse gerçek medya smoke testi yapılamaz.
 - Replik zamanları form alanlarıyla düzenlenir; görsel sürükle-bırak timeline henüz yoktur.
+- Platform arayüzündeki (Faz 8) Discord, Giriş, Kayıt, VIP ve Footer (Gizlilik, Kullanım Koşulları vb.) bağlantıları şu an placeholder (yer tutucu) durumundadır. Canlı sunuma geçmeden önce gerçek yasal metinler ve Discord davet bağlantısı hazırlanarak güncellenmelidir.
