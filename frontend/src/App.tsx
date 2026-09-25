@@ -454,17 +454,17 @@ function App() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* NAVBAR */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel">
         <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-6 lg:gap-10">
             <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="text-xl font-black tracking-tight">
-              dublaj<span className="text-[#e1251b]">.io</span>
+              dublaj<span className="text-lime">.io</span>
             </a>
-            <div className="hidden items-center gap-6 md:flex text-sm font-medium text-zinc-400">
-              <button onClick={() => setActiveTab('play')} className={activeTab === 'play' ? 'text-white' : 'hover:text-white'}>Oyna</button>
-              <button onClick={() => setActiveTab('scenes')} className={activeTab === 'scenes' ? 'text-white' : 'hover:text-white'}>Sahneler</button>
-              <button onClick={() => setActiveTab('dubs')} className={activeTab === 'dubs' ? 'text-white' : 'hover:text-white'}>Dublajlar</button>
-              <button onClick={() => setActiveTab('daily')} className={activeTab === 'daily' ? 'text-white' : 'hover:text-white'}>Günün Dublajı</button>
+            <div className="hidden items-center gap-2 md:flex text-sm font-semibold text-zinc-400">
+              <button onClick={() => setActiveTab('play')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'play' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Oyna</button>
+              <button onClick={() => setActiveTab('scenes')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'scenes' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Sahneler</button>
+              <button onClick={() => setActiveTab('dubs')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'dubs' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Dublajlar</button>
+              <button onClick={() => setActiveTab('daily')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'daily' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Günün Dublajı</button>
             </div>
           </div>
           <div className="hidden items-center gap-4 md:flex text-sm font-medium">
@@ -476,8 +476,8 @@ function App() {
             </button>
             <div className="h-4 w-[1px] bg-white/10"></div>
             <button onClick={handleFeatureSoon} className="text-zinc-300 hover:text-white">Giriş yap</button>
-            <button onClick={handleFeatureSoon} className="rounded-md border border-white/20 px-4 py-1.5 text-white hover:bg-white/10">Kayıt ol</button>
-            <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 rounded-md bg-[#e3cd93] px-3 py-1.5 font-bold text-black hover:bg-[#ebd59a]">
+            <button onClick={handleFeatureSoon} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">Kayıt ol</button>
+            <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 rounded-lg border border-lime/30 bg-lime/10 px-3 py-1.5 font-bold text-lime transition hover:bg-lime/20">
               <Crown className="h-4 w-4" /> VIP ol
             </button>
           </div>
@@ -498,14 +498,14 @@ function App() {
             <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Discord</button>
             <button onClick={handleFeatureSoon} className="text-left">Giriş yap</button>
             <button onClick={handleFeatureSoon} className="text-left">Kayıt ol</button>
-            <button onClick={handleFeatureSoon} className="text-left text-[#e3cd93] flex items-center gap-2"><Crown className="h-4 w-4" /> VIP ol</button>
+            <button onClick={handleFeatureSoon} className="text-left text-lime flex items-center gap-2"><Crown className="h-4 w-4" /> VIP ol</button>
           </div>
         </div>
       )}
 
       {/* TOAST */}
       {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 rounded-full bg-indigo-500 text-white px-4 py-2 text-sm shadow-xl animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 rounded-full border border-violet/30 bg-violet text-white px-4 py-2 text-sm font-medium shadow-glow animate-in fade-in slide-in-from-bottom-4">
           <Info className="h-4 w-4" />
           {toastMessage}
         </div>
@@ -553,8 +553,8 @@ function App() {
               <div className="mt-8 pt-6 border-t border-white/10">
                 <p className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">Çok Oyunculu Dublaj</p>
                 <div className="flex flex-wrap gap-3">
-                  <button onClick={handleFeatureSoon} className="rounded-lg bg-white/10 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-white/20">Oda kur</button>
-                  <button onClick={handleFeatureSoon} className="rounded-lg border border-white/20 px-4 py-2.5 text-sm font-bold text-zinc-300 transition hover:bg-white/5">Oda koduyla katıl</button>
+                  <button onClick={handleFeatureSoon} className="inline-flex items-center gap-2 rounded-xl bg-violet/15 px-4 py-2.5 text-sm font-bold text-violet transition hover:bg-violet/25">Oda kur</button>
+                  <button onClick={handleFeatureSoon} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-zinc-300 transition hover:bg-white/10">Oda koduyla katıl</button>
                 </div>
               </div>
             </div>
@@ -1069,7 +1069,7 @@ function App() {
           ) : (
             <div className="grid min-h-[50vh] place-items-center text-center">
               <div>
-                <Crown className="mx-auto h-12 w-12 text-[#e3cd93]" />
+                <Crown className="mx-auto h-12 w-12 text-lime" />
                 <h2 className="mt-4 text-2xl font-bold">Günün Dublajı</h2>
                 <p className="mt-2 text-zinc-400">Her gün seçilen en iyi topluluk dublajı burada sergilenecek.</p>
               </div>
@@ -1084,7 +1084,7 @@ function App() {
           <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
             <div className="col-span-2 lg:col-span-2">
               <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="text-2xl font-black tracking-tight">
-                dublaj<span className="text-[#e1251b]">.io</span>
+                dublaj<span className="text-lime">.io</span>
               </a>
               <p className="mt-4 text-sm leading-6 text-zinc-400">
                 Arkadaşlarınla sahneyi yeniden seslendir. 
