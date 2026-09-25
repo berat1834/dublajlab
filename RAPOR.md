@@ -2,7 +2,7 @@
 
 ## Current Status
 
-- Faz 1-8 kapsamındaki MVP, profesyonel ürünleştirme ve platform kabuğu (shell) çalışmaları tamamlandı.
+- Faz 1-9 kapsamındaki MVP, profesyonel ürünleştirme ve platform showcase (placeholder) çalışmaları tamamlandı.
 - Ana akış, kullanıcının kendi mikrofon kaydını zamanlanmış repliklere yerleştirir.
 - FastAPI backend video yükleme, doğrulama, export ve indirme API'lerini sunar.
 - React/Vite frontend kaynak seçimi, kayıt timeline'ı ve sonuç ekranını yönetir.
@@ -29,6 +29,7 @@
 | 6 | Public Demo Safety + Rate Limit + Cleanup Policy | [sprint-06-public-demo-safety.md](docs/reports/sprint-06-public-demo-safety.md) |
 | 7 | Product Polish + Demo Content UX (Visual QA, Animations) | [sprint-07-product-polish.md](docs/reports/sprint-07-product-polish.md) |
 | 8 | Platform Shell + Navigation + Footer (Multi-tab UX, Auth placeholders) | [sprint-08-platform-shell.md](docs/reports/sprint-08-platform-shell.md) |
+| 9 | Showcase Pages + Placeholder Content (Gallery Filters, Dubs, Daily Dub) | [sprint-09-showcase-pages.md](docs/reports/sprint-09-showcase-pages.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 

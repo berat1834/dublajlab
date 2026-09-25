@@ -141,3 +141,12 @@ video {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Hide scrollbar for horizontal scroll areas */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
