@@ -65,3 +65,5 @@ export interface VideoTemplate {
   source: string
   lines: TimelineLine[]
 }
+
+export type Tab = 'play' | 'scenes' | 'dubs' | 'daily'

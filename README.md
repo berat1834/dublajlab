@@ -704,6 +704,24 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Renk ve spacing iyileştirmeleri, mobil uyumluluk korundu
 - [ ] Gerçek ekran görüntüleri ve GIF
 
+### Faz 8 — Platform Shell & Navigation
+- [x] Tek sayfalık araç görünümünden "Platform" (çoklu sekme) hissine geçiş
+- [x] Oyna, Sahneler, Dublajlar, Günün Dublajı sekmeleri (internal state router)
+- [x] Placeholder Auth, VIP, Discord linkleri ve bilgilendirici modal/toast'lar
+- [x] Geniş ve kurumsal görünümlü footer (Keşfet, Yasal, Kurumsal, Destek)
+
+### Faz 9 — Showcase Pages & Brand Updates
+- [x] Ana marka isminin "DublajLab" olarak netleştirilmesi
+- [x] Sahne galerisi için filtre kategorileri (Komedi, Dram, Tanıtım vb.)
+- [x] "Dublajlar" sayfasında topluluk içeriklerini simüle eden placeholder demo kartları
+- [x] "Günün Dublajı" sayfasında hero card ve dublaj izleme/katılma CTA'ları
+- [x] 3 adımlı "Nasıl Oynanır" modal rehberi
+
+### Faz 10 — UI Component Refactoring
+- [x] Büyüyen `App.tsx` dosyasının alt bileşenlere (components) ayrılması
+- [x] Navbar, Footer, HowToModal, ShowcaseDubs, DailyDub ve EthicsNotice bileşenlerinin modüler hale getirilmesi
+- [x] İş mantığı (upload, job queue, FFmpeg) ile sunum (presentation) katmanının ayrıştırılması
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
