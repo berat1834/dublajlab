@@ -554,3 +554,18 @@ GitHub ve LinkedIn sunumu için yalnızca dokümantasyon hazırlığı yapıldı
 - Telifli film/dizi/meme/sosyal medya kesitlerinin kullanılmaması; yalnızca proje sahibine ait veya lisansı doğrulanmış medya kullanılması şartı tekrarlandı.
 - Kişisel dosya yolu, token, e-posta, terminal geçmişi ve özel bildirimlerin yayın öncesinde kırpılması kontrol listesine eklendi.
 - Gerçek asset bulunmadığı için Markdown görsel yolları yorum içinde bırakıldı; README'de bozuk görsel oluşturulmadı.
+
+---
+
+## Deployment Planı — Dokümantasyon
+
+Canlı public demo için kod veya provider konfigürasyonu eklenmeden platform ve mimari değerlendirmesi yapıldı.
+
+- Render, Railway, Fly.io, VPS ve Vercel frontend + ayrı backend seçenekleri FFmpeg, Docker, volume, uyku, upload, cleanup, maliyet ve kurulum karmaşıklığı açısından karşılaştırıldı.
+- İlk demo için Vercel statik frontend + Railway tek replik Docker backend + `/app/media` volume mimarisi önerildi.
+- Memory tabanlı job registry ve rate limiter nedeniyle backend'in tek process/replica kalması ve ilk demo sırasında uyku modunun kapalı tutulması kararlaştırıldı.
+- Public demo için 20 MB/30 saniye video, 5 MB kayıt, IP başına günlük 5 export ve 6 saat medya TTL başlangıç değerleri önerildi.
+- Saatlik tokenlı maintenance cleanup çağrısı, custom domain/CORS düzeni ve ilk deployment smoke test listesi belgelendi.
+- Tahmini düşük trafik maliyeti domain hariç 5–15 USD/ay olarak planlandı; gerçek maliyetin ilk hafta Railway usage metrikleriyle güncellenmesi önerildi.
+- `DEPLOYMENT_PLAN.md` içine risk tablosu, environment değişkenleri, domain bağlantısı, cleanup politikası, kabul kriterleri ve VPS'e geçiş koşulları eklendi.
+- Backend, frontend, Dockerfile, Docker Compose, CI ve secret değerlerinde değişiklik yapılmadı.

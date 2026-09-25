@@ -15,6 +15,7 @@ DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı
 
 - [Kurulum](#backend-kurulumu)
 - [Docker ile çalıştırma](#docker-ile-local-production-kurulumu)
+- [Deployment planı](#deployment-planı)
 - [Public demo güvenliği](#public-demo-güvenliği)
 - [Mimari](#mimari)
 - [API endpointleri](#api-endpointleri)
@@ -398,6 +399,18 @@ docker compose --env-file .env.docker down --volumes
 ```
 
 Volume bilgisini silmeden incelemek için `docker volume inspect dublajlab_media` kullanılabilir.
+
+## Deployment planı
+
+Canlı public demo için önerilen hedef mimari **Vercel üzerinde statik React/Vite frontend + Railway üzerinde tek replik Docker/FastAPI backend + `/app/media` persistent volume** yapısıdır.
+
+- Frontend upload isteklerini Vercel Function üzerinden geçirmek yerine doğrudan backend API domain'ine gönderir.
+- Backend tek replica/worker olarak kalır; mevcut job registry ve rate limiter process belleğindedir.
+- Public demo için Railway uyku modu başlangıçta kapalı, medya TTL'i kısa ve cleanup saatlik olmalıdır.
+- Gerçek domain yapısı `dublajlab.example` ve `api.dublajlab.example` biçiminde ayrılır; CORS yalnızca frontend origin'ine açılır.
+- Düşük trafikte beklenen başlangıç maliyeti domain hariç yaklaşık 5–15 USD/aydır.
+
+Render, Railway, Fly.io, VPS ve Vercel + ayrı backend karşılaştırması; environment değişkenleri, domain, cleanup, risk ve ilk yayın adımları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın. Bu aşamada provider konfigürasyonu veya secret repoya eklenmemiştir.
 
 ## Ortam değişkenleri
 
