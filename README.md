@@ -42,25 +42,37 @@ Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının
 
 **Live demo:** Henüz herkese açık bir deployment bulunmuyor. Yerel demo için [kurulum](#backend-kurulumu) ve [demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
 
-Portföy görselleri için sabit hedefler hazırdır:
+### Screenshots
 
-| İçerik | Dosya yolu | Durum |
-| --- | --- | --- |
-| Hero + polish edilmiş editör | `docs/assets/dublajlab-editor.webp` | Çekim bekliyor |
-| Template galerisi (grid kartlar) | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
-| Mobil demo GIF | `docs/assets/dublajlab-mobile.gif` | Kayıt bekliyor |
+GitHub, LinkedIn ve CV sunumunda kullanılacak beş temel ekran için sabit placeholder yolları hazırdır. Gerçek dosyalar henüz repoya eklenmediği için bağlantılar bozuk görsel oluşturmaması amacıyla aşağıda yorum içinde tutulur.
 
-[Görsel hazırlama kuralları ve dosya manifesti](docs/assets/README.md)
+| Ekran | Portföyde göstereceği değer | Placeholder yolu | Durum |
+| --- | --- | --- | --- |
+| Landing / hero | Ürün vaadi, üç adım, CTA ve çıktı mock'u | `docs/assets/dublajlab-landing-hero.webp` | Çekim bekliyor |
+| Template gallery | CSS placeholder kartlar, kategori, süre, replik ve zorluk bilgileri | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
+| Recording timeline | Zamanlanmış replikler, mikrofon kaydı ve kayıt ilerlemesi | `docs/assets/dublajlab-recording-timeline.webp` | Çekim bekliyor |
+| Export result | Sonuç video önizlemesi, MP4 indirme ve yeniden deneme aksiyonları | `docs/assets/dublajlab-export-result.webp` | Çekim bekliyor |
+| Mobile view | Tek kolon hero, kaynak seçimi ve kayıt paneli | `docs/assets/dublajlab-mobile.webp` | Çekim bekliyor |
 
-Gerçek dosyalar eklendiğinde aşağıdaki hazır Markdown satırları yorumdan çıkarılabilir:
+```markdown
+<!-- ![DublajLab landing ve hero](docs/assets/dublajlab-landing-hero.webp) -->
+<!-- ![DublajLab hazır sahne galerisi](docs/assets/dublajlab-template-gallery.webp) -->
+<!-- ![DublajLab replik kayıt timeline'ı](docs/assets/dublajlab-recording-timeline.webp) -->
+<!-- ![DublajLab MP4 export sonucu](docs/assets/dublajlab-export-result.webp) -->
+<!-- ![DublajLab mobil görünümü](docs/assets/dublajlab-mobile.webp) -->
+```
 
-<!-- ![DublajLab masaüstü editörü](docs/assets/dublajlab-editor.webp) -->
-<!-- ![DublajLab template galerisi](docs/assets/dublajlab-template-gallery.webp) -->
-<!-- ![DublajLab mobil demo akışı](docs/assets/dublajlab-mobile.gif) -->
+### Demo GIF
 
-Görseller yalnızca proje sahibinin kendi videosu veya doğrulanmış açık lisanslı/telifsiz bir kaynakla hazırlanmalıdır. Telifli film, dizi, meme ya da sosyal medya klibi repoya eklenmemelidir.
+Kısa demo GIF'i kaynak seçimi → replik kaydı → export sonucu akışını göstermelidir. Hedef yol:
 
-Not: Faz 7 sonrası template galerisinde kullanılan thumbnail görselleri CSS gradientleridir; repoda telifli görsel veya medya dosyası bulunmaz.
+```markdown
+<!-- ![DublajLab uçtan uca demo akışı](docs/assets/dublajlab-demo.gif) -->
+```
+
+GIF 15 saniyeden kısa, okunabilir ve tekrarlı izlemeye uygun hazırlanmalıdır. Ayrıntılı kadraj, boyut, optimizasyon ve yayın öncesi kontrol listesi için [görsel hazırlama kuralları ve dosya manifestine](docs/assets/README.md) bakın.
+
+> Telif güvenliği: Çekimlerde yalnızca proje sahibinin ürettiği medya veya lisansı doğrulanmış açık lisanslı/telifsiz içerik kullanılmalıdır. Film, dizi, reklam, müzik klibi, meme veya sosyal medya kesiti repoya eklenmemelidir. Faz 7 template thumbnail'ları gerçek görsel değil, CSS ile üretilmiş güvenli placeholder'lardır.
 
 ## Hazır video / template sistemi
 

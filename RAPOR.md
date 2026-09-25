@@ -542,3 +542,15 @@ Faz 7 arayüzü masaüstü ve mobil breakpoint'lerde yeniden kontrol edildi. Bu 
 - Frontend ESLint geçti.
 - TypeScript + Vite production build geçti.
 - Backend Pytest: 51/51 geçti; mevcut gerçek FFmpeg entegrasyon testi bozulmadı.
+
+### Demo Sunum Hazırlığı
+
+GitHub ve LinkedIn sunumu için yalnızca dokümantasyon hazırlığı yapıldı; gerçek medya veya görsel dosyası eklenmedi.
+
+- README içindeki Screenshots / Demo GIF alanı beş ayrı statik ekran ve bir kısa akış GIF'i için düzenlendi.
+- Landing/hero, template gallery, recording timeline, export result ve mobile view için kalıcı placeholder yolları tanımlandı.
+- `docs/assets/README.md` içinde her çekimin kadrajı, önerilen çözünürlüğü, formatı ve hazır olma durumu netleştirildi.
+- Demo GIF için 8–15 saniyelik kaynak seçimi → iki replik kaydı → export sonucu senaryosu tanımlandı.
+- Telifli film/dizi/meme/sosyal medya kesitlerinin kullanılmaması; yalnızca proje sahibine ait veya lisansı doğrulanmış medya kullanılması şartı tekrarlandı.
+- Kişisel dosya yolu, token, e-posta, terminal geçmişi ve özel bildirimlerin yayın öncesinde kırpılması kontrol listesine eklendi.
+- Gerçek asset bulunmadığı için Markdown görsel yolları yorum içinde bırakıldı; README'de bozuk görsel oluşturulmadı.
