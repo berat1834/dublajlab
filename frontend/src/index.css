@@ -21,6 +21,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(ellipse 80% 50% at 15% -5%, rgba(199, 244, 100, 0.07), transparent),
     radial-gradient(ellipse 70% 45% at 85% 8%, rgba(167, 139, 250, 0.065), transparent),
@@ -68,51 +69,6 @@ video {
   background-clip: padding-box;
 }
 
-/* ── Utility animations ── */
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes fade-in-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background-size: 200% 100%;
-  animation: shimmer 2.5s ease-in-out infinite;
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.5s ease-out both;
-}
-
 /* ── Card & panel glass effect ── */
 
 .glass-panel {
@@ -125,9 +81,11 @@ video {
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06);
+@media (hover: hover) and (pointer: fine) {
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
 }
 
 /* ── Template thumbnail placeholder gradients ── */
@@ -152,7 +110,7 @@ video {
   background: linear-gradient(135deg, #71717a 0%, #52525b 50%, #3f3f46 100%);
 }
 
-/* ── Feature strip shimmer ── */
+/* ── Feature strip highlight ── */
 
 .feature-strip-item {
   position: relative;
@@ -163,10 +121,14 @@ video {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 6s ease-in-out infinite;
+  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.035), transparent 80%);
   pointer-events: none;
+}
+
+@media (max-width: 639px) {
+  body {
+    background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, 100% 100%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

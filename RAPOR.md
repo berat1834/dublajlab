@@ -527,3 +527,18 @@ Uygulamayı dublaj.io / memedublaj benzeri daha dolu ve daha profesyonel bir ür
 - Backend Pytest: 51/51 geçti (gerçek FFmpeg entegrasyon testi dahil)
 - Frontend ESLint: geçti
 - TypeScript + Vite production build: geçti
+
+### Visual QA Notu
+
+Faz 7 arayüzü masaüstü ve mobil breakpoint'lerde yeniden kontrol edildi. Bu turda yeni ürün özelliği veya backend sözleşmesi değişikliği yapılmadı.
+
+- Hero CTA'ları, üç adım göstergesi ve çıktı mock'u dar ekranlarda taşmayacak şekilde düzenlendi.
+- Mobil timeline'daki iç içe dikey kaydırma kaldırıldı; replikler doğal sayfa akışına bırakıldı.
+- Native ses oynatıcısı, uzun hata/lisans metinleri, template başlıkları ve dosya bilgileri için taşma koruması eklendi.
+- Backend kapalıyken template kataloğunda aynı hatanın iki ayrı panelde tekrarlanması önlendi; yerel tekrar deneme kartı korundu.
+- Boş durum ve demo-medya-yok durumu daha dengeli ve daha yüksek kontrastlı hale getirildi.
+- Sürekli shimmer ve kart bazlı gecikmeli giriş animasyonları kaldırıldı. Yalnızca yükleme, job ve aktif kayıt gibi işlevsel durum animasyonları bırakıldı.
+- Güncel production build 1440 px masaüstü ve 500 px mobil breakpoint görünümünde headless Chromium ile render edilerek görsel olarak kontrol edildi.
+- Frontend ESLint geçti.
+- TypeScript + Vite production build geçti.
+- Backend Pytest: 51/51 geçti; mevcut gerçek FFmpeg entegrasyon testi bozulmadı.

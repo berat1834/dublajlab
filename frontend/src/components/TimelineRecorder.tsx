@@ -287,7 +287,7 @@ export function TimelineRecorder({
       <div className="mb-4 rounded-xl border border-white/8 bg-black/15 p-3">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-zinc-300">Kayıt ilerlemesi</span>
-          <span className="tabular-nums text-zinc-500">{completedCount}/{lines.length} tamamlandı</span>
+          <span className="shrink-0 tabular-nums text-zinc-400">{completedCount}/{lines.length} tamamlandı</span>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
           <div
@@ -298,12 +298,13 @@ export function TimelineRecorder({
       </div>
 
       {!videoAvailable && (
-        <div className="mb-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.05] p-3 text-xs leading-5 text-amber-100/80">
-          Demo video dosyası eklenmedi. Hazır replikleri düzenleyebilir ve mikrofon kayıt akışını deneyebilirsin; video önizleme ve MP4 export için kendi videonu yükle.
+        <div className="mb-4 rounded-xl border border-violet/20 bg-violet/[0.06] p-3 text-xs leading-5 text-zinc-300">
+          <span className="font-bold text-violet">Demo medya yakında.</span>{' '}
+          Hazır replikleri düzenleyip kayıt akışını deneyebilirsin. Video önizleme ve MP4 export için kendi videonu yükle.
         </div>
       )}
 
-      <div className="max-h-[590px] space-y-3 overflow-y-auto pr-1">
+      <div className="space-y-3 lg:max-h-[590px] lg:overflow-y-auto lg:pr-1">
         {lines.map((line, index) => {
           const clip = clips.get(line.id)
           const isRecording = activeLineId === line.id
@@ -321,12 +322,12 @@ export function TimelineRecorder({
                     : 'border-white/8 bg-black/15'
               }`}
             >
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-2">
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <span className="grid h-6 w-6 place-items-center rounded-lg bg-white/5 text-[11px] font-bold text-zinc-400">
                     {index + 1}
                   </span>
-                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-bold ${isRecording ? 'text-red-300' : clip ? 'text-lime' : 'text-zinc-500'}`}>
+                  <span className={`inline-flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-bold leading-4 ${isRecording ? 'text-red-300' : clip ? 'text-lime' : 'text-zinc-400'}`}>
                     {isRecording ? (
                       <><Radio className="h-3.5 w-3.5 animate-pulse" /> Kayıt devam ediyor</>
                     ) : clip ? (
@@ -336,7 +337,7 @@ export function TimelineRecorder({
                     )}
                   </span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     title="Sahneyi oynat"
@@ -432,9 +433,9 @@ export function TimelineRecorder({
                   )}
                 </button>
                 {clip && (
-                  <div className="flex min-w-0 flex-1 items-center gap-2 rounded-lg bg-black/20 px-2 py-1">
+                  <div className="flex w-full min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-lg bg-black/20 px-2 py-1">
                     <Headphones className="h-3.5 w-3.5 shrink-0 text-lime" />
-                    <audio className="h-8 min-w-0 flex-1" src={clip.url} controls />
+                    <audio className="h-8 min-w-0 max-w-full flex-1" src={clip.url} controls />
                   </div>
                 )}
                 {isRecording && (
@@ -480,7 +481,7 @@ export function TimelineRecorder({
         <WandSparkles className="h-5 w-5" /> Kendi Sesimle Videoyu Oluştur
       </button>
       {exportBlockReason ? (
-        <p className="mt-2 text-center text-xs text-zinc-500">{exportBlockReason}</p>
+        <p className="mt-2 break-words text-center text-xs leading-5 text-zinc-400">{exportBlockReason}</p>
       ) : (
         <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-lime">
           <CheckCircle2 className="h-3.5 w-3.5" /> Tüm replikler hazır; videonu oluşturabilirsin.
