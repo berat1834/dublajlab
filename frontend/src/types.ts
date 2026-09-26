@@ -68,4 +68,4 @@ export interface VideoTemplate {
   character_count?: number
 }
 
-export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily'
+export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily' | 'login' | 'register'

@@ -34,6 +34,7 @@ import { ShowcaseDubs } from './components/ShowcaseDubs'
 import { DailyDub } from './components/DailyDub'
 import { EthicsNotice } from './components/EthicsNotice'
 import { SceneDetail } from './components/SceneDetail'
+import { AuthPage } from './components/AuthPage'
 import {
   absoluteApiUrl,
   fetchDemoPolicy,
@@ -1028,6 +1029,8 @@ function App() {
             </div>
           ) : activeTab === 'dubs' ? (
             <ShowcaseDubs />
+          ) : activeTab === 'login' || activeTab === 'register' ? (
+            <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} />
           ) : (
             <DailyDub setActiveTab={setActiveTab} handleFeatureSoon={handleFeatureSoon} />
           )}

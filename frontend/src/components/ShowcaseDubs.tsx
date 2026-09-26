@@ -10,11 +10,35 @@ export function ShowcaseDubs() {
           ⚠️ Bu alan canlı demo için örnek (placeholder) içeriklerle gösterilmektedir.
         </div>
       </div>
+      <div className="mb-6 flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+        <button className="rounded-full bg-white px-4 py-1.5 text-xs font-bold text-black">Akış</button>
+        <button className="rounded-full bg-white/5 px-4 py-1.5 text-xs font-bold text-zinc-400 hover:bg-white/10 hover:text-white transition">En Yeni</button>
+        <button className="rounded-full bg-white/5 px-4 py-1.5 text-xs font-bold text-zinc-400 hover:bg-white/10 hover:text-white transition">En Beğenilen</button>
+      </div>
+
+      <div className="mb-8 overflow-hidden rounded-3xl border border-white/10 bg-black relative group cursor-pointer">
+        <div className="absolute inset-0 bg-gradient-to-r from-lime/20 to-violet/20 opacity-50"></div>
+        <div className="relative p-6 sm:p-10 flex flex-col sm:flex-row items-center gap-6">
+          <div className="w-full sm:w-1/2 aspect-video bg-zinc-900 rounded-xl relative grid place-items-center border border-white/10 shadow-glow">
+            <Play className="h-12 w-12 text-white/40 group-hover:text-lime transition group-hover:scale-110" />
+            <span className="absolute top-3 left-3 rounded-md bg-lime/20 border border-lime/30 px-2 py-1 text-[10px] font-black text-lime uppercase">Haftanın Kazananı</span>
+          </div>
+          <div className="w-full sm:w-1/2">
+            <h2 className="text-2xl font-black text-white">Toplantı Faciası - Şefik'in Dublajı</h2>
+            <p className="mt-2 text-sm text-zinc-400 leading-relaxed">Topluluk oylamasıyla seçilen bu haftanın en komik dublajını izle. Gerçekten inanılmaz bir ses aktarımı olmuş!</p>
+            <div className="mt-4 flex items-center gap-4 text-sm font-semibold text-zinc-300">
+              <span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-lime" /> 24K</span>
+              <span className="flex items-center gap-1.5"><MessageSquare className="h-4 w-4 text-violet" /> 1.2K</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div key={i} className="group overflow-hidden rounded-2xl border border-white/10 bg-surface/80 shadow-card transition hover:border-white/20">
             <div className="relative aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 grid place-items-center">
-              <Play className="h-10 w-10 text-white/40 group-hover:text-lime transition" />
+              <Play className="h-10 w-10 text-white/40 group-hover:text-lime transition group-hover:scale-110" />
               <span className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white uppercase">Komedi</span>
               <span className="absolute bottom-2 right-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] tabular-nums text-white">0:15</span>
             </div>

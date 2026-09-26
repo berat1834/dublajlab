@@ -743,6 +743,12 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] "Nasıl Oynanır" yönlendirmeleri ve VIP/Premium promo alanı (fake state)
 - [x] Kullanıcı istatistikleri simulasyonu (Oynanma sayısı) ve estetik medya placeholder'ları
 
+### Faz 14 — Platform Pages Polish & Auth Shell
+- [x] `AuthPage.tsx` ile marka diline uygun demo Giriş/Kayıt arayüzü
+- [x] Arama ve sıralama (UI-only) filtreleriyle zenginleştirilmiş `TemplateGallery`
+- [x] Öne çıkan kartı (Featured) ve akış filtreleriyle genişletilmiş `ShowcaseDubs`
+- [x] Özel component haline getirilmiş `VipPromo` modülü ve Footer iyileştirmeleri
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline

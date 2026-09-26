@@ -33,8 +33,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
               <MessageSquare className="h-4 w-4" /> Discord
             </button>
             <div className="h-4 w-[1px] bg-white/10"></div>
-            <button onClick={handleFeatureSoon} className="text-zinc-300 hover:text-white">Giriş yap</button>
-            <button onClick={handleFeatureSoon} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">Kayıt ol</button>
+            <button onClick={() => setActiveTab('login')} className="text-zinc-300 hover:text-white">Giriş yap</button>
+            <button onClick={() => setActiveTab('register')} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">Kayıt ol</button>
             <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 rounded-lg border border-lime/30 bg-lime/10 px-3 py-1.5 font-bold text-lime transition hover:bg-lime/20">
               <Crown className="h-4 w-4" /> VIP ol
             </button>
@@ -54,8 +54,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             <hr className="border-white/10" />
             <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><Globe className="h-4 w-4" /> TR</button>
             <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Discord</button>
-            <button onClick={handleFeatureSoon} className="text-left">Giriş yap</button>
-            <button onClick={handleFeatureSoon} className="text-left">Kayıt ol</button>
+            <button onClick={() => { setActiveTab('login'); setMobileMenuOpen(false); }} className="text-left">Giriş yap</button>
+            <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">Kayıt ol</button>
             <button onClick={handleFeatureSoon} className="text-left text-lime flex items-center gap-2"><Crown className="h-4 w-4" /> VIP ol</button>
           </div>
         </div>

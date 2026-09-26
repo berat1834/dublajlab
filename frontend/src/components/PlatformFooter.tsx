@@ -17,10 +17,14 @@ export function PlatformFooter({ setActiveTab, handleFeatureSoon, handleLegalLin
               Dublaj<span className="text-lime">Lab</span>
             </a>
             <p className="mt-4 text-sm leading-6 text-zinc-400">
-              Arkadaşlarınla sahneyi yeniden seslendir. 
-              <br />
-              Kendi videonu kullan, kimseyi taklit etme.
+              Bu proje bir kişisel portföy çalışması olup, video işleme (FFmpeg) ve asenkron web teknolojilerinin sunumunu hedefler. <br/>Tüm işlemler "demo" modundadır.
             </p>
+            <div className="mt-6 flex items-center gap-4 text-zinc-400">
+              <button onClick={handleFeatureSoon} className="hover:text-white transition">X</button>
+              <button onClick={handleFeatureSoon} className="hover:text-white transition">IG</button>
+              <button onClick={handleFeatureSoon} className="hover:text-white transition">DC</button>
+              <button onClick={handleFeatureSoon} className="hover:text-white transition">IN</button>
+            </div>
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Oyna</h3>
