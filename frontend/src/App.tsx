@@ -184,6 +184,13 @@ function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlToken = params.get('token')
+    if (urlToken) {
+      localStorage.setItem('token', urlToken)
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
     if (localStorage.getItem('token')) {
       getMe().then(user => setCurrentUser(user)).catch(() => localStorage.removeItem('token'))
     }
