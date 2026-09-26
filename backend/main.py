@@ -51,7 +51,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins(),
     allow_credentials=False,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 app.include_router(video_router)
@@ -61,6 +61,15 @@ app.include_router(maintenance_router)
 
 from backend.routers.auth_router import router as auth_router
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+
+from backend.routers.user_router import router as user_router
+app.include_router(user_router, prefix="/api/me", tags=["me"])
+
+from backend.routers.public_router import router as public_router
+app.include_router(public_router)
+
+from backend.routers.admin_router import router as admin_router
+app.include_router(admin_router)
 
 import backend.models_db as models_db
 from backend.database import engine

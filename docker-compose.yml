@@ -5,6 +5,10 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       APP_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/media/dublajlab.db}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env.docker}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-4320}
       MEDIA_ROOT: /app/media
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
       MAINTENANCE_TOKEN: ${MAINTENANCE_TOKEN:?MAINTENANCE_TOKEN must be set in .env.docker}
