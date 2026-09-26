@@ -34,8 +34,9 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
         onToast('Giriş başarılı! Stüdyoya yönlendiriliyorsunuz.')
         setActiveTab('play')
       }
-    } catch (err: any) {
-      onToast(err.message || 'Bir hata oluştu.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Bir hata oluştu.'
+      onToast(msg)
     } finally {
       setLoading(false)
     }
