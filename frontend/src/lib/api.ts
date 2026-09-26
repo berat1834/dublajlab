@@ -243,6 +243,22 @@ export async function getMe(): Promise<User> {
   return parseResponse<User>(response)
 }
 
+export async function deleteAccount(password: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/me/account`, {
+    method: 'DELETE',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ password })
+  })
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    throw new Error(errorData?.detail || 'Hesap silinirken bir hata oluştu.')
+  }
+}
+
 // ═══════════════════════════ USER LIBRARY API ═══════════════════════════
 
 export async function getUserProjects(): Promise<DubbingProject[]> {

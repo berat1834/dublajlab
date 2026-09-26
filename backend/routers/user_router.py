@@ -6,9 +6,22 @@ import os
 from backend.database import get_db
 import backend.models_db as models_db
 import backend.schemas as schemas
-from backend.routers.auth_router import get_current_user
+from backend.routers.auth_router import get_current_user, get_password_hash, verify_password
 
 router = APIRouter()
+
+@router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(body: dict, db: Session = Depends(get_db), current_user: models_db.User = Depends(get_current_user)):
+    password = body.get("password")
+    if not password:
+        raise HTTPException(status_code=400, detail="Şifre gerekli.")
+        
+    if not current_user.hashed_password or not verify_password(password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Geçersiz şifre.")
+        
+    db.delete(current_user)
+    db.commit()
+    return None
 
 @router.get("/projects", response_model=List[schemas.ProjectResponse])
 def get_user_projects(db: Session = Depends(get_db), current_user: models_db.User = Depends(get_current_user)):

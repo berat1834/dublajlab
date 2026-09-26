@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { User, Shield, Trash2, Edit3, Image as ImageIcon, MessageSquare, Diamond, Fingerprint } from 'lucide-react'
 import type { User as UserType } from '../types'
+import { deleteAccount } from '../lib/api'
+import { useLanguage } from '../LanguageContext'
 
 interface AccountSettingsProps {
   currentUser: UserType
@@ -10,6 +12,7 @@ interface AccountSettingsProps {
 }
 
 export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiveTab }: AccountSettingsProps) {
+  const { t } = useLanguage()
   const [username, setUsername] = useState(currentUser.display_name)
   const [bio, setBio] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
@@ -17,14 +20,14 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteUsername, setDeleteUsername] = useState('')
   const [deletePassword, setDeletePassword] = useState('')
-  const [isDiscordConnecting, setIsDiscordConnecting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleSaveProfile = () => {
     setCurrentUser({ ...currentUser, display_name: username, avatar_url: avatar })
-    onToast('Profil başarıyla güncellendi.', 'success')
+    onToast(t('account.save') + ' başarılı.', 'success')
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deleteUsername !== currentUser.display_name) {
       onToast('Kullanıcı adı eşleşmiyor.', 'error')
       return
@@ -34,21 +37,23 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
       return
     }
     
-    // Simulate API call and success
-    setCurrentUser(null)
-    localStorage.removeItem('token')
-    setActiveTab('play')
-    onToast('Hesabınız kalıcı olarak silindi.', 'success')
+    setIsDeleting(true)
+    try {
+      await deleteAccount(deletePassword)
+      setCurrentUser(null)
+      localStorage.removeItem('token')
+      setActiveTab('play')
+      onToast('Hesabınız kalıcı olarak silindi.', 'success')
+    } catch (err: any) {
+      onToast(err.message, 'error')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleDiscordConnect = () => {
-    setIsDiscordConnecting(true)
-    onToast('Discord bağlantısı açılıyor...', 'success')
-    setTimeout(() => {
-      setIsDiscordConnecting(false)
-      setCurrentUser({ ...currentUser, discord_linked: true, role: 'lab' })
-      onToast('Discord başarıyla bağlandı! Lab rolü kazandınız.', 'success')
-    }, 2000)
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    window.location.href = `${baseUrl}/api/auth/discord/login`
   }
 
   return (
@@ -205,8 +210,8 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
                 <MessageSquare className="h-4 w-4 text-[#5865F2]" /> {currentUser.display_name} Bağlandı
               </div>
             ) : (
-              <button disabled={isDiscordConnecting} onClick={handleDiscordConnect} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2 disabled:opacity-50">
-                <MessageSquare className="h-4 w-4" /> {isDiscordConnecting ? 'Bağlanıyor...' : 'Discord Hesabını Bağla'}
+              <button onClick={handleDiscordConnect} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2">
+                <MessageSquare className="h-4 w-4" /> Discord Hesabını Bağla
               </button>
             )}
           </div>
@@ -255,10 +260,10 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
               </div>
               <p className="text-xs text-red-400 mb-4 font-medium">Hesabın gerçekten sana ait olduğunu doğruluyoruz.</p>
               <div className="flex items-center gap-3">
-                <button onClick={handleDelete} className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition shadow-lg shadow-red-900/20">
-                  Hesabı kalıcı olarak sil
+                <button disabled={isDeleting} onClick={handleDelete} className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition shadow-lg shadow-red-900/20 disabled:opacity-50">
+                  {isDeleting ? 'Siliniyor...' : 'Hesabı kalıcı olarak sil'}
                 </button>
-                <button onClick={() => setShowDeleteConfirm(false)} className="px-5 py-2.5 rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 text-sm font-bold transition">
+                <button disabled={isDeleting} onClick={() => setShowDeleteConfirm(false)} className="px-5 py-2.5 rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 text-sm font-bold transition disabled:opacity-50">
                   Vazgeç
                 </button>
               </div>
