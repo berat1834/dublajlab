@@ -5,9 +5,10 @@ import type { DubbingProject, DubbingExport } from '../types'
 
 interface UserLibraryProps {
   onToast: (msg: string) => void
+  setActiveTab: (tab: any) => void
 }
 
-export function UserLibrary({ onToast }: UserLibraryProps) {
+export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
   const [projects, setProjects] = useState<DubbingProject[]>([])
   const [exports, setExports] = useState<DubbingExport[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,7 +85,7 @@ export function UserLibrary({ onToast }: UserLibraryProps) {
           <p className="text-sm text-zinc-500 max-w-sm mb-8">
             Bir oda kur, arkadaşlarını çağır — ilk dublajın burada görünsün.
           </p>
-          <button className="px-6 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
+          <button onClick={() => setActiveTab('oda_kur')} className="px-6 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
             Oda kur
           </button>
         </div>
@@ -97,7 +98,7 @@ export function UserLibrary({ onToast }: UserLibraryProps) {
             <h2 className="text-2xl font-black text-white">Dublaj daha hızlı, daha yüksek kalitede.</h2>
             <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile sahneleri açar, render sırasını atlar ve 1080p çıktı alırsın.</p>
           </div>
-          <button className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
+          <button onClick={() => setActiveTab('membership')} className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
             VIP Ol
           </button>
         </div>
@@ -207,7 +208,7 @@ export function UserLibrary({ onToast }: UserLibraryProps) {
           <h2 className="text-2xl font-black text-white">Dublaj daha hızlı, daha yüksek kalitede.</h2>
           <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile sahneleri açar, render sırasını atlar ve 1080p çıktı alırsın.</p>
         </div>
-        <button className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
+        <button onClick={() => setActiveTab('membership')} className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
           VIP Ol
         </button>
       </div>

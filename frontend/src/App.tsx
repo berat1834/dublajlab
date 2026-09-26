@@ -1063,23 +1063,23 @@ function App() {
           ) : activeTab === 'dubs' ? (
             <ShowcaseDubs onToast={showToast} />
           ) : activeTab === 'library' ? (
-            currentUser ? <UserLibrary onToast={showToast} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
+            currentUser ? <UserLibrary onToast={showToast} setActiveTab={setActiveTab} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
           ) : activeTab === 'admin' ? (
             currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
           ) : activeTab === 'oda_kur' ? (
             <OdaKur setActiveTab={setActiveTab} />
           ) : activeTab === 'account' && currentUser ? (
-            <AccountSettings currentUser={currentUser} onToast={showToast} setActiveTab={setActiveTab} />
+            <AccountSettings currentUser={currentUser} setCurrentUser={setCurrentUser} onToast={showToast} setActiveTab={setActiveTab} />
           ) : activeTab === 'profile' && currentUser ? (
             <PublicProfile currentUser={currentUser} setActiveTab={setActiveTab} />
           ) : activeTab === 'membership' ? (
-            <Membership setActiveTab={setActiveTab} />
+            <Membership setActiveTab={setActiveTab} onToast={showToast} />
           ) : activeTab === 'user_scenes' ? (
-            <UserScenes setActiveTab={setActiveTab} />
+            <UserScenes setActiveTab={setActiveTab} onToast={showToast} />
           ) : activeTab === 'user_favorites' ? (
             <UserFavorites setActiveTab={setActiveTab} />
           ) : activeTab === 'user_credits' ? (
-            <UserCredits setActiveTab={setActiveTab} />
+            <UserCredits setActiveTab={setActiveTab} onToast={showToast} />
           ) : activeTab === 'login' || activeTab === 'register' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (

@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { ArrowRight, Coins, Calendar, TrendingUp } from 'lucide-react'
 import type { Tab } from '../types'
 
 interface UserCreditsProps {
   setActiveTab: (tab: Tab) => void
+  onToast: (msg: string, type?: 'error' | 'success') => void
 }
 
-export function UserCredits({ setActiveTab }: UserCreditsProps) {
+export function UserCredits({ setActiveTab, onToast }: UserCreditsProps) {
+  const [filter, setFilter] = useState<'all' | 'earned' | 'spent'>('all')
   return (
     <div className="py-8 max-w-4xl mx-auto pb-24 px-4 sm:px-0">
       <div className="mb-12">
@@ -23,7 +26,7 @@ export function UserCredits({ setActiveTab }: UserCreditsProps) {
               <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Kullanılabilir</div>
               <div className="text-5xl font-black text-white">35</div>
             </div>
-            <button className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-zinc-200 transition">
+            <button onClick={() => onToast('Kredi satın alma sistemi yakında aktif edilecek!', 'error')} className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-zinc-200 transition">
               Kredi Al
             </button>
           </div>
@@ -63,9 +66,9 @@ export function UserCredits({ setActiveTab }: UserCreditsProps) {
           <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
             <h3 className="text-lg font-bold text-white">Hareketler</h3>
             <div className="flex items-center gap-2 p-1 rounded-lg bg-black border border-white/10">
-              <button className="px-3 py-1 rounded-md bg-white/10 text-white text-xs font-bold">Tümü</button>
-              <button className="px-3 py-1 rounded-md text-zinc-500 hover:text-white text-xs font-bold transition">Kazanılan</button>
-              <button className="px-3 py-1 rounded-md text-zinc-500 hover:text-white text-xs font-bold transition">Harcanan</button>
+              <button onClick={() => setFilter('all')} className={`px-3 py-1 rounded-md text-xs font-bold transition ${filter === 'all' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-white'}`}>Tümü</button>
+              <button onClick={() => setFilter('earned')} className={`px-3 py-1 rounded-md text-xs font-bold transition ${filter === 'earned' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-white'}`}>Kazanılan</button>
+              <button onClick={() => setFilter('spent')} className={`px-3 py-1 rounded-md text-xs font-bold transition ${filter === 'spent' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-white'}`}>Harcanan</button>
             </div>
           </div>
           
@@ -74,20 +77,24 @@ export function UserCredits({ setActiveTab }: UserCreditsProps) {
           </div>
 
           <div className="p-6">
-            <div className="flex items-center justify-between pb-4 border-b border-white/5 last:border-0 last:pb-0">
-              <div>
-                <div className="font-bold text-white text-sm mb-1">Hoş geldin kredisi</div>
-                <div className="text-xs text-zinc-500 flex items-center gap-1">
-                  <Calendar className="h-3 w-3" /> 26 Eylül 17:00
+            {filter !== 'spent' ? (
+              <div className="flex items-center justify-between pb-4 border-b border-white/5 last:border-0 last:pb-0">
+                <div>
+                  <div className="font-bold text-white text-sm mb-1">Hoş geldin kredisi</div>
+                  <div className="text-xs text-zinc-500 flex items-center gap-1">
+                    <Calendar className="h-3 w-3" /> 26 Eylül 17:00
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-lime-400 font-black flex items-center justify-end gap-1 mb-1">
+                    <TrendingUp className="h-3 w-3" /> +35
+                  </div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Bakiye 35</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-lime-400 font-black flex items-center justify-end gap-1 mb-1">
-                  <TrendingUp className="h-3 w-3" /> +35
-                </div>
-                <div className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Bakiye 35</div>
-              </div>
-            </div>
+            ) : (
+              <div className="text-center text-sm text-zinc-500 py-4">Bu kategoriye ait işlem bulunamadı.</div>
+            )}
           </div>
         </div>
 

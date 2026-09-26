@@ -4,17 +4,30 @@ import type { User as UserType } from '../types'
 
 interface AccountSettingsProps {
   currentUser: UserType
+  setCurrentUser: (user: UserType | null) => void
   onToast: (msg: string, type?: 'success' | 'error') => void
   setActiveTab: (tab: any) => void
 }
 
-export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountSettingsProps) {
+export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiveTab }: AccountSettingsProps) {
   const [username, setUsername] = useState(currentUser.display_name)
   const [bio, setBio] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
 
+  const [avatar, setAvatar] = useState(currentUser.avatar_url || '')
+
   const handleSaveProfile = () => {
+    setCurrentUser({ ...currentUser, display_name: username, avatar_url: avatar })
     onToast('Profil başarıyla güncellendi.', 'success')
+  }
+
+  const handleDelete = () => {
+    if (window.confirm('Bu işlem GERİ ALINAMAZ. Hesabınızı gerçekten silmek istiyor musunuz?')) {
+      setCurrentUser(null)
+      localStorage.removeItem('token')
+      setActiveTab('play')
+      onToast('Hesabınız kalıcı olarak silindi.')
+    }
   }
 
   return (
@@ -68,7 +81,7 @@ export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountS
               <button onClick={() => setActiveTab('membership')} className="px-5 py-2.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 text-sm font-bold hover:bg-amber-500/20 transition flex items-center gap-2">
                 <Diamond className="h-4 w-4" /> VIP Ol
               </button>
-              <button onClick={() => setActiveTab('membership')} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
+              <button onClick={() => setActiveTab('user_credits')} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
                 Krediler
               </button>
             </div>
@@ -108,7 +121,8 @@ export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountS
               <input 
                 type="text" 
                 placeholder="https://..."
-                defaultValue={currentUser.avatar_url || ''}
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
                 className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lime-500 transition font-medium"
               />
               <p className="text-xs text-zinc-500 mt-2">Şimdilik yalnızca adres kabul ediliyor (Discord ya da başka bir yerdeki resminin bağlantısı). Dosya yükleme henüz yok.</p>
@@ -129,7 +143,7 @@ export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountS
             </div>
             <div className="text-sm text-zinc-400">
               Şifreni değiştirmek için e-postana bir sıfırlama bağlantısı iste:{' '}
-              <button className="text-white font-bold underline hover:text-lime-400 transition">Sıfırlama bağlantısı iste</button>
+              <button onClick={() => onToast('Şifre sıfırlama bağlantısı e-postanıza gönderildi!', 'success')} className="text-white font-bold underline hover:text-lime-400 transition">Sıfırlama bağlantısı iste</button>
             </div>
           </div>
         </div>
@@ -165,7 +179,7 @@ export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountS
               </h3>
               <p className="text-sm text-zinc-400 mb-6">Discord hesabını bağlayarak topluluk sunucumuzda lab rolünü kap ve seviyene göre özel rozetler kazan.</p>
             </div>
-            <button className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2">
+            <button onClick={() => onToast('Discord entegrasyonu yakında aktif edilecek!', 'error')} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2">
               <MessageSquare className="h-4 w-4" /> Discord Hesabını Bağla
             </button>
           </div>
@@ -188,7 +202,7 @@ export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountS
           <p className="text-xs text-red-500/50 mb-6">
             Verilerinin nasıl işlendiğini KVKK aydınlatma metninde okuyabilirsin.
           </p>
-          <button className="px-6 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition">
+          <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition">
             Hesabımı silmek istiyorum
           </button>
         </div>

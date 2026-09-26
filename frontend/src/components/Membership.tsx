@@ -3,9 +3,10 @@ import type { Tab } from '../types'
 
 interface MembershipProps {
   setActiveTab: (tab: Tab) => void
+  onToast: (msg: string, type?: 'success' | 'error') => void
 }
 
-export function Membership({}: MembershipProps) {
+export function Membership({ setActiveTab, onToast }: MembershipProps) {
   const vipFeatures = [
     { name: 'Hızlı render', description: 'İşlem kuyruğunda sıranın önüne geçersin.', icon: Zap },
     { name: '1080p çıktı', description: 'Kaynak izin verdiği ölçüde en yüksek kalite.', icon: EyeOff },
@@ -35,10 +36,12 @@ export function Membership({}: MembershipProps) {
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <button className="px-5 py-2.5 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-400 transition flex items-center gap-2">
+              <button onClick={() => onToast('VIP satın alma altyapısı yakında!', 'error')} className="px-5 py-2.5 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-400 transition flex items-center gap-2">
                 <Diamond className="h-4 w-4" /> VIP Ol
               </button>
-              <button className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
+              <button onClick={() => {
+                document.getElementById('compare-table')?.scrollIntoView({ behavior: 'smooth' })
+              }} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
                 Paketleri Karşılaştır
               </button>
             </div>
@@ -53,13 +56,13 @@ export function Membership({}: MembershipProps) {
               35 <span className="text-sm font-medium text-zinc-400">Kullanılabilir</span>
             </div>
           </div>
-          <button className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
+          <button onClick={() => setActiveTab('user_credits')} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
             Kredi geçmişi
           </button>
         </div>
 
         {/* Features Table */}
-        <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] overflow-hidden">
+        <div id="compare-table" className="rounded-2xl border border-white/10 bg-[#0f0f0f] overflow-hidden scroll-mt-24">
           <div className="px-6 py-5 border-b border-white/10 bg-black/20">
             <h3 className="text-lg font-bold text-white">Laboratuvar Hakları</h3>
             <p className="text-sm text-zinc-500 mt-1">Üyelikle açılan haklar. VIP+ bütün VIP haklarını kapsar.</p>

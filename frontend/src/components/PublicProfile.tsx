@@ -69,7 +69,7 @@ export function PublicProfile({ currentUser, setActiveTab }: PublicProfileProps)
         <h3 className="text-sm font-bold text-white mb-4">Son dublajlar</h3>
         <div className="rounded-2xl border border-white/10 border-dashed bg-transparent py-16 px-4 flex flex-col items-center text-center">
           <p className="text-sm text-zinc-500 mb-2">Henüz dublaj yok.</p>
-          <button className="text-sm font-bold text-white hover:text-lime-400 transition flex items-center gap-1">
+          <button onClick={() => setActiveTab('oda_kur')} className="text-sm font-bold text-white hover:text-lime-400 transition flex items-center gap-1">
             Bir oyun başlat <ArrowRight className="h-4 w-4" />
           </button>
         </div>

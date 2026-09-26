@@ -3,9 +3,10 @@ import type { Tab } from '../types'
 
 interface UserScenesProps {
   setActiveTab: (tab: Tab) => void
+  onToast: (msg: string, type?: 'success' | 'error') => void
 }
 
-export function UserScenes({ setActiveTab }: UserScenesProps) {
+export function UserScenes({ setActiveTab, onToast }: UserScenesProps) {
   const steps = [
     { title: 'Video', desc: 'MP4 yükle, süre ve ses otomatik ölçülür.', icon: Film },
     { title: 'Karakterler', desc: 'Sahnede konuşan her kişiyi ekle.', icon: Users },
@@ -45,7 +46,7 @@ export function UserScenes({ setActiveTab }: UserScenesProps) {
             </div>
           </div>
           <div className="w-[1px] h-12 bg-white/10 hidden sm:block"></div>
-          <button className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition shadow-[0_0_15px_rgba(220,38,38,0.3)] shrink-0">
+          <button onClick={() => onToast('Sahne stüdyosu çok yakında!', 'success')} className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition shadow-[0_0_15px_rgba(220,38,38,0.3)] shrink-0">
             Yeni Sahne
           </button>
         </div>
@@ -62,7 +63,7 @@ export function UserScenes({ setActiveTab }: UserScenesProps) {
         ))}
       </div>
       
-      <p className="text-xs text-zinc-500 mb-8 font-medium">Gönderdiğin içeriğin haklarına sahip olmalısın. Ayrıntılar: <span className="underline cursor-pointer hover:text-white">Telif bildirimi</span></p>
+      <p className="text-xs text-zinc-500 mb-8 font-medium">Gönderdiğin içeriğin haklarına sahip olmalısın. Ayrıntılar: <span onClick={() => onToast('Telif kuralları sayfası yakında eklenecek.')} className="underline cursor-pointer hover:text-white">Telif bildirimi</span></p>
 
       {/* Empty State */}
       <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] py-20 px-4 flex flex-col items-center text-center">
@@ -70,7 +71,7 @@ export function UserScenes({ setActiveTab }: UserScenesProps) {
         <p className="text-sm text-zinc-400 max-w-md mb-8">
           Bir film ya da dizi sahnesinin videosunu yükle, kimin ne zaman konuştuğunu işaretle, arka plan sesini hazırla ve incelemeye gönder.
         </p>
-        <button className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
+        <button onClick={() => onToast('Sahne stüdyosu çok yakında!', 'success')} className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
           İlk Sahneni Oluştur
         </button>
       </div>
