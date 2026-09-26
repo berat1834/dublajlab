@@ -53,7 +53,7 @@ Bu proje, bir modern web uygulamasının teknik derinliğini sergilemek amacıyl
 
 ## Live Demo / Screenshots / Demo GIF
 
-**Live demo:** Henüz herkese açık bir deployment bulunmuyor. Yerel demo için [kurulum](#backend-kurulumu) ve [demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
+**Live demo:** İlk deployment denemesi **partial deployment** durumundadır; henüz herkese açık Railway veya Vercel URL'si üretilmedi. Yerel doğrulamalar geçti, ancak GitHub CI ve provider girişleri tamamlanmadan production deploy başlatılmadı. Ayrıntılar: [Faz 22 deployment raporu](docs/reports/sprint-22-first-deployment.md). Yerel demo için [kurulum](#backend-kurulumu) ve [demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
 
 ### Screenshots
 
@@ -146,6 +146,17 @@ Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman
 - H.264 + AAC, `yuv420p`, fast-start MP4 export
 - Sonuç önizleme ve indirme
 
+### Hesap ve Kullanıcı Kataloğu (Kalıcı Veri)
+
+- JWT tabanlı kimlik doğrulama altyapısı (giriş yapma, kayıt olma)
+- Giriş yapan kullanıcılara özel "Kataloğum" sayfası (geçmiş projeler ve MP4 çıktıları kalıcı olarak saklanır)
+- Projeleri durum bazlı (İşleniyor, Tamamlandı, Başarısız) izleme ve tek tıkla silme/indirme
+- **Herkese Açık Paylaşım (Public Feed)**: Kullanıcılar tamamlanmış dublaj projelerini "Açık" (Public) duruma getirerek Dublajlar sayfasında topluluğa sergileyebilir.
+- **Topluluk Moderasyonu**: Herkese açık içerikler için kullanıcı raporlama (şikayet) sistemi ve yetkili (Admin) hesaplara özel "Moderasyon Paneli" (içerik gizleme/rapor yönetimi) mevcuttur. (*Not: Henüz manuel moderasyon filtresi vardır, AI content scanning bulunmaz.*)
+- **Beğeni & Görüntülenme Metrikleri**: Herkese açık içerikler izlendikçe `view_count` artar, giriş yapmış kullanıcılar beğendikçe `like_count` kaydedilir ve kalıcı olarak tutulur. (*Not: View sistemi IP bazlı korunmamaktadır, her izlemede artar.*)
+- **Topluluk Yorumları**: Kullanıcılar (sadece giriş yapmış olanlar) Dublajlar sayfasında projelere metin tabanlı (plain text) yorum yapabilirler. Adminler uygunsuz yorumları gizleyebilir (*Basic comment moderation, no automated toxicity filtering*).
+- Giriş yapmayan kullanıcılar (anonim/demo) için platform sorunsuz çalışmaya devam eder
+
 ### Opsiyonel mod — AI ses
 
 - En fazla 500 karakterlik metin girişi
@@ -160,7 +171,8 @@ Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman
 - Yalnızca kullanma hakkına sahip olduğunuz videoları yükleyin.
 - Ünlü/gerçek kişi ses klonlama, deepfake ve sosyal medya bağlantısından video indirme desteklenmez.
 - Mikrofon kayıtları frontend’de blob olarak tutulur, export sırasında backend’e gönderilir ve FFmpeg işlemi bittiğinde geçici sunucu kopyaları silinir.
-- Kaynak ve çıktı dosyaları local modda `backend/data`, Docker modunda media volume içinde tutulur; kalıcı saklama garantisi verilmez.
+- Kaynak ve çıktı dosyaları local modda `backend/data`, Docker modunda media volume içinde tutulur; **kalıcı saklama garantisi verilmez**.
+- **Media Retention (Medya Saklama) Uyarısı**: Giriş yapan kullanıcıların projeleri ve `Kataloğum` sayfası kalıcı olsa da, arka plan (CleanupService) politikası belirli bir süresi dolmuş (.mp4) export dosyalarını temizleyebilir. Bu durumda projeleriniz silinmez ancak dosyalarınız "Süresi Dolmuş" görünür ve indirilemeyebilir.
 - Public demo modunda TTL cleanup politikası gösterilir ve dosyalar harici cron/zamanlanmış görevle düzenli temizlenmelidir.
 
 ## Teknoloji yığını
@@ -173,6 +185,19 @@ Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman
 | Opsiyonel TTS | Edge TTS, değiştirilebilir servis katmanı |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS |
 | Test | Pytest, FastAPI TestClient, ESLint, TypeScript |
+
+## 🚀 Production Readiness
+
+Platform artık kullanıcı hesapları, kalıcı kütüphane, public feed, beğeni, yorum ve moderasyon gibi "Tam Platform" özelliklerine sahiptir. Canlıya çıkış için dikkat edilmesi gereken noktalar:
+
+- **Veritabanı:** Production ortamında **PostgreSQL** kullanımı zorunludur. Geliştirmede kullanılan SQLite, eşzamanlı isteklerde `database is locked` hatasına sebep olur ve kalıcı disk olmayan servislerde veri kaybı yaşatır.
+- **JWT Güvenliği:** `APP_ENV=production` iken varsayılan `JWT_SECRET` ile uygulama başlatılamaz — güçlü, rastgele bir secret tanımlanmalıdır (`openssl rand -hex 32`).
+- **Medya Depolama:** Kısa vadede Railway Volume, uzun vadede S3/R2 kullanılmalıdır.
+- **Moderasyon:** Otomatik içerik taraması (AI toxicity filtering) yoktur; admin'in düzenli denetimi gereklidir.
+
+Deployment stratejisi ve risk analizi için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md), canlıya çıkış kontrol listesi için [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md), smoke test akışı için [docs/PRODUCTION_SMOKE_TEST.md](docs/PRODUCTION_SMOKE_TEST.md) belgelerine bakın.
+
+İlk gerçek hosting denemesi production URL oluşturulmadan **partial deployment** olarak durduruldu. Yerel backend image ve smoke testleri başarılıdır; güncel engeller ve çözümler [Faz 22 raporunda](docs/reports/sprint-22-first-deployment.md) kayıtlıdır.
 
 ## Mimari
 
