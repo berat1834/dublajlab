@@ -33,6 +33,21 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
     return user
 
+from fastapi import Request
+def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id:
+            return db.query(models_db.User).filter(models_db.User.id == user_id).first()
+    except JWTError:
+        return None
+    return None
+
 @router.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     email_lower = user.email.lower()

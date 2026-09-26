@@ -35,6 +35,8 @@ import { DailyDub } from './components/DailyDub'
 import { EthicsNotice } from './components/EthicsNotice'
 import { SceneDetail } from './components/SceneDetail'
 import { AuthPage } from './components/AuthPage'
+import { UserLibrary } from './components/UserLibrary'
+import { AdminModerationPanel } from './components/AdminModerationPanel'
 import {
   absoluteApiUrl,
   fetchDemoPolicy,
@@ -327,6 +329,9 @@ function App() {
     setJobMessage('Dublaj videosu hazır.')
     setOutputUrl(absoluteApiUrl(downloadUrl))
     setStage('completed')
+    if (currentUser) {
+      showToast('Dublajın hesabına kaydedildi.')
+    }
   }
 
   const failProcessing = (
@@ -1039,7 +1044,11 @@ function App() {
               <TemplateGallery onSelect={handleTabTemplateSelect} />
             </div>
           ) : activeTab === 'dubs' ? (
-            <ShowcaseDubs />
+            <ShowcaseDubs onToast={showToast} />
+          ) : activeTab === 'library' ? (
+            currentUser ? <UserLibrary currentUser={currentUser} onToast={showToast} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
+          ) : activeTab === 'admin' ? (
+            currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
           ) : activeTab === 'login' || activeTab === 'register' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (

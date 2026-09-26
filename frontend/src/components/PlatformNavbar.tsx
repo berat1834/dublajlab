@@ -42,8 +42,16 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             <div className="h-4 w-[1px] bg-white/10"></div>
             {currentUser ? (
               <div className="flex items-center gap-4">
+                {currentUser.role === 'admin' && (
+                  <button onClick={() => setActiveTab('admin')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'admin' ? 'bg-violet-500 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}>
+                    Admin
+                  </button>
+                )}
+                <button onClick={() => setActiveTab('library')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'library' ? 'bg-lime-400 text-black' : 'text-white hover:bg-white/10'}`}>
+                  Kataloğum
+                </button>
                 <div className="flex items-center gap-2">
-                  <div className="grid h-8 w-8 place-items-center rounded-full bg-lime/20 text-lime">
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-lime-400/20 text-lime-400">
                     <UserIcon className="h-4 w-4" />
                   </div>
                   <span className="text-sm font-bold text-white">{currentUser.display_name}</span>
@@ -79,8 +87,12 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Discord</button>
             {currentUser ? (
               <>
+                {currentUser.role === 'admin' && (
+                  <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">Admin Paneli</button>
+                )}
+                <button onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} className="text-left text-lime-400 font-bold">Kataloğum</button>
                 <div className="flex items-center gap-2 py-2 text-white">
-                  <UserIcon className="h-4 w-4 text-lime" /> {currentUser.display_name}
+                  <UserIcon className="h-4 w-4 text-lime-400" /> {currentUser.display_name}
                 </div>
                 <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-left text-zinc-400">Çıkış yap</button>
               </>

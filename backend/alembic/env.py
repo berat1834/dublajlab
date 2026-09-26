@@ -16,10 +16,10 @@ if config.config_file_name is not None:
 
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from database import Base, SQLALCHEMY_DATABASE_URL
-import models_db
+from backend.database import Base, SQLALCHEMY_DATABASE_URL
+import backend.models_db
 
 config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
 target_metadata = Base.metadata
