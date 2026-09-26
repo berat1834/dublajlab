@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, Diamond } from 'lucide-react'
 import type { Tab, User } from '../types'
+import { useLanguage } from '../LanguageContext'
 
 interface PlatformNavbarProps {
   activeTab: Tab
@@ -14,7 +15,7 @@ interface PlatformNavbarProps {
 
 export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [lang, setLang] = useState<'TR' | 'EN'>('TR')
+  const { language, setLanguage, t } = useLanguage()
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -37,15 +38,15 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
               Dublaj<span className="text-lime">Lab</span>
             </a>
             <div className="hidden items-center gap-2 md:flex text-sm font-semibold text-zinc-400">
-              <button onClick={() => setActiveTab('play')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'play' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Oyna</button>
-              <button onClick={() => setActiveTab('scenes')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'scenes' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Sahneler</button>
-              <button onClick={() => setActiveTab('dubs')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'dubs' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Dublajlar</button>
-              <button onClick={() => setActiveTab('daily')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'daily' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>Günün Dublajı</button>
+              <button onClick={() => setActiveTab('play')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'play' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>{t('nav.play')}</button>
+              <button onClick={() => setActiveTab('scenes')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'scenes' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>{t('nav.scenes')}</button>
+              <button onClick={() => setActiveTab('dubs')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'dubs' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>{t('nav.dubs')}</button>
+              <button onClick={() => setActiveTab('daily')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'daily' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>{t('nav.daily')}</button>
             </div>
           </div>
           <div className="hidden items-center gap-4 md:flex text-sm font-medium">
-            <button onClick={() => setLang(lang === 'TR' ? 'EN' : 'TR')} className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition w-[50px] justify-center">
-              <Globe className="h-4 w-4" /> {lang}
+            <button onClick={() => setLanguage(language === 'TR' ? 'EN' : 'TR')} className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition w-[50px] justify-center">
+              <Globe className="h-4 w-4" /> {language}
             </button>
             <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 text-zinc-400 hover:text-white">
               <MessageSquare className="h-4 w-4" /> Discord
@@ -105,18 +106,18 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
 
                       <div className="py-2">
                         <div className="px-4 py-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Hesabın</div>
-                        <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Profilim</button>
-                        <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Üyeliğim</button>
-                        <button onClick={() => handleDropdownNav('library')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kataloğum</button>
-                        <button onClick={() => handleDropdownNav('user_scenes')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Sahnelerim</button>
-                        <button onClick={() => handleDropdownNav('user_favorites')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Favorilerim</button>
-                        <button onClick={() => handleDropdownNav('user_credits')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kredilerim</button>
-                        <button onClick={() => handleDropdownNav('account')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Hesabım</button>
+                        <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.profile')}</button>
+                        <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.membership')}</button>
+                        <button onClick={() => handleDropdownNav('library')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.library')}</button>
+                        <button onClick={() => handleDropdownNav('user_scenes')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.scenes')}</button>
+                        <button onClick={() => handleDropdownNav('user_favorites')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.favorites')}</button>
+                        <button onClick={() => handleDropdownNav('user_credits')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.credits')}</button>
+                        <button onClick={() => handleDropdownNav('account')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.account')}</button>
                       </div>
 
                       <div className="border-t border-white/10 pt-2">
                         <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition flex items-center justify-between">
-                          Çıkış yap <LogOut className="h-4 w-4" />
+                          {t('drop.logout')} <LogOut className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -125,8 +126,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
               </div>
             ) : (
               <>
-                <button onClick={() => setActiveTab('login')} className="text-zinc-300 hover:text-white">Giriş yap</button>
-                <button onClick={() => setActiveTab('register')} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">Kayıt ol</button>
+                <button onClick={() => setActiveTab('login')} className="text-zinc-300 hover:text-white">{t('nav.login')}</button>
+                <button onClick={() => setActiveTab('register')} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">{t('nav.register')}</button>
               </>
             )}
             <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 rounded-lg border border-lime/30 bg-lime/10 px-3 py-1.5 font-bold text-lime transition hover:bg-lime/20">

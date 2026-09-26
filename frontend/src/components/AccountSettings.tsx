@@ -17,6 +17,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteUsername, setDeleteUsername] = useState('')
   const [deletePassword, setDeletePassword] = useState('')
+  const [isDiscordConnecting, setIsDiscordConnecting] = useState(false)
 
   const handleSaveProfile = () => {
     setCurrentUser({ ...currentUser, display_name: username, avatar_url: avatar })
@@ -38,6 +39,16 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
     localStorage.removeItem('token')
     setActiveTab('play')
     onToast('Hesabınız kalıcı olarak silindi.', 'success')
+  }
+
+  const handleDiscordConnect = () => {
+    setIsDiscordConnecting(true)
+    onToast('Discord bağlantısı açılıyor...', 'success')
+    setTimeout(() => {
+      setIsDiscordConnecting(false)
+      setCurrentUser({ ...currentUser, discord_linked: true, role: 'lab' })
+      onToast('Discord başarıyla bağlandı! Lab rolü kazandınız.', 'success')
+    }, 2000)
   }
 
   return (
@@ -189,9 +200,15 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
               </h3>
               <p className="text-sm text-zinc-400 mb-6">Discord hesabını bağlayarak topluluk sunucumuzda lab rolünü kap ve seviyene göre özel rozetler kazan.</p>
             </div>
-            <button onClick={() => onToast('Discord entegrasyonu yakında aktif edilecek!', 'error')} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2">
-              <MessageSquare className="h-4 w-4" /> Discord Hesabını Bağla
-            </button>
+            {currentUser.discord_linked ? (
+              <div className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-bold flex items-center justify-center gap-2">
+                <MessageSquare className="h-4 w-4 text-[#5865F2]" /> {currentUser.display_name} Bağlandı
+              </div>
+            ) : (
+              <button disabled={isDiscordConnecting} onClick={handleDiscordConnect} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2 disabled:opacity-50">
+                <MessageSquare className="h-4 w-4" /> {isDiscordConnecting ? 'Bağlanıyor...' : 'Discord Hesabını Bağla'}
+              </button>
+            )}
           </div>
         </div>
 

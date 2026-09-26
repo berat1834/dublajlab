@@ -76,6 +76,7 @@ export interface User {
   display_name: string
   avatar_url?: string | null
   role: string
+  discord_linked?: boolean
 }
 
 export interface AuthResponse {
