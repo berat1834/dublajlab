@@ -104,13 +104,13 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
 
                       <div className="py-2">
                         <div className="px-4 py-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Hesabın</div>
-                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Profilim</button>
-                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Üyeliğim</button>
+                        <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Profilim</button>
+                        <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Üyeliğim</button>
                         <button onClick={() => handleDropdownNav('library')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kataloğum</button>
                         <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Sahnelerim</button>
                         <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Favorilerim</button>
-                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kredilerim</button>
-                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Hesabım</button>
+                        <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kredilerim</button>
+                        <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Hesabım</button>
                       </div>
 
                       <div className="border-t border-white/10 pt-2">

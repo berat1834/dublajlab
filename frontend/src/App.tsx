@@ -38,6 +38,9 @@ import { OdaKur } from './components/OdaKur'
 import { AuthPage } from './components/AuthPage'
 import { UserLibrary } from './components/UserLibrary'
 import { AdminModerationPanel } from './components/AdminModerationPanel'
+import { AccountSettings } from './components/AccountSettings'
+import { Membership } from './components/Membership'
+import { SecurityCheck } from './components/SecurityCheck'
 import {
   absoluteApiUrl,
   fetchDemoPolicy,
@@ -160,6 +163,7 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
   const activeJobControllerRef = useRef<AbortController | null>(null)
+  const [isSecuring, setIsSecuring] = useState(true)
   const [stage, setStage] = useState<Stage>('idle')
   const [mode, setMode] = useState<DubbingMode>('my-voice')
   const [sourceMode, setSourceMode] = useState<SourceMode>('upload')
@@ -494,6 +498,7 @@ function App() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {isSecuring && <SecurityCheck onComplete={() => setIsSecuring(false)} />}
       {/* NAVBAR */}
       <PlatformNavbar 
         activeTab={activeTab} 
@@ -1059,6 +1064,10 @@ function App() {
             currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
           ) : activeTab === 'oda_kur' ? (
             <OdaKur setActiveTab={setActiveTab} />
+          ) : activeTab === 'profile' && currentUser ? (
+            <AccountSettings currentUser={currentUser} onToast={showToast} setActiveTab={setActiveTab} />
+          ) : activeTab === 'membership' ? (
+            <Membership setActiveTab={setActiveTab} />
           ) : activeTab === 'login' || activeTab === 'register' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (
