@@ -13,8 +13,10 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
   const [username, setUsername] = useState(currentUser.display_name)
   const [bio, setBio] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
-
   const [avatar, setAvatar] = useState(currentUser.avatar_url || '')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteUsername, setDeleteUsername] = useState('')
+  const [deletePassword, setDeletePassword] = useState('')
 
   const handleSaveProfile = () => {
     setCurrentUser({ ...currentUser, display_name: username, avatar_url: avatar })
@@ -22,12 +24,20 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
   }
 
   const handleDelete = () => {
-    if (window.confirm('Bu işlem GERİ ALINAMAZ. Hesabınızı gerçekten silmek istiyor musunuz?')) {
-      setCurrentUser(null)
-      localStorage.removeItem('token')
-      setActiveTab('play')
-      onToast('Hesabınız kalıcı olarak silindi.')
+    if (deleteUsername !== currentUser.display_name) {
+      onToast('Kullanıcı adı eşleşmiyor.', 'error')
+      return
     }
+    if (!deletePassword) {
+      onToast('Lütfen şifrenizi girin.', 'error')
+      return
+    }
+    
+    // Simulate API call and success
+    setCurrentUser(null)
+    localStorage.removeItem('token')
+    setActiveTab('play')
+    onToast('Hesabınız kalıcı olarak silindi.', 'success')
   }
 
   return (
@@ -202,9 +212,41 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
           <p className="text-xs text-red-500/50 mb-6">
             Verilerinin nasıl işlendiğini KVKK aydınlatma metninde okuyabilirsin.
           </p>
-          <button onClick={handleDelete} className="px-6 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition">
-            Hesabımı silmek istiyorum
-          </button>
+          {!showDeleteConfirm ? (
+            <button onClick={() => setShowDeleteConfirm(true)} className="px-6 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition">
+              Hesabımı silmek istiyorum
+            </button>
+          ) : (
+            <div className="rounded-xl border border-red-500/30 bg-black/40 p-5 mt-4">
+              <div className="mb-4">
+                <label className="block text-xs font-bold text-red-400 mb-1.5">Onaylamak için kullanıcı adını yaz: <span className="text-white">{currentUser.display_name}</span></label>
+                <input 
+                  type="text" 
+                  value={deleteUsername}
+                  onChange={(e) => setDeleteUsername(e.target.value)}
+                  className="w-full bg-black border border-red-500/30 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-red-500 transition"
+                />
+              </div>
+              <div className="mb-6">
+                <label className="block text-xs font-bold text-red-400 mb-1.5">Şifren</label>
+                <input 
+                  type="password" 
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="w-full bg-black border border-red-500/30 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-red-500 transition"
+                />
+              </div>
+              <p className="text-xs text-red-400 mb-4 font-medium">Hesabın gerçekten sana ait olduğunu doğruluyoruz.</p>
+              <div className="flex items-center gap-3">
+                <button onClick={handleDelete} className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-sm font-bold transition shadow-lg shadow-red-900/20">
+                  Hesabı kalıcı olarak sil
+                </button>
+                <button onClick={() => setShowDeleteConfirm(false)} className="px-5 py-2.5 rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 text-sm font-bold transition">
+                  Vazgeç
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

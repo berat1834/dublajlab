@@ -14,6 +14,7 @@ interface PlatformNavbarProps {
 
 export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [lang, setLang] = useState<'TR' | 'EN'>('TR')
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -43,8 +44,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             </div>
           </div>
           <div className="hidden items-center gap-4 md:flex text-sm font-medium">
-            <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 text-zinc-400 hover:text-white">
-              <Globe className="h-4 w-4" /> TR
+            <button onClick={() => setLang(lang === 'TR' ? 'EN' : 'TR')} className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition w-[50px] justify-center">
+              <Globe className="h-4 w-4" /> {lang}
             </button>
             <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 text-zinc-400 hover:text-white">
               <MessageSquare className="h-4 w-4" /> Discord
