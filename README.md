@@ -749,6 +749,12 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Öne çıkan kartı (Featured) ve akış filtreleriyle genişletilmiş `ShowcaseDubs`
 - [x] Özel component haline getirilmiş `VipPromo` modülü ve Footer iyileştirmeleri
 
+### Faz 15 — Real Auth & Persistent User Foundation
+- [x] SQLAlchemy + SQLite (PostgreSQL hazır) veritabanı altyapısı ve Alembic göç (migration) sistemi
+- [x] Kullanıcı (`User`) tablosu, şifre hashleme (`bcrypt`) ve Pydantic modelleri
+- [x] JWT (JSON Web Token) tabanlı güvenli `login`, `register` ve `me` endpointleri
+- [x] React frontend içinde token tabanlı oturum yönetimi, giriş yapan kullanıcıyı anında arayüzde (Navbar) gösterme ve çıkış yapma işlevleri
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline

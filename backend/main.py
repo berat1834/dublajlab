@@ -59,6 +59,13 @@ app.include_router(templates_router)
 app.include_router(jobs_router)
 app.include_router(maintenance_router)
 
+from backend.routers.auth_router import router as auth_router
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+
+import backend.models_db as models_db
+from backend.database import engine
+models_db.Base.metadata.create_all(bind=engine)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_error_handler(

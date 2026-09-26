@@ -1,5 +1,5 @@
-import { Globe, MessageSquare, Crown, Menu, X } from 'lucide-react'
-import type { Tab } from '../types'
+import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut } from 'lucide-react'
+import type { Tab, User } from '../types'
 
 interface PlatformNavbarProps {
   activeTab: Tab
@@ -7,9 +7,16 @@ interface PlatformNavbarProps {
   handleFeatureSoon: () => void
   mobileMenuOpen: boolean
   setMobileMenuOpen: (open: boolean) => void
+  currentUser?: User | null
+  setCurrentUser?: (user: User | null) => void
 }
 
-export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mobileMenuOpen, setMobileMenuOpen }: PlatformNavbarProps) {
+export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    if (setCurrentUser) setCurrentUser(null)
+    setActiveTab('play')
+  }
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel">
@@ -33,8 +40,24 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
               <MessageSquare className="h-4 w-4" /> Discord
             </button>
             <div className="h-4 w-[1px] bg-white/10"></div>
-            <button onClick={() => setActiveTab('login')} className="text-zinc-300 hover:text-white">Giriş yap</button>
-            <button onClick={() => setActiveTab('register')} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">Kayıt ol</button>
+            {currentUser ? (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-lime/20 text-lime">
+                    <UserIcon className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-bold text-white">{currentUser.display_name}</span>
+                </div>
+                <button onClick={handleLogout} className="text-zinc-400 hover:text-white" title="Çıkış yap">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <button onClick={() => setActiveTab('login')} className="text-zinc-300 hover:text-white">Giriş yap</button>
+                <button onClick={() => setActiveTab('register')} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">Kayıt ol</button>
+              </>
+            )}
             <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 rounded-lg border border-lime/30 bg-lime/10 px-3 py-1.5 font-bold text-lime transition hover:bg-lime/20">
               <Crown className="h-4 w-4" /> VIP ol
             </button>
@@ -54,8 +77,19 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             <hr className="border-white/10" />
             <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><Globe className="h-4 w-4" /> TR</button>
             <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Discord</button>
-            <button onClick={() => { setActiveTab('login'); setMobileMenuOpen(false); }} className="text-left">Giriş yap</button>
-            <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">Kayıt ol</button>
+            {currentUser ? (
+              <>
+                <div className="flex items-center gap-2 py-2 text-white">
+                  <UserIcon className="h-4 w-4 text-lime" /> {currentUser.display_name}
+                </div>
+                <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-left text-zinc-400">Çıkış yap</button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => { setActiveTab('login'); setMobileMenuOpen(false); }} className="text-left">Giriş yap</button>
+                <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">Kayıt ol</button>
+              </>
+            )}
             <button onClick={handleFeatureSoon} className="text-left text-lime flex items-center gap-2"><Crown className="h-4 w-4" /> VIP ol</button>
           </div>
         </div>

@@ -6,6 +6,8 @@ import type {
   TimelineLine,
   VideoTemplate,
   VoiceStyle,
+  User,
+  AuthResponse
 } from '../types'
 
 export const API_BASE_URL = (
@@ -204,4 +206,37 @@ export async function waitForJobCompletion(
 
 export function absoluteApiUrl(path: string): string {
   return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
+}
+
+// ═══════════════════════════ AUTH API ═══════════════════════════
+
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+export async function login(email: string, password: string): Promise<AuthResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  return parseResponse<AuthResponse>(response)
+}
+
+export async function register(email: string, password: string, display_name: string): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, display_name }),
+  })
+  return parseResponse<User>(response)
+}
+
+export async function getMe(): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<User>(response)
 }

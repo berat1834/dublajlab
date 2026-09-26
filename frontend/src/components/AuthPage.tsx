@@ -1,21 +1,44 @@
 import { useState } from 'react'
 import { ArrowRight, Github, Mail, Mic2, PlayCircle } from 'lucide-react'
-import type { Tab } from '../types'
+import type { Tab, User } from '../types'
+import { login, register, getMe } from '../lib/api'
 
 interface AuthPageProps {
   mode: 'login' | 'register'
   setActiveTab: (tab: Tab) => void
   onToast: (msg: string) => void
+  setCurrentUser?: (user: User) => void
 }
 
-export function AuthPage({ mode, setActiveTab, onToast }: AuthPageProps) {
+export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPageProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onToast('Bu özellik canlı ürünleşme aşamasında eklenecektir. (Demo/Placeholder)')
+    setLoading(true)
+    try {
+      if (mode === 'register') {
+        await register(email, password, name || 'Dublajcı')
+        onToast('Kayıt başarılı! Lütfen giriş yapın.')
+        setActiveTab('login')
+      } else {
+        const res = await login(email, password)
+        localStorage.setItem('token', res.access_token)
+        if (setCurrentUser) {
+          const user = await getMe()
+          setCurrentUser(user)
+        }
+        onToast('Giriş başarılı! Stüdyoya yönlendiriliyorsunuz.')
+        setActiveTab('play')
+      }
+    } catch (err: any) {
+      onToast(err.message || 'Bir hata oluştu.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleSocial = (provider: string) => {
@@ -108,9 +131,10 @@ export function AuthPage({ mode, setActiveTab, onToast }: AuthPageProps) {
 
             <button
               type="submit"
-              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-4 py-3.5 text-sm font-black text-ink hover:bg-lime/90 transition shadow-glow"
+              disabled={loading}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-4 py-3.5 text-sm font-black text-ink hover:bg-lime/90 transition shadow-glow disabled:opacity-50"
             >
-              {mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'} <ArrowRight className="h-4 w-4" />
+              {loading ? 'Bekleniyor...' : (mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur')} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 

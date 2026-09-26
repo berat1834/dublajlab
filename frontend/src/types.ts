@@ -69,3 +69,16 @@ export interface VideoTemplate {
 }
 
 export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily' | 'login' | 'register'
+
+export interface User {
+  id: string
+  email: string
+  display_name: string
+  avatar_url?: string | null
+  role: string
+}
+
+export interface AuthResponse {
+  access_token: string
+  token_type: string
+}

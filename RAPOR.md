@@ -35,6 +35,7 @@
 | 12 | Safe Demo Media Integration Plan | [demo-media-plan.md](docs/demo-media-plan.md) |
 | 13 | Scene Detail Page & Template Preview | [sprint-13-scene-detail.md](docs/reports/sprint-13-scene-detail.md) |
 | 14 | Platform Pages Polish & Auth Shell | [sprint-14-platform-pages-polish.md](docs/reports/sprint-14-platform-pages-polish.md) |
+| 15 | Real Auth + Persistent User Foundation | [sprint-15-real-auth.md](docs/reports/sprint-15-real-auth.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 

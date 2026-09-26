@@ -43,6 +43,7 @@ import {
   processVideo,
   uploadVideo,
   waitForJobCompletion,
+  getMe,
 } from './lib/api'
 import type {
   DemoPolicy,
@@ -52,6 +53,7 @@ import type {
   UploadResponse,
   VideoTemplate,
   VoiceStyle,
+  User,
 } from './types'
 
 type Stage = 'idle' | 'uploading' | 'ready' | 'processing' | 'completed'
@@ -177,6 +179,13 @@ function App() {
   const [toastMessage, setToastMessage] = useState('')
   const [showHowTo, setShowHowTo] = useState(false)
   const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      getMe().then(user => setCurrentUser(user)).catch(() => localStorage.removeItem('token'))
+    }
+  }, [])
 
   const handleLegalLink = () => {
     setToastMessage('Bu sayfa (Gizlilik/Şartlar) canlı yayın öncesi profesyonel metinlerle güncellenecektir.')
@@ -479,6 +488,8 @@ function App() {
         handleFeatureSoon={handleFeatureSoon} 
         mobileMenuOpen={mobileMenuOpen} 
         setMobileMenuOpen={setMobileMenuOpen} 
+        currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
       />
 
       {/* TOAST */}
@@ -1030,7 +1041,7 @@ function App() {
           ) : activeTab === 'dubs' ? (
             <ShowcaseDubs />
           ) : activeTab === 'login' || activeTab === 'register' ? (
-            <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} />
+            <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (
             <DailyDub setActiveTab={setActiveTab} handleFeatureSoon={handleFeatureSoon} />
           )}
