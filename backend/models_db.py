@@ -10,9 +10,11 @@ class User(Base):
     # Use string for UUID if SQLite, but SQLAlchemy handles UUID objects ok with String(36)
     id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     email = Column(String(255), unique=True, index=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=True) # Nullable for OAuth users
     display_name = Column(String(100), nullable=False)
     avatar_url = Column(String(255), nullable=True)
+    google_id = Column(String(255), unique=True, index=True, nullable=True)
+    discord_id = Column(String(255), unique=True, index=True, nullable=True)
     role = Column(String(50), default="user", nullable=False)
     is_active = Column(Boolean, default=True)
 

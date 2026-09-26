@@ -62,6 +62,9 @@ app.include_router(maintenance_router)
 from backend.routers.auth_router import router as auth_router
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
+from backend.routers.oauth_router import router as oauth_router
+app.include_router(oauth_router, prefix="/api/auth", tags=["oauth"])
+
 from backend.routers.user_router import router as user_router
 app.include_router(user_router, prefix="/api/me", tags=["me"])
 

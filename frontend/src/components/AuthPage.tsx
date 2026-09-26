@@ -42,8 +42,9 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
     }
   }
 
-  const handleSocial = (provider: string) => {
-    onToast(`${provider} ile giriş yakında aktif edilecek. (Demo/Placeholder)`)
+  const handleSocial = (provider: 'Google' | 'Discord') => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    window.location.href = `${baseUrl}/api/auth/${provider.toLowerCase()}/login`
   }
 
   return (
@@ -149,10 +150,10 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => handleSocial('Google')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white hover:bg-white/10 transition">
+            <button type="button" onClick={() => handleSocial('Google')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white hover:bg-white/10 transition">
               <Mail className="h-4 w-4" /> Google
             </button>
-            <button onClick={() => handleSocial('Discord')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#5865F2]/20 py-3 text-sm font-bold text-white hover:bg-[#5865F2]/40 transition text-[#5865F2]">
+            <button type="button" onClick={() => handleSocial('Discord')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#5865F2]/20 py-3 text-sm font-bold text-white hover:bg-[#5865F2]/40 transition text-[#5865F2]">
               <Github className="h-4 w-4" /> Discord
             </button>
           </div>

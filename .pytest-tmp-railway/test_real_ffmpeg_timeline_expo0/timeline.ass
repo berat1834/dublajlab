@@ -1,0 +1,17 @@
+﻿[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+ScaledBorderAndShadow: yes
+WrapStyle: 2
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Subtitle,Arial,62,&H00FFFFFF,&H000000FF,&H00101010,&H80000000,-1,0,0,0,100,100,0,0,1,4,1,2,70,70,150,1
+Style: Watermark,Arial,30,&HB8FFFFFF,&H000000FF,&H60000000,&H60000000,0,0,0,0,100,100,0,0,1,2,0,9,32,32,36,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:04.00,Watermark,,0,0,0,,DublajLab
+Dialogue: 0,0:00:00.50,0:00:01.50,Subtitle,,0,0,0,,İlk replik
+Dialogue: 0,0:00:02.20,0:00:03.20,Subtitle,,0,0,0,,İkinci replik
