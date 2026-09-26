@@ -1,4 +1,5 @@
-import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut } from 'lucide-react'
+import { useState } from 'react'
+import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, ChevronDown, Diamond } from 'lucide-react'
 import type { Tab, User } from '../types'
 
 interface PlatformNavbarProps {
@@ -12,11 +13,20 @@ interface PlatformNavbarProps {
 }
 
 export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     if (setCurrentUser) setCurrentUser(null)
     setActiveTab('play')
+    setDropdownOpen(false)
   }
+
+  const handleDropdownNav = (tab: Tab) => {
+    setActiveTab(tab)
+    setDropdownOpen(false)
+  }
+
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel">
@@ -41,7 +51,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             </button>
             <div className="h-4 w-[1px] bg-white/10"></div>
             {currentUser ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 relative">
                 {currentUser.role === 'admin' && (
                   <button onClick={() => setActiveTab('admin')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'admin' ? 'bg-violet-500 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}>
                     Admin
@@ -50,15 +60,67 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
                 <button onClick={() => setActiveTab('library')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'library' ? 'bg-lime-400 text-black' : 'text-white hover:bg-white/10'}`}>
                   Kataloğum
                 </button>
-                <div className="flex items-center gap-2">
-                  <div className="grid h-8 w-8 place-items-center rounded-full bg-lime-400/20 text-lime-400">
-                    <UserIcon className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-bold text-white">{currentUser.display_name}</span>
+                
+                <div className="relative">
+                  <button 
+                    onClick={() => setDropdownOpen(!dropdownOpen)} 
+                    className="flex items-center gap-2 hover:bg-white/5 p-1.5 rounded-lg transition"
+                  >
+                    <span className="text-sm font-bold text-white">{currentUser.display_name}</span>
+                    <div className="grid h-8 w-8 place-items-center rounded-full bg-lime-400/20 text-lime-400">
+                      <UserIcon className="h-4 w-4" />
+                    </div>
+                  </button>
+
+                  {dropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-64 rounded-xl border border-white/10 bg-[#0a0a0a] shadow-2xl overflow-hidden py-2 z-50">
+                      <div className="px-4 py-3 border-b border-white/10 flex items-center gap-3">
+                        <div className="grid h-10 w-10 place-items-center rounded-full bg-lime-400/20 text-lime-400 shrink-0">
+                          <UserIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-black text-white">{currentUser.display_name}</div>
+                          <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Kayıtlı Hesap</div>
+                        </div>
+                      </div>
+                      
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <div className="flex justify-between text-xs font-bold text-zinc-400 mb-2">
+                          <span>Seviye 1</span>
+                          <span>0 / 100 XP</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-full bg-white w-[10%]"></div>
+                        </div>
+                      </div>
+
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Diamond className="h-3 w-3 text-amber-500" />
+                          <span className="text-xs font-black text-white">VIP ol</span>
+                        </div>
+                        <p className="text-[10px] text-zinc-500">VIP sahneler, hızlı render ve 1080p çıktı.</p>
+                      </div>
+
+                      <div className="py-2">
+                        <div className="px-4 py-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Hesabın</div>
+                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Profilim</button>
+                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Üyeliğim</button>
+                        <button onClick={() => handleDropdownNav('library')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kataloğum</button>
+                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Sahnelerim</button>
+                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Favorilerim</button>
+                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kredilerim</button>
+                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Hesabım</button>
+                      </div>
+
+                      <div className="border-t border-white/10 pt-2">
+                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition flex items-center justify-between">
+                          Çıkış yap <LogOut className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <button onClick={handleLogout} className="text-zinc-400 hover:text-white" title="Çıkış yap">
-                  <LogOut className="h-4 w-4" />
-                </button>
               </div>
             ) : (
               <>

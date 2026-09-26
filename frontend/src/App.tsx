@@ -34,6 +34,7 @@ import { ShowcaseDubs } from './components/ShowcaseDubs'
 import { DailyDub } from './components/DailyDub'
 import { EthicsNotice } from './components/EthicsNotice'
 import { SceneDetail } from './components/SceneDetail'
+import { OdaKur } from './components/OdaKur'
 import { AuthPage } from './components/AuthPage'
 import { UserLibrary } from './components/UserLibrary'
 import { AdminModerationPanel } from './components/AdminModerationPanel'
@@ -554,7 +555,7 @@ function App() {
               <div className="mt-8 pt-6 border-t border-white/10">
                 <p className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">Çok Oyunculu Dublaj</p>
                 <div className="flex flex-wrap gap-3">
-                  <button onClick={handleFeatureSoon} className="inline-flex items-center gap-2 rounded-xl bg-violet/15 px-4 py-2.5 text-sm font-bold text-violet transition hover:bg-violet/25">Oda kur</button>
+                  <button onClick={() => setActiveTab('oda_kur')} className="inline-flex items-center gap-2 rounded-xl bg-violet/15 px-4 py-2.5 text-sm font-bold text-violet transition hover:bg-violet/25">Oda kur</button>
                   <button onClick={handleFeatureSoon} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-zinc-300 transition hover:bg-white/10">Oda koduyla katıl</button>
                 </div>
               </div>
@@ -1056,6 +1057,8 @@ function App() {
             currentUser ? <UserLibrary currentUser={currentUser} onToast={showToast} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
           ) : activeTab === 'admin' ? (
             currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
+          ) : activeTab === 'oda_kur' ? (
+            <OdaKur setActiveTab={setActiveTab} />
           ) : activeTab === 'login' || activeTab === 'register' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (

@@ -68,7 +68,7 @@ export interface VideoTemplate {
   character_count?: number
 }
 
-export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily' | 'login' | 'register' | 'library' | 'admin'
+export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily' | 'login' | 'register' | 'library' | 'admin' | 'oda_kur'
 
 export interface User {
   id: string
