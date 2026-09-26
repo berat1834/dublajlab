@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, ShieldCheck, RefreshCw, CreditCard, Copy } from 'lucide-react'
+import { Check, ShieldCheck, Zap, Star, Crown, ExternalLink } from 'lucide-react'
 import type { Tab } from '../types'
 
 interface MembershipProps {
@@ -7,158 +7,140 @@ interface MembershipProps {
 }
 
 export function Membership({}: MembershipProps) {
-  const [selectedPlan, setSelectedPlan] = useState<'vip' | 'vip_plus' | null>(null)
-  const [agreedToUsername, setAgreedToUsername] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState<'pro' | 'max' | null>(null)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
-  const vipFeatures = [
-    'Hızlı ve öncelikli render',
-    '1080p Full HD video çıktısı',
-    'Filigransız video çıktısı',
-    'Voice FX özel kütüphanesine erişim',
-    'Özel VIP sahnelerine erişim',
-    'VIP profil rozeti',
-    'Discord VIP rolü',
-    'Öncelikli sahne önerisi incelemesi',
-    'Yalnızca VIP ve VIP+ üyelere oynama'
+  const proFeatures = [
+    'Öncelikli hızlı render',
+    'Yüksek çözünürlük (1080p)',
+    'Reklamsız / Filigransız çıktı',
+    'Özel Meme Ses Efektleri',
+    'Pro rozeti ve Discord Rolü',
   ]
 
-  const vipPlusFeatures = [
-    'Üyeliği olmayan arkadaşların odana davet et',
-    'Tek başına veya arkadaşlarınla oyna',
-    'VIP ve VIP+ üyelerle birlikte oyna',
-    'Hızlı ve öncelikli render',
-    '1080p Full HD video çıktısı',
-    'Filigransız videolar',
-    'Voice FX özel kütüphanesine erişim',
-    'Özel VIP sahnelerine erişim',
-    'Özel VIP+ profil rozeti',
-    'Discord VIP+ rolü',
-    'Öncelikli sahne önerisi incelemesi'
+  const maxFeatures = [
+    'Oda kurma yetkisi (Çok Oyunculu)',
+    'Davet edilen arkadaşlara ücretsiz oynama',
+    'Tüm Pro özellikleri dahil',
+    'Max rozeti ve Discord Max Rolü',
+    'Özel müşteri desteği',
   ]
 
   const comparisonRows = [
-    { name: 'Hızlı render', desc: 'İşlem kuyruğunda sıranın önüne geçersin.', free: false, vip: true, vipPlus: true },
-    { name: '1080p çıktı', desc: 'Kaynak izin verdiği ölçüde en yüksek kalite.', free: false, vip: true, vipPlus: true },
-    { name: 'Filigransız', desc: 'Finalde DublajLab logosu basılmaz.', free: false, vip: true, vipPlus: true },
-    { name: 'Voice FX', desc: 'On beş profesyonel ses efekti.', free: false, vip: true, vipPlus: true },
-    { name: 'VIP sahneler', desc: 'Yalnızca üyelere açık sahneler.', free: false, vip: true, vipPlus: true },
-    { name: 'VIP rozeti', desc: 'Adının yanında görünür.', free: false, vip: true, vipPlus: true },
-    { name: 'Öncelikli öneri', desc: 'Sahne önerin sırada öne geçer.', free: false, vip: true, vipPlus: true },
-    { name: 'Discord rolü', desc: 'Sunucuda ayrı rol.', free: false, vip: true, vipPlus: true },
-    { name: 'Oda geneli haklar', desc: 'Kurduğun odadaki herkes aynı çıktıyı alır.', free: false, vip: true, vipPlus: true },
-    { name: 'Üye olmayan arkadaş daveti', desc: 'Odana üyeliği olmayan arkadaşlarını alırsın. VIP sahnelerde onlar da oynar ve odada kimseden kredi düşülmez.', free: false, vip: false, vipPlus: true },
+    { name: 'Kuyruk Önceliği', desc: 'Videoların daha hızlı işlenir.', free: false, pro: true, max: true },
+    { name: 'HD Çıktı', desc: '1080p kalitesinde indirme.', free: false, pro: true, max: true },
+    { name: 'Temiz Görüntü', desc: 'Videolarda watermark olmaz.', free: false, pro: true, max: true },
+    { name: 'Özel Efektler', desc: 'Genişletilmiş ses kütüphanesi.', free: false, pro: true, max: true },
+    { name: 'Rozet ve Rol', desc: 'Toplulukta öne çıkarsın.', free: false, pro: true, max: true },
+    { name: 'Oda Kurma', desc: 'Arkadaşlarınla beraber dublaj yap.', free: false, free_text: 'Yakında', pro: false, max: true },
+    { name: 'Ücretsiz Davet', desc: 'Senin odanda oynayanlar kredi harcamaz.', free: false, pro: false, max: true },
   ]
 
-  const handleCopyUsername = () => {
-    // In a real app, this would be the actual user's username
-    navigator.clipboard.writeText('kullanici_adiniz_buraya_gelecek')
-  }
-
   const handleCheckout = () => {
-    // Redirect to Shopier or mailto
-    window.location.href = "mailto:sales@dublajlab.com?subject=VIP%20Abonelik"
+    // KULLANICI BURAYA KENDİ SHOPİER LİNKİNİ GİRECEK
+    // Örnek: window.open('https://shopier.com/SİZİN_ÜRÜN_KODUNUZ', '_blank')
+    const shopierUrl = selectedPlan === 'pro' ? 'https://shopier.com/SİZİN_PRO_KODUNUZ' : 'https://shopier.com/SİZİN_MAX_KODUNUZ'
+    window.open(shopierUrl, '_blank')
   }
 
   return (
-    <div className="py-12 max-w-5xl mx-auto px-4 sm:px-0">
+    <div className="py-12 max-w-6xl mx-auto px-4 sm:px-0">
       
       {/* Header */}
-      <div className="text-center mb-16">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 text-xs font-bold text-zinc-400 mb-6">
-          DublajLab VIP
+      <div className="text-center mb-16 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-lime-500/20 blur-[100px] pointer-events-none"></div>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-lime-500/10 border border-lime-500/20 text-xs font-black text-lime-400 mb-6">
+          <Crown className="h-4 w-4" /> MEME DUBLAJ STUDIO PREMIUM
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4">
-          Dublaj daha hızlı, daha<br className="hidden sm:block" /> yüksek kalitede.
+        <h1 className="text-4xl sm:text-6xl font-black text-white tracking-tighter mb-6 uppercase">
+          Sınırları <span className="text-lime-400">Kaldır.</span>
         </h1>
-        <p className="text-zinc-400 text-lg max-w-2xl mx-auto mb-10">
-          Üyelik sahneleri açar, renderı öne alır ve filigransız 1080p çıktı verir.
+        <p className="text-zinc-400 text-lg max-w-xl mx-auto font-medium">
+          Daha hızlı render, yüksek kalite ve arkadaşlarınla beraber oynama ayrıcalığı. Topluluğun yıldızı ol.
         </p>
-
-        <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs font-medium text-zinc-500">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4" /> Kart bilgilerin sunucularımıza ulaşmaz
-          </div>
-          <div className="flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" /> Otomatik yenileme yok
-          </div>
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4" /> Ödeme onaylanınca üyelik açılır
-          </div>
-        </div>
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-24">
+      <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-24">
         
-        {/* VIP Card */}
-        <div className="rounded-3xl border border-white/10 bg-[#0a0a0a] p-8 flex flex-col relative overflow-hidden group hover:border-amber-500/50 transition duration-500">
-          <div className="absolute top-0 right-0 p-6">
-            <div className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-amber-500/20 text-xs font-black uppercase tracking-widest text-amber-500">
-              ÖNERİLEN
+        {/* Pro Card */}
+        <div className="rounded-[2rem] border-2 border-white/5 bg-[#121212] p-8 flex flex-col relative hover:border-lime-500/30 hover:shadow-[0_0_40px_rgba(132,204,22,0.1)] transition-all duration-500">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-white">
+                <Star className="h-5 w-5" />
+              </div>
+              <h3 className="text-2xl font-black text-white uppercase tracking-wide">Stüdyo Pro</h3>
             </div>
-          </div>
-          <div className="mb-6">
-            <div className="text-sm font-black text-white mb-1">.VIP</div>
-            <div className="text-sm text-zinc-400">Hızlı render, 1080p, filigran yok</div>
+            <p className="text-sm text-zinc-400">Tek tabanca takılan profesyoneller için.</p>
           </div>
           
           <div className="mb-8">
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-white">₺199</span>
-              <span className="text-sm font-medium text-zinc-500">/ 30 gün</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-black text-white">₺249</span>
+              <span className="text-sm font-medium text-zinc-500">/ ay</span>
             </div>
-            <div className="text-xs font-medium text-zinc-500 mt-1">günde yaklaşık ₺6,63</div>
           </div>
 
-          <div className="space-y-4 flex-1 mb-8">
-            {vipFeatures.map((feature, i) => (
+          <div className="space-y-4 flex-1 mb-10">
+            {proFeatures.map((feature, i) => (
               <div key={i} className="flex items-start gap-3">
-                <Check className="h-4 w-4 text-white shrink-0 mt-0.5" />
-                <span className="text-sm font-medium text-zinc-300 leading-snug">{feature}</span>
+                <div className="mt-1 bg-lime-500/20 rounded-full p-0.5">
+                  <Check className="h-3 w-3 text-lime-400 shrink-0" />
+                </div>
+                <span className="text-sm font-bold text-zinc-300">{feature}</span>
               </div>
             ))}
           </div>
 
           <button 
-            onClick={() => setSelectedPlan('vip')}
-            className="w-full py-4 rounded-xl bg-[#e3cd96] text-black text-sm font-bold hover:brightness-110 transition"
+            onClick={() => setSelectedPlan('pro')}
+            className="w-full py-4 rounded-xl border-2 border-zinc-700 text-white text-sm font-black uppercase tracking-wider hover:bg-zinc-800 transition"
           >
-            VIP al
+            Pro Pakete Geç
           </button>
         </div>
 
-        {/* VIP+ Card */}
-        <div className="rounded-3xl border border-white/10 bg-[#0a0a0a] p-8 flex flex-col relative overflow-hidden hover:border-amber-500/50 transition duration-500">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="text-sm font-black text-white">VIP+</div>
-              <div className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-bold text-white">EN İYİ DENEYİM</div>
+        {/* Max Card */}
+        <div className="rounded-[2rem] border-2 border-lime-500/50 bg-gradient-to-b from-[#1a2310] to-[#121212] p-8 flex flex-col relative hover:shadow-[0_0_50px_rgba(132,204,22,0.15)] transition-all duration-500">
+          <div className="absolute top-0 right-8 -translate-y-1/2">
+            <div className="bg-lime-400 text-black text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-[0_0_20px_rgba(132,204,22,0.4)]">
+              En Popüler
             </div>
-            <div className="text-sm text-zinc-400">Arkadaşların VIP üyelik almasına gerek yok.</div>
+          </div>
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-lime-400 flex items-center justify-center text-black">
+                <Zap className="h-5 w-5" />
+              </div>
+              <h3 className="text-2xl font-black text-white uppercase tracking-wide">Stüdyo Max</h3>
+            </div>
+            <p className="text-sm text-zinc-400">Arkadaş grubuyla eğlencenin dibine vurmak isteyenlere.</p>
           </div>
           
           <div className="mb-8">
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-white">₺459</span>
-              <span className="text-sm font-medium text-zinc-500">/ 30 gün</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-5xl font-black text-white">₺499</span>
+              <span className="text-sm font-medium text-zinc-500">/ ay</span>
             </div>
-            <div className="text-xs font-medium text-zinc-500 mt-1">günde yaklaşık ₺15,30</div>
           </div>
 
-          <div className="space-y-4 flex-1 mb-8 border-t border-white/10 pt-8">
-            {vipPlusFeatures.map((feature, i) => (
+          <div className="space-y-4 flex-1 mb-10 border-t border-white/5 pt-8">
+            {maxFeatures.map((feature, i) => (
               <div key={i} className="flex items-start gap-3">
-                <Check className="h-4 w-4 text-white shrink-0 mt-0.5" />
-                <span className="text-sm font-medium text-zinc-300 leading-snug">{feature}</span>
+                <div className="mt-1 bg-lime-500/20 rounded-full p-0.5">
+                  <Check className="h-3 w-3 text-lime-400 shrink-0" />
+                </div>
+                <span className="text-sm font-bold text-white">{feature}</span>
               </div>
             ))}
           </div>
 
           <button 
-            onClick={() => setSelectedPlan('vip_plus')}
-            className="w-full py-4 rounded-xl bg-[#e3cd96] text-black text-sm font-bold hover:brightness-110 transition"
+            onClick={() => setSelectedPlan('max')}
+            className="w-full py-4 rounded-xl bg-lime-400 text-black text-sm font-black uppercase tracking-wider hover:bg-lime-300 shadow-[0_0_20px_rgba(132,204,22,0.2)] transition"
           >
-            VIP al
+            Max Pakete Geç
           </button>
         </div>
 
@@ -167,33 +149,32 @@ export function Membership({}: MembershipProps) {
       {/* Comparison Table */}
       <div className="max-w-4xl mx-auto mb-20">
         <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-white">Üyeliğe dahil olanlar</h2>
-          <p className="text-sm text-zinc-500 mt-1">Ücretsiz hesap, VIP ve VIP+ arasındaki farklar.</p>
+          <h2 className="text-2xl font-black text-white uppercase">Özellik Karşılaştırması</h2>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 p-5 text-[10px] font-black uppercase tracking-widest text-zinc-500 bg-white/[0.02] border-b border-white/10">
-            <div className="col-span-6">ÖZELLİK</div>
+        <div className="rounded-3xl border border-white/10 bg-[#121212] overflow-hidden">
+          <div className="grid grid-cols-12 gap-4 p-6 text-xs font-black uppercase tracking-widest text-zinc-500 bg-white/5 border-b border-white/10">
+            <div className="col-span-6">Özellik</div>
             <div className="col-span-2 text-center">Ücretsiz</div>
-            <div className="col-span-2 text-center text-amber-500">VIP</div>
-            <div className="col-span-2 text-center text-amber-500">VIP+</div>
+            <div className="col-span-2 text-center text-white">Pro</div>
+            <div className="col-span-2 text-center text-lime-400">Max</div>
           </div>
 
           <div className="divide-y divide-white/5">
             {comparisonRows.map((row, i) => (
-              <div key={i} className="grid grid-cols-12 gap-4 p-5 items-center hover:bg-white/[0.02] transition">
+              <div key={i} className="grid grid-cols-12 gap-4 p-6 items-center hover:bg-white/[0.02] transition">
                 <div className="col-span-6">
                   <div className="font-bold text-white text-sm mb-1">{row.name}</div>
-                  <div className="text-xs text-zinc-500 leading-relaxed pr-4">{row.desc}</div>
+                  <div className="text-xs text-zinc-500">{row.desc}</div>
                 </div>
-                <div className="col-span-2 flex justify-center">
-                  {row.free ? <Check className="h-4 w-4 text-zinc-500" /> : <span className="text-zinc-600 font-black">—</span>}
+                <div className="col-span-2 flex justify-center text-sm font-bold text-zinc-500">
+                  {row.free ? <Check className="h-5 w-5" /> : (row.free_text || '—')}
                 </div>
-                <div className="col-span-2 flex justify-center">
-                  {row.vip ? <Check className="h-4 w-4 text-white" /> : <span className="text-zinc-600 font-black">—</span>}
+                <div className="col-span-2 flex justify-center text-white">
+                  {row.pro ? <Check className="h-5 w-5" /> : <span className="text-zinc-700 font-black">—</span>}
                 </div>
-                <div className="col-span-2 flex justify-center">
-                  {row.vipPlus ? <Check className="h-4 w-4 text-white" /> : <span className="text-zinc-600 font-black">—</span>}
+                <div className="col-span-2 flex justify-center text-lime-400">
+                  {row.max ? <Check className="h-5 w-5" /> : <span className="text-zinc-700 font-black">—</span>}
                 </div>
               </div>
             ))}
@@ -201,80 +182,77 @@ export function Membership({}: MembershipProps) {
         </div>
       </div>
 
-      <div className="text-center text-xs font-medium text-zinc-500 max-w-xl mx-auto">
-        Ödemeler Shopier altyapısıyla alınır, kart bilgilerin DublajLab sunucularına hiç ulaşmaz. Üyelik dönem sonunda kendiliğinden yenilenmez.
+      <div className="text-center text-xs font-medium text-zinc-500 max-w-2xl mx-auto flex flex-col gap-2">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <ShieldCheck className="h-5 w-5 text-zinc-400" />
+          <span>Güvenli Ödeme Altyapısı</span>
+        </div>
+        <p>Tüm ödeme işlemleri yasal ödeme kuruluşu Shopier güvencesiyle gerçekleşmektedir. Kredi kartı bilgileriniz sistemlerimizde saklanmaz.</p>
+        <p>Abonelikler otomatik yenilenmez, dilediğiniz zaman yeni paket satın alabilirsiniz. Mesafeli satış sözleşmesi ve iade koşulları ödeme sayfasında yer almaktadır.</p>
       </div>
 
       {/* Payment Modal */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-[#111] rounded-3xl border border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-white/10 shrink-0">
-              <h3 className="text-xl font-bold text-white mb-1">Ödemeden önce tek şey</h3>
-              <p className="text-sm text-zinc-400">
-                {selectedPlan === 'vip' ? '.VIP - ₺199' : 'VIP+ - ₺459'}
-              </p>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-md bg-[#121212] rounded-[2rem] border-2 border-white/10 overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-8 border-b border-white/5 text-center relative">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-lime-400 rounded-b-full"></div>
+              <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tight">Sipariş Detayı</h3>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 text-sm font-bold text-zinc-300">
+                {selectedPlan === 'pro' ? 'Stüdyo Pro Paketi' : 'Stüdyo Max Paketi'} 
+                <span className={selectedPlan === 'pro' ? 'text-white' : 'text-lime-400'}>
+                  ({selectedPlan === 'pro' ? '₺249' : '₺499'})
+                </span>
+              </div>
             </div>
             
-            <div className="p-6 overflow-y-auto">
-              <div className="mb-6 rounded-2xl bg-white/5 p-4 border border-white/10">
-                <p className="text-sm text-zinc-300 font-medium mb-3 leading-relaxed">
-                  Shopier'deki ödeme formunda Sipariş Notu / Açıklama alanına kullanıcı adını yaz:
+            <div className="p-8 space-y-6 bg-[#0a0a0a]">
+              <div className="rounded-2xl bg-lime-500/10 border border-lime-500/20 p-5">
+                <h4 className="text-sm font-black text-lime-400 mb-2 uppercase tracking-wide">ÖNEMLİ ADIM</h4>
+                <p className="text-sm text-zinc-300 font-medium leading-relaxed">
+                  Shopier sayfasına yönlendirileceksiniz. Lütfen ödeme yaparken <strong>"Sipariş Notu"</strong> kısmına kayıtlı <strong className="text-white">E-posta adresinizi</strong> veya <strong className="text-white">Kullanıcı adınızı</strong> yazmayı unutmayın.
                 </p>
-                <div className="flex gap-2 mb-3">
-                  <div className="flex-1 bg-black rounded-lg px-4 py-3 text-sm font-bold text-white border border-white/10 flex items-center">
-                    kullanici_adiniz
-                  </div>
-                  <button 
-                    onClick={handleCopyUsername}
-                    className="px-4 bg-white/10 hover:bg-white/20 transition rounded-lg text-white font-bold text-sm flex items-center gap-2"
-                  >
-                    Kopyala <Copy className="h-4 w-4" />
-                  </button>
-                </div>
-                <p className="text-xs text-zinc-500 font-medium">E-posta adresini yazman da olur.</p>
               </div>
 
-              <div className="mb-6 rounded-2xl bg-white/5 p-4 border border-white/10">
-                <h4 className="text-sm font-bold text-white mb-2">Ödemeden sonra ne olacak?</h4>
+              <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
                 <p className="text-xs text-zinc-400 leading-relaxed mb-3">
-                  Açıklamaya kullanıcı adını yazdıysan üyeliğin <strong className="text-white">birkaç dakika içinde otomatik tanımlanır</strong>, ayrıca bir şey yapmana gerek yok. Sayfayı yenilediğinde rozetini görürsün.
+                  Sistemimiz ödemenizi notunuzdaki bilgilere göre eşleştirip hesabınızı <strong className="text-white">anında aktif</strong> edecektir. 
                 </p>
                 <p className="text-xs text-zinc-400 leading-relaxed">
-                  Yazmayı unutursan ödemen kaybolmaz ama hangi hesaba ait olduğu anlaşılamaz ve üyeliğin bir yönetici elle bağlayana kadar açılmaz. Bu durumda Discord'dan ya da iletişim adresinden sipariş numaranla yaz.
+                  Eğer not eklemeyi unutursanız, işlem dekontunuzla birlikte destek@memedublaj.com adresine ulaşabilirsiniz. İşleminiz manuel olarak tamamlanacaktır.
                 </p>
               </div>
 
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition ${agreedToUsername ? 'bg-amber-500 border-amber-500 text-black' : 'border-white/20 bg-black group-hover:border-white/40'}`}>
-                  {agreedToUsername && <Check className="h-3.5 w-3.5" />}
+              <label className="flex items-start gap-4 cursor-pointer group p-2">
+                <div className={`mt-0.5 w-6 h-6 rounded-lg border-2 flex items-center justify-center shrink-0 transition-colors ${agreedToTerms ? 'bg-lime-400 border-lime-400 text-black' : 'border-zinc-600 bg-transparent group-hover:border-zinc-400'}`}>
+                  {agreedToTerms && <Check className="h-4 w-4" />}
                 </div>
                 <input 
                   type="checkbox" 
                   className="hidden" 
-                  checked={agreedToUsername}
-                  onChange={(e) => setAgreedToUsername(e.target.checked)}
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
                 />
-                <span className="text-sm font-bold text-white">Açıklama alanına kullanıcı adımı yazacağım.</span>
+                <span className="text-sm font-bold text-white leading-snug">Ödeme notuna e-posta adresimi veya kullanıcı adımı yazacağımı anladım.</span>
               </label>
             </div>
 
-            <div className="p-6 border-t border-white/10 flex gap-3 shrink-0">
+            <div className="p-6 border-t border-white/5 flex gap-4 bg-[#121212]">
               <button 
                 onClick={() => {
                   setSelectedPlan(null)
-                  setAgreedToUsername(false)
+                  setAgreedToTerms(false)
                 }}
-                className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-sm transition"
+                className="px-6 py-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-black text-sm uppercase tracking-wide transition"
               >
-                Vazgeç
+                İptal
               </button>
               <button 
-                disabled={!agreedToUsername}
+                disabled={!agreedToTerms}
                 onClick={handleCheckout}
-                className={`flex-1 py-3 rounded-xl font-bold text-sm transition ${agreedToUsername ? 'bg-[#e3cd96] hover:brightness-110 text-black' : 'bg-white/10 text-zinc-500 cursor-not-allowed'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-black text-sm uppercase tracking-wide transition ${agreedToTerms ? 'bg-lime-400 hover:bg-lime-300 text-black shadow-[0_0_20px_rgba(132,204,22,0.2)]' : 'bg-white/5 text-zinc-600 cursor-not-allowed'}`}
               >
-                Shopier'e git (₺)
+                Shopier ile Öde <ExternalLink className="h-4 w-4" />
               </button>
             </div>
           </div>
