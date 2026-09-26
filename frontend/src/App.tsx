@@ -40,6 +40,9 @@ import { UserLibrary } from './components/UserLibrary'
 import { AdminModerationPanel } from './components/AdminModerationPanel'
 import { AccountSettings } from './components/AccountSettings'
 import { Membership } from './components/Membership'
+import { UserScenes } from './components/UserScenes'
+import { UserFavorites } from './components/UserFavorites'
+import { UserCredits } from './components/UserCredits'
 import { SecurityCheck } from './components/SecurityCheck'
 import {
   absoluteApiUrl,
@@ -1068,6 +1071,12 @@ function App() {
             <AccountSettings currentUser={currentUser} onToast={showToast} setActiveTab={setActiveTab} />
           ) : activeTab === 'membership' ? (
             <Membership setActiveTab={setActiveTab} />
+          ) : activeTab === 'user_scenes' ? (
+            <UserScenes setActiveTab={setActiveTab} />
+          ) : activeTab === 'user_favorites' ? (
+            <UserFavorites setActiveTab={setActiveTab} />
+          ) : activeTab === 'user_credits' ? (
+            <UserCredits setActiveTab={setActiveTab} />
           ) : activeTab === 'login' || activeTab === 'register' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (

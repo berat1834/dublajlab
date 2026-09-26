@@ -107,9 +107,9 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
                         <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Profilim</button>
                         <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Üyeliğim</button>
                         <button onClick={() => handleDropdownNav('library')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kataloğum</button>
-                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Sahnelerim</button>
-                        <button onClick={handleFeatureSoon} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Favorilerim</button>
-                        <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kredilerim</button>
+                        <button onClick={() => handleDropdownNav('user_scenes')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Sahnelerim</button>
+                        <button onClick={() => handleDropdownNav('user_favorites')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Favorilerim</button>
+                        <button onClick={() => handleDropdownNav('user_credits')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Kredilerim</button>
                         <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">Hesabım</button>
                       </div>
 

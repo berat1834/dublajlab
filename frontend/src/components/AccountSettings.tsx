@@ -103,9 +103,34 @@ export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountS
                 className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lime-500 transition font-medium h-24 resize-none"
               ></textarea>
             </div>
+            <div>
+              <label className="block text-sm font-bold text-zinc-300 mb-2">Avatar Adresi (URL)</label>
+              <input 
+                type="text" 
+                placeholder="https://..."
+                defaultValue={currentUser.avatar_url || ''}
+                className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-lime-500 transition font-medium"
+              />
+              <p className="text-xs text-zinc-500 mt-2">Şimdilik yalnızca adres kabul ediliyor (Discord ya da başka bir yerdeki resminin bağlantısı). Dosya yükleme henüz yok.</p>
+            </div>
             <button onClick={handleSaveProfile} className="px-6 py-2.5 rounded-xl bg-lime-400 text-black text-sm font-bold hover:bg-lime-500 transition">
               Değişiklikleri Kaydet
             </button>
+          </div>
+        </div>
+
+        {/* Account Details (Email & Password) */}
+        <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] p-6">
+          <h3 className="text-lg font-bold text-white mb-4">Hesap Güvenliği</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-sm text-zinc-300">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+              <span>E-posta adresin henüz doğrulanmadı.</span>
+            </div>
+            <div className="text-sm text-zinc-400">
+              Şifreni değiştirmek için e-postana bir sıfırlama bağlantısı iste:{' '}
+              <button className="text-white font-bold underline hover:text-lime-400 transition">Sıfırlama bağlantısı iste</button>
+            </div>
           </div>
         </div>
 
