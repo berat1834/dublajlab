@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, ChevronDown, Diamond } from 'lucide-react'
+import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, Diamond } from 'lucide-react'
 import type { Tab, User } from '../types'
 
 interface PlatformNavbarProps {

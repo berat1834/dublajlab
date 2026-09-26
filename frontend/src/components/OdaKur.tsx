@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, Download, RefreshCw, SquarePlay } from 'lucide-react'
+import { Download, RefreshCw, SquarePlay } from 'lucide-react'
 import type { Tab } from '../types'
 
 interface OdaKurProps {
