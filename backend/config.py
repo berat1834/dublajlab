@@ -151,3 +151,15 @@ def app_environment() -> str:
 def maintenance_token() -> str | None:
     value = os.getenv("MAINTENANCE_TOKEN", "").strip()
     return value or None
+
+def get_jwt_secret() -> str:
+    secret = os.getenv("JWT_SECRET", "super_secret_dev_key_only")
+    if app_environment() == "production" and secret == "super_secret_dev_key_only":
+        raise ValueError("Production ortamında güçlü ve rastgele bir JWT_SECRET ayarlanmalıdır.")
+    return secret
+
+def get_jwt_algorithm() -> str:
+    return os.getenv("JWT_ALGORITHM", "HS256")
+
+def get_jwt_expire_minutes() -> int:
+    return _positive_int_setting("ACCESS_TOKEN_EXPIRE_MINUTES", 4320)

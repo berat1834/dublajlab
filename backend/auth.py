@@ -3,13 +3,11 @@ from typing import Optional
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
+from backend import config
 
-SECRET_KEY = os.getenv("SECRET_KEY", "demo-super-secret-key-12345")
-if os.getenv("ENVIRONMENT") == "production" and SECRET_KEY == "demo-super-secret-key-12345":
-    raise RuntimeError("Production'da güvenli bir SECRET_KEY ortam değişkeni ayarlanmalıdır!")
-
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
+SECRET_KEY = config.get_jwt_secret()
+ALGORITHM = config.get_jwt_algorithm()
+ACCESS_TOKEN_EXPIRE_MINUTES = config.get_jwt_expire_minutes()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

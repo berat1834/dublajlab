@@ -7,7 +7,9 @@ import type {
   VideoTemplate,
   VoiceStyle,
   User,
-  AuthResponse
+  AuthResponse,
+  DubbingProject,
+  DubbingExport
 } from '../types'
 
 export const API_BASE_URL = (
@@ -239,4 +241,177 @@ export async function getMe(): Promise<User> {
     headers: getAuthHeaders(),
   })
   return parseResponse<User>(response)
+}
+
+// ═══════════════════════════ USER LIBRARY API ═══════════════════════════
+
+export async function getUserProjects(): Promise<DubbingProject[]> {
+  const response = await fetch(`${API_BASE_URL}/api/me/projects`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<DubbingProject[]>(response)
+}
+
+export async function getUserExports(): Promise<DubbingExport[]> {
+  const response = await fetch(`${API_BASE_URL}/api/me/exports`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<DubbingExport[]>(response)
+}
+
+export async function deleteUserProject(projectId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/me/projects/${projectId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  })
+  if (!response.ok) {
+    let body: ApiErrorBody = {}
+    try {
+      body = (await response.json()) as ApiErrorBody
+    } catch {
+      // empty
+    }
+    throw new Error(body.detail || 'Proje silinemedi.')
+  }
+}
+
+export async function updateProjectVisibility(projectId: string, visibility: 'public' | 'private'): Promise<DubbingProject> {
+  const response = await fetch(`${API_BASE_URL}/api/me/projects/${projectId}`, {
+    method: 'PATCH',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ visibility })
+  })
+  return parseResponse<DubbingProject>(response)
+}
+
+// ═══════════════════════════ PUBLIC DUBS API ═══════════════════════════
+
+export interface PublicDub {
+  project_id: string
+  title: string
+  display_name: string
+  created_at: string
+  duration_seconds: string | null
+  download_url: string | null
+  view_count: number
+  like_count: number
+  liked_by_me: boolean
+}
+
+export async function getPublicDubs(): Promise<PublicDub[]> {
+  const response = await fetch(`${API_BASE_URL}/api/public/dubs`, {
+    method: 'GET'
+  })
+  return parseResponse<PublicDub[]>(response)
+}
+
+export async function reportPublicDub(projectId: string, reason: string, details?: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/public/dubs/${projectId}/report`, {
+    method: 'POST',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ reason, details })
+  })
+  if (!response.ok) {
+    throw new Error('Rapor gönderilemedi.')
+  }
+}
+
+export async function toggleLikePublicDub(projectId: string, isLiking: boolean): Promise<void> {
+  const method = isLiking ? 'POST' : 'DELETE'
+  const response = await fetch(`${API_BASE_URL}/api/public/dubs/${projectId}/like`, {
+    method,
+    headers: getAuthHeaders()
+  })
+  if (!response.ok) {
+    throw new Error('Beğeni işlemi başarısız.')
+  }
+}
+
+export async function recordViewPublicDub(projectId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/public/dubs/${projectId}/view`, {
+    method: 'POST'
+  })
+  if (!response.ok) {
+    // Silently fail view counts, not critical
+  }
+}
+
+export interface CommentResponse {
+  id: string
+  project_id: string
+  user_id: string
+  display_name: string
+  body: string
+  created_at: string
+  is_mine: boolean
+}
+
+export async function getPublicDubComments(projectId: string): Promise<CommentResponse[]> {
+  const response = await fetch(`${API_BASE_URL}/api/public/dubs/${projectId}/comments`, {
+    headers: getAuthHeaders()
+  })
+  if (!response.ok) throw new Error('Yorumlar alınamadı.')
+  return response.json()
+}
+
+export async function addPublicDubComment(projectId: string, body: string): Promise<CommentResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/public/dubs/${projectId}/comments`, {
+    method: 'POST',
+    headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ body })
+  })
+  if (!response.ok) throw new Error('Yorum gönderilemedi.')
+  return response.json()
+}
+
+export async function deletePublicDubComment(projectId: string, commentId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/public/dubs/${projectId}/comments/${commentId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+  })
+  if (!response.ok) throw new Error('Yorum silinemedi.')
+}
+
+// ═══════════════════════════ ADMIN API ═══════════════════════════
+
+export interface ContentReport {
+  id: string
+  project_id: string
+  reporter_user_id: string | null
+  reason: string
+  details: string | null
+  status: string
+  created_at: string
+}
+
+export async function getAdminReports(): Promise<ContentReport[]> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/reports`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<ContentReport[]>(response)
+}
+
+export async function updateReportStatus(reportId: string, status: string): Promise<ContentReport> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/reports/${reportId}?status=${status}`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<ContentReport>(response)
+}
+
+export async function updateProjectModeration(projectId: string, moderation_status: string): Promise<DubbingProject> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/projects/${projectId}/moderation?moderation_status=${moderation_status}`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<DubbingProject>(response)
 }

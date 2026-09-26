@@ -68,7 +68,7 @@ export interface VideoTemplate {
   character_count?: number
 }
 
-export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily' | 'login' | 'register'
+export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily' | 'login' | 'register' | 'library' | 'admin'
 
 export interface User {
   id: string
@@ -81,4 +81,27 @@ export interface User {
 export interface AuthResponse {
   access_token: string
   token_type: string
+}
+
+export interface DubbingExport {
+  id: string
+  project_id: string
+  output_video_id: string
+  download_url?: string
+  duration_seconds?: string
+  file_size_bytes?: string
+  created_at: string
+}
+
+export interface DubbingProject {
+  id: string
+  user_id?: string
+  source_type: string
+  template_id?: string
+  title: string
+  duration_seconds?: string
+  status: JobStatus | string
+  visibility: string
+  created_at: string
+  updated_at: string
 }
