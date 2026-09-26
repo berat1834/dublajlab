@@ -40,28 +40,43 @@ Bu MVP tarayıcı ve medya backend’i arasında uçtan uca bir prodüksiyon ak�
 
 Repo telifli bir demo video barındırmaz; MVP kaynak adımında kullanıcının kendi videosunu yüklemesini destekler.
 
+## Portfolio Highlights
+
+Bu proje, bir modern web uygulamasının teknik derinliğini sergilemek amacıyla şu temel yetenekleri barındırır:
+- **FastAPI Backend:** Asenkron, hızlı ve tip güvenli (Pydantic) API servisi.
+- **React + TypeScript Frontend:** Modüler, temiz ve modern arayüz (Platform Shell, Showcase Pages).
+- **FFmpeg Video Processing:** Sunucu tarafında sub-process ile video-ses mix, trim ve altyazı render işlemleri.
+- **Timeline-based Microphone Recording:** Tarayıcı API'leri üzerinden satır satır mikrofon kaydı yakalama ve yönetme.
+- **Job Queue + Progress Polling:** Uzun süren medya işlemlerini bloklanmadan yönetme, `job_id` ile progress bar besleme.
+- **Docker Setup:** Tek komutla backend, frontend ve FFmpeg ortamlarını ayağa kaldırma (`docker-compose`).
+- **Public Demo Safety Limits:** DDoS ve maliyet yönetimi için dosya boyutu, TTL (Time-to-Live) silme ve günlük endpoint limitleri.
+
 ## Live Demo / Screenshots / Demo GIF
 
 **Live demo:** Henüz herkese açık bir deployment bulunmuyor. Yerel demo için [kurulum](#backend-kurulumu) ve [demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
 
 ### Screenshots
 
-GitHub, LinkedIn ve CV sunumunda kullanılacak beş temel ekran için sabit placeholder yolları hazırdır. Gerçek dosyalar henüz repoya eklenmediği için bağlantılar bozuk görsel oluşturmaması amacıyla aşağıda yorum içinde tutulur.
+GitHub, LinkedIn ve CV sunumunda kullanılacak temel ekranlar için sabit placeholder yolları hazırdır. Gerçek dosyalar henüz repoya eklenmediği için bağlantılar bozuk görsel oluşturmaması amacıyla aşağıda yorum içinde tutulur.
 
 | Ekran | Portföyde göstereceği değer | Placeholder yolu | Durum |
 | --- | --- | --- | --- |
 | Landing / hero | Ürün vaadi, üç adım, CTA ve çıktı mock'u | `docs/assets/dublajlab-landing-hero.webp` | Çekim bekliyor |
-| Template gallery | CSS placeholder kartlar, kategori, süre, replik ve zorluk bilgileri | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
-| Recording timeline | Zamanlanmış replikler, mikrofon kaydı ve kayıt ilerlemesi | `docs/assets/dublajlab-recording-timeline.webp` | Çekim bekliyor |
-| Export result | Sonuç video önizlemesi, MP4 indirme ve yeniden deneme aksiyonları | `docs/assets/dublajlab-export-result.webp` | Çekim bekliyor |
-| Mobile view | Tek kolon hero, kaynak seçimi ve kayıt paneli | `docs/assets/dublajlab-mobile.webp` | Çekim bekliyor |
+| Template gallery | CSS placeholder kartlar, kategori filtreleri | `docs/assets/dublajlab-template-gallery.webp` | Çekim bekliyor |
+| Showcase Dubs | Topluluk içerikleri mock tasarımı | `docs/assets/dublajlab-showcase-dubs.webp` | Çekim bekliyor |
+| Daily Dub | Günün dublajı hero card ve CTA | `docs/assets/dublajlab-daily-dub.webp` | Çekim bekliyor |
+| Recording timeline | Zamanlanmış replikler, mikrofon kaydı ve ilerleme | `docs/assets/dublajlab-recording-timeline.webp` | Çekim bekliyor |
+| Export result | Sonuç video önizlemesi ve MP4 indirme | `docs/assets/dublajlab-export-result.webp` | Çekim bekliyor |
+| Mobile view | Mobil navbar, menü ve tek kolon sekme düzeni | `docs/assets/dublajlab-mobile-navbar.webp` | Çekim bekliyor |
 
 ```markdown
 <!-- ![DublajLab landing ve hero](docs/assets/dublajlab-landing-hero.webp) -->
 <!-- ![DublajLab hazır sahne galerisi](docs/assets/dublajlab-template-gallery.webp) -->
+<!-- ![DublajLab topluluk dublajları](docs/assets/dublajlab-showcase-dubs.webp) -->
+<!-- ![DublajLab günün dublajı](docs/assets/dublajlab-daily-dub.webp) -->
 <!-- ![DublajLab replik kayıt timeline'ı](docs/assets/dublajlab-recording-timeline.webp) -->
 <!-- ![DublajLab MP4 export sonucu](docs/assets/dublajlab-export-result.webp) -->
-<!-- ![DublajLab mobil görünümü](docs/assets/dublajlab-mobile.webp) -->
+<!-- ![DublajLab mobil görünümü](docs/assets/dublajlab-mobile-navbar.webp) -->
 ```
 
 ### Demo GIF

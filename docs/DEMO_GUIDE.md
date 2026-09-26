@@ -1,85 +1,57 @@
-# DublajLab Demo ve Portföy Rehberi
+# DublajLab Canlı Demo & Portföy Sunum Rehberi
 
-Bu rehber, DublajLab için telif açısından güvenli bir demo videosu, template kaydı, ekran görüntüsü ve kısa portföy GIF'i hazırlama adımlarını açıklar.
+Bu belge, DublajLab projesini LinkedIn, GitHub veya kişisel portföyünüzde sergilerken kullanılacak 20-30 saniyelik video senaryosunu ve 8-15 saniyelik GIF kurgusunu açıklamaktadır.
 
-## 1. Demo videosunu hazırlama
+## ⚠️ Telif Uyarısı
+**Önemli Not:** Canlı demo, GIF veya ekran görüntüleri için **kesinlikle telif hakkı bulunan (film, dizi, sosyal medya kesiti, müzik)** materyal kullanmayın. Yalnızca kendi çektiğiniz kısa bir video, açık lisanslı (CC0) bir görüntü veya projede bulunan dummy/placeholder (örneğin CSS gradient) öğeleri üzerinden çekim yapın.
 
-En güvenli seçenek videoyu kendiniz üretmektir. Telefonla çekilmiş kısa, yüz içermeyen bir masa/ürün sahnesi; kendi hazırladığınız basit animasyon; ya da yalnızca DublajLab arayüzünün ekran kaydı kullanılabilir.
+---
 
-Önerilen teknik sınırlar:
+## 1. Kısa Demo Videosu Senaryosu (20 - 30 Saniye)
 
-- MP4/H.264, MOV veya WEBM
-- 5–15 saniye; sistem üst sınırı 60 saniye
-- 720p veya 1080p
-- 50 MB altında
-- Konuşmasız ya da kullanım izni size ait ses
-- Başka kişilere ait yüz, logo, müzik ve özel bilgi içermeyen kadraj
+Bu video, LinkedIn paylaşımınızda projenin ne işe yaradığını en hızlı anlatan "Hero" içerik olacaktır.
 
-Yerel deneme için videoyu `demo/input/` klasörüne koyun. Bu klasördeki medya `.gitignore` tarafından Git dışında tutulur. İşlenmiş sonucu inceleme amacıyla `demo/output/` altında saklayabilirsiniz; bu klasördeki çıktılar da commit edilmez.
+### Adım Adım Akış:
+1. **0s - 5s (Giriş & Platform Keşfi):**
+   - Ana sayfadaki (Oyna) güçlü hero mesajı gösterilir.
+   - Sahneler sekmesine tıklanıp galerideki filtrelemeler (Komedi, Dram) 1-2 saniye gösterilir.
+   - Ardından "Dublaj yap" butonuna tıklanarak stüdyo ekranına geçilir.
 
-## 2. Lisans ve kaynak bilgisini yazma
+2. **5s - 15s (Replik Kaydı):**
+   - Kayıt ekranında sağdaki Timeline'a odaklanılır.
+   - 1. satır için mikrofona tıklanır, 2 saniyelik bir kayıt yapılır (kırmızı kayıt animasyonu vurgulanır).
+   - "Sonraki Replik" geçişi ile timeline ilerlemesi gösterilir.
 
-Her template için `license` ve `source` zorunludur.
+3. **15s - 23s (Export ve Job Queue):**
+   - Tüm replikler bitince "Dublajı tamamla ve videoyu oluştur" butonuna basılır.
+   - Polling ekranı (Gerçek job durumu %0'dan %100'e giden progress bar) gösterilir. (Bu aşama izleyiciye backend/job mimarisi gücünü yansıtır).
 
-Kendi üretiminiz için:
+4. **23s - 30s (Sonuç):**
+   - Sonuç ekranı açılır. MP4 oynatıcıda video 3 saniye çalar (sesler mikslenmiş ve altyazı gömülmüş halde).
+   - Mouse "MP4 indir" butonuna gider ve video biter.
 
-```json
-"license": "All rights reserved — proje sahibinin kendi üretimi",
-"source": "Berat — özgün demo çekimi — 2026-09-24"
-```
+---
 
-Açık lisanslı bir kaynak için:
+## 2. GitHub README GIF Senaryosu (8 - 15 Saniye)
 
-```json
-"license": "CC BY 4.0",
-"source": "Üretici adı — https://kaynak.example/video — erişim: 2026-09-24"
-```
+GitHub reposunu gezen yazılımcıların dikkatini çekmek için daha hızlı ve loop'a uygun bir GIF kurgusu:
 
-Lisans; yeniden dağıtıma, düzenlemeye ve türetilmiş video üretmeye izin vermelidir. Atıf gerekiyorsa üretici adı ile kaynak bağlantısı korunmalıdır. “Google”, “YouTube” veya “internetten bulundu” kaynak değildir.
+- **1 - 3s:** Sahneler'den hızlıca bir video seçilir ve stüdyo açılır.
+- **3 - 8s:** Tek bir repliğe mikrofon ikonuna tıklanıp kayıt atılır, anında "Oluştur" butonuna basılır.
+- **8 - 12s:** Progress bar'ın hızla dolması (Job polling).
+- **12 - 15s:** Sonuç MP4'ü indirme sayfasının belirip GIF'in başa dönmesi.
 
-## 3. Videoyu template sistemine bağlama
+---
 
-1. Yayınlama hakkını doğruladığınız dosyayı `frontend/public/templates/` klasörüne kopyalayın. Klasör yoksa oluşturun.
-2. Dosya adında küçük harf, rakam ve tire kullanın: `my-demo-scene.mp4`.
-3. `demo/metadata/template.example.json` dosyasını örnek alarak bir metadata kaydı hazırlayın.
-4. Kaydı `backend/data/templates/templates.json` içindeki JSON listesine ekleyin.
-5. `video_url` değerini frontend public klasörüne göre yazın:
+## 3. Gösterilecek Temel Ekranlar (Screenshots için)
 
-```json
-"video_url": "/templates/my-demo-scene.mp4"
-```
+Eğer video veya GIF kullanamıyorsanız (veya README için statik görsel lazımsa), şu akışı yakalayacak sabit görseller elde edin:
+1. **Landing / Hero:** Navbar, giriş/kayıt CTA'ları ve platform hissi.
+2. **Sahneler Galerisi:** Dinamik filtreler ve mock kartlar.
+3. **Dublajlar Showcase:** Kullanıcı içerikleri varmış gibi duran placeholder vitrin.
+4. **Günün Dublajı:** Dev boyutlu play butonu olan vitrin kartı.
+5. **Recording Timeline:** Aktif mikrofon ve ses dalgası tasarımı.
+6. **Export Result:** Başarı ekranı ve indirme butonu.
+7. **Mobil Navbar / Landing:** Telefon görünümü, hamburger menü.
 
-6. `duration_seconds` değerini gerçek video süresiyle eşleştirin.
-7. Her replik için `start >= 0`, `end > start` ve `end <= duration_seconds` koşullarını sağlayın.
-8. Replik kimliklerini template içinde benzersiz tutun; toplam replik sayısı 1–20 arasında olmalıdır.
-
-Template seçildiğinde frontend bu dosyayı mevcut upload endpoint'ine gönderir. Böylece ayrı bir medya işleme hattı kurulmadan normal kayıt ve FFmpeg export akışı kullanılır.
-
-## 4. Ekran görüntüsü ve GIF hazırlama
-
-Portföy dosyaları için hedef yollar:
-
-- `docs/assets/dublajlab-editor.webp`
-- `docs/assets/dublajlab-template-gallery.webp`
-- `docs/assets/dublajlab-mobile.gif`
-
-Ekran görüntüsünde kaynak video, kayıt durumları ve export sonucu mümkünse tek akışta gösterilmelidir. GIF kısa tutulmalı; yükleme → replik kaydı → sonuç adımlarını göstermelidir. Kişisel dosya yolu, mikrofon cihaz adı, terminal token'ı veya özel tarayıcı sekmeleri görünmemelidir.
-
-## 5. Telifli içerik neden eklenmemeli?
-
-Film, dizi, reklam, müzik klibi, YouTube/TikTok/Instagram videosu veya lisansı belirsiz meme kesitleri; kısa olmaları ya da eğitim amaçlı kullanılmaları nedeniyle otomatik olarak serbest hale gelmez. Bunları repoya eklemek kaldırma talebi, GitHub bildirimi ve portföy güvenilirliğinin zarar görmesi riskini doğurur.
-
-Lisans kesin değilse dosyayı eklemeyin. Metadata içinde `video_url: null` bırakmak güvenli ve desteklenen seçenektir.
-
-## 6. Yayın öncesi kontrol
-
-Proje kökünde:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest backend/tests -q
-cd frontend
-npm run lint
-npm run build
-```
-
-Ardından template kartındaki lisans/kaynak bilgisini, videonun oynatılmasını, iki mikrofon kaydını ve MP4 export'u manuel olarak doğrulayın.
+Bu rehberi izleyerek, hem teknik zorlukları (FFmpeg, Job Queue, React) hem de estetik ürünü (Platform Shell, Glassmorphism) portföyünüzde eksiksiz yansıtabilirsiniz.

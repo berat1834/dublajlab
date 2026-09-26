@@ -6,60 +6,51 @@ Bu klasör GitHub README'si, LinkedIn paylaşımı ve CV portföy bağlantısı 
 
 | Öncelik | Dosya | Gösterilecek ekran | Önerilen çıktı | Durum |
 | --- | --- | --- | --- | --- |
-| 1 | `dublajlab-landing-hero.webp` | Başlık, alt metin, CTA'lar, üç adım ve çıktı mock'u | 1600×900 WebP | Çekim bekliyor |
-| 2 | `dublajlab-template-gallery.webp` | En az üç CSS placeholder template kartı; kategori, süre, replik ve zorluk bilgisi | 1600×900 WebP | Çekim bekliyor |
-| 3 | `dublajlab-recording-timeline.webp` | Video alanı ile kayıt timeline'ı; tamamlanan ve bekleyen replik durumları | 1600×900 WebP | Çekim bekliyor |
-| 4 | `dublajlab-export-result.webp` | Sonuç video önizlemesi, MP4 indir, aynı videoyla yeniden dene ve yeni video aksiyonları | 1600×900 WebP | Çekim bekliyor |
-| 5 | `dublajlab-mobile.webp` | Tek kolon hero, kaynak seçimi ve dublaj panelinin responsive görünümü | 430×932 WebP | Çekim bekliyor |
-| 6 | `dublajlab-demo.gif` | Kaynak seçimi → iki replik kaydı → export sonucu | 960 px genişlik, en fazla 15 saniye | Kayıt bekliyor |
+| 1 | `dublajlab-landing-hero.webp` | Başlık, alt metin, feature list ve "Oyna" (Hero) | 1600×900 WebP | Çekim bekliyor |
+| 2 | `dublajlab-template-gallery.webp` | Sahneler sekmesi, filtreler ve placeholder template kartları | 1600×900 WebP | Çekim bekliyor |
+| 3 | `dublajlab-showcase-dubs.webp` | Dublajlar sekmesi ve topluluk içerik mockları | 1600×900 WebP | Çekim bekliyor |
+| 4 | `dublajlab-daily-dub.webp` | Günün Dublajı hero kartı ve açıklama alanı | 1600×900 WebP | Çekim bekliyor |
+| 5 | `dublajlab-recording-timeline.webp` | Kayıt alanı, mikrofon kontrolü ve timeline | 1600×900 WebP | Çekim bekliyor |
+| 6 | `dublajlab-export-result.webp` | Sonuç video önizlemesi ve MP4 indirme seçenekleri | 1600×900 WebP | Çekim bekliyor |
+| 7 | `dublajlab-mobile-navbar.webp` | Mobil cihazda hamburger menü ve sekme görünümü | 430×932 WebP | Çekim bekliyor |
+| 8 | `dublajlab-demo.gif` | Kaynak seçimi → iki replik kaydı → export sonucu | 960 px genişlik, 15s | Kayıt bekliyor |
 
 ## Çekim planı
 
 ### 1. Landing / hero
-
-- Hero başlığı, iki CTA, üç adım göstergesi ve çıktı mock'u aynı kadrajda bulunsun.
-- Tarayıcı geliştirici araçları ve kişisel yer imi çubuğu görünmesin.
+- Navbar sekmeleri, giriş/kayıt butonları, hero başlığı ve CTA'lar görünür olmalı.
 - Masaüstü çekim 16:9 oranında ve metinler kesilmeden alınsın.
 
-### 2. Template gallery
+### 2. Sahneler galerisi
+- Kategoriler (Komedi, Dram vb.) tıklanmış şekilde galerinin filtreleme yeteneği vurgulansın.
+- Gerçek medya yoksa mevcut CSS gradient placeholder'ları kullanılsın.
 
-- `Komik tepki`, `Dramatik sahne` ve `Ürün tanıtımı` kartları görünür olsun.
-- Kategori, süre, replik sayısı, zorluk ve “Dublaj yap” CTA'ları okunabilsin.
-- Gerçek medya yoksa mevcut CSS gradient placeholder'ları kullanılsın; üçüncü taraf thumbnail eklenmesin.
+### 3. Dublajlar showcase
+- Sayfadaki "Demo içerik" bilgilendirme notu net bir şekilde kadraja girsin.
+- 6 adet placeholder dublaj kartı listelensin.
 
-### 3. Recording timeline
+### 4. Günün dublajı
+- Hero play butonu, "Günün Kazananı" etiketi ve replik mockları görünür olsun.
 
-- Yalnızca proje sahibine ait veya lisansı doğrulanmış demo video kullanılsın.
-- En az bir tamamlanmış ve bir kayıt bekleyen replik gösterilsin.
-- Mikrofon izni bildirimi, kişisel cihaz adı veya işletim sistemi bildirimi kadraja girmesin.
+### 5. Recording timeline
+- Video yüklenmiş veya sahne seçilmiş olmalı.
+- En az bir replik tamamlanmış ve ikincisi "Kayıt ediliyor" (kırmızı pulse) durumunda gösterilsin.
 
-### 4. Export result
+### 6. Export result
+- İşlem tamamlanmış, yeşil onaylı sonuç ve MP4 indirme butonu gösterilsin.
 
-- Sonuç videosu, “MP4 indir”, “Aynı video ile yeniden dene” ve “Yeni video ile başla” aksiyonları görünür olsun.
-- Video karesi telif açısından güvenli ve kişisel bilgi içermeyen bir karede durdurulsun.
+### 7. Mobile navbar
+- Tarayıcı Developer Tools'tan mobil görünüm aktifken (ör. iPhone 14 Pro) menü açık (hamburger) hali çekilsin.
 
-### 5. Mobile view
-
-- 390–430 px genişliğinde responsive viewport kullanılsın.
-- Yatay taşma olmadığı ve panellerin tek kolon aktığı gösterilsin.
-- Mobil ekran görüntüsünde tarayıcı adres çubuğu mümkünse kırpılsın.
-
-### 6. Demo GIF
-
-- Akış 8–15 saniye içinde kaynak seçimi, iki kısa kayıt ve export sonucunu göstermeli.
-- Uzun beklemeler kesilmeli; hareket kullanıcı eylemini takip edecek kadar sakin tutulmalı.
-- GIF sonsuz döngüde rahatsız edici flaş, hızlı zoom veya kişisel bildirim içermemeli.
-- Optimize edilmiş dosya tercih edilmeli; GitHub için mümkünse 10 MB altında tutulmalı.
+### 8. Demo GIF
+- 8-15 saniyelik uçtan uca hızlı akış.
 
 ## Telif ve gizlilik kontrolü
 
-- Film, dizi, reklam, müzik klibi, meme veya sosyal medya videosu kullanılmamalıdır.
-- Yalnızca proje sahibinin ürettiği medya ya da lisansı ve kaynağı doğrulanmış CC0/Public Domain/açık lisanslı medya kullanılmalıdır.
-- “İnternette bulundu” veya kaynak sahibi belirsiz içerik geçerli lisans kanıtı değildir.
-- Tarayıcı sekmeleri, yerel dosya yolları, terminal geçmişi, erişim token'ları, e-posta adresleri ve özel bildirimler kırpılmalıdır.
-- Template galerisindeki renkli thumbnail'lar CSS placeholder'dır; gerçek veya telifli görsel değildir.
-- Kaynak medya repoya eklenecekse `license` ve `source` metadata alanları doldurulmalı, lisans şartları yeniden dağıtıma izin vermelidir.
+- Yalnızca proje sahibinin ürettiği medya ya da CC0 lisanslı medya kullanılmalıdır.
+- "İnternette bulundu" içerikler kesinlikle eklenmemelidir.
+- Placeholder görseller kullanılabilir.
 
 ## Yayınlama
 
-Görseller hazır olduğunda dosya adlarını değiştirmeden bu klasöre ekleyin ve ana README içindeki ilgili Markdown yorumlarını kaldırın. Dosya eklenmemiş bir placeholder yolunu aktif görsel bağlantısına çevirmeyin; GitHub üzerinde bozuk görsel gösterir.
+Görseller hazır olduğunda dosya adlarını değiştirmeden bu klasöre ekleyin.
