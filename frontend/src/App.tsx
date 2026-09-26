@@ -39,6 +39,7 @@ import { AuthPage } from './components/AuthPage'
 import { UserLibrary } from './components/UserLibrary'
 import { AdminModerationPanel } from './components/AdminModerationPanel'
 import { AccountSettings } from './components/AccountSettings'
+import { PublicProfile } from './components/PublicProfile'
 import { Membership } from './components/Membership'
 import { UserScenes } from './components/UserScenes'
 import { UserFavorites } from './components/UserFavorites'
@@ -1062,13 +1063,15 @@ function App() {
           ) : activeTab === 'dubs' ? (
             <ShowcaseDubs onToast={showToast} />
           ) : activeTab === 'library' ? (
-            currentUser ? <UserLibrary currentUser={currentUser} onToast={showToast} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
+            currentUser ? <UserLibrary onToast={showToast} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
           ) : activeTab === 'admin' ? (
             currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
           ) : activeTab === 'oda_kur' ? (
             <OdaKur setActiveTab={setActiveTab} />
-          ) : activeTab === 'profile' && currentUser ? (
+          ) : activeTab === 'account' && currentUser ? (
             <AccountSettings currentUser={currentUser} onToast={showToast} setActiveTab={setActiveTab} />
+          ) : activeTab === 'profile' && currentUser ? (
+            <PublicProfile currentUser={currentUser} setActiveTab={setActiveTab} />
           ) : activeTab === 'membership' ? (
             <Membership setActiveTab={setActiveTab} />
           ) : activeTab === 'user_scenes' ? (

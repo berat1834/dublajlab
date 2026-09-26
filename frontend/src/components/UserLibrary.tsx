@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Download, Play, Trash2, Clock, CheckCircle2, AlertCircle, Globe, Lock } from 'lucide-react'
 import { getUserProjects, getUserExports, deleteUserProject, updateProjectVisibility, absoluteApiUrl } from '../lib/api'
-import type { DubbingProject, DubbingExport, User } from '../types'
+import type { DubbingProject, DubbingExport } from '../types'
 
 interface UserLibraryProps {
-  currentUser: User
   onToast: (msg: string) => void
 }
 
-export function UserLibrary({ currentUser, onToast }: UserLibraryProps) {
+export function UserLibrary({ onToast }: UserLibraryProps) {
   const [projects, setProjects] = useState<DubbingProject[]>([])
   const [exports, setExports] = useState<DubbingExport[]>([])
   const [loading, setLoading] = useState(true)
@@ -74,29 +73,43 @@ export function UserLibrary({ currentUser, onToast }: UserLibraryProps) {
 
   if (projects.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto py-16 px-4 text-center">
-        <div className="w-20 h-20 bg-lime-400/10 rounded-full flex items-center justify-center mx-auto mb-6">
-          <Play className="w-10 h-10 text-lime-400 opacity-50" />
+      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-0 pb-24">
+        <div className="mb-12">
+          <h1 className="text-3xl font-black text-white tracking-tight">Dublajlarım</h1>
+          <p className="text-zinc-400 mt-2">Yer aldığın 0 dublaj. İzle, indir ya da stüdyoda yeniden miksle.</p>
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">Henüz dublaj oluşturmadın</h2>
-        <p className="text-white/60 max-w-md mx-auto">
-          Galeriden bir sahne seç veya kendi videonu yükleyerek ilk dublajını oluştur.
-        </p>
+
+        <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] py-24 px-4 flex flex-col items-center text-center mb-12">
+          <h3 className="text-lg font-bold text-white mb-2">Henüz dublajın yok</h3>
+          <p className="text-sm text-zinc-500 max-w-sm mb-8">
+            Bir oda kur, arkadaşlarını çağır — ilk dublajın burada görünsün.
+          </p>
+          <button className="px-6 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
+            Oda kur
+          </button>
+        </div>
+
+        <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-500 mb-3">
+              DublajLab VIP
+            </div>
+            <h2 className="text-2xl font-black text-white">Dublaj daha hızlı, daha yüksek kalitede.</h2>
+            <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile sahneleri açar, render sırasını atlar ve 1080p çıktı alırsın.</p>
+          </div>
+          <button className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
+            VIP Ol
+          </button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">
-            Merhaba, {currentUser.display_name} 👋
-          </h2>
-          <p className="text-white/60 mt-1">
-            Toplam {projects.length} dublaj projeniz bulunuyor
-          </p>
-        </div>
+      <div className="mb-12">
+        <h1 className="text-3xl font-black text-white tracking-tight">Dublajlarım</h1>
+        <p className="text-zinc-400 mt-2">Yer aldığın {projects.length} dublaj. İzle, indir ya da stüdyoda yeniden miksle.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -184,6 +197,19 @@ export function UserLibrary({ currentUser, onToast }: UserLibraryProps) {
             </div>
           )
         })}
+      </div>
+
+      <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-6 mt-12">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-500 mb-3">
+            DublajLab VIP
+          </div>
+          <h2 className="text-2xl font-black text-white">Dublaj daha hızlı, daha yüksek kalitede.</h2>
+          <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile sahneleri açar, render sırasını atlar ve 1080p çıktı alırsın.</p>
+        </div>
+        <button className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
+          VIP Ol
+        </button>
       </div>
     </div>
   )

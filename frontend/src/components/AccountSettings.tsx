@@ -174,13 +174,22 @@ export function AccountSettings({ currentUser, onToast, setActiveTab }: AccountS
         {/* Security & Danger Zone */}
         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 mt-8">
           <h3 className="text-lg font-bold text-red-500 flex items-center gap-2 mb-2">
-            <Trash2 className="h-5 w-5" /> Tehlikeli Bölge
+            <Trash2 className="h-5 w-5" /> Hesabı kalıcı olarak sil
           </h3>
-          <p className="text-sm text-red-400/80 mb-6">
-            Bu işlem geri alınamaz. Hesabını sildiğinde tüm dublajların, projelerin ve verilerin kalıcı olarak yok edilir.
+          <p className="text-sm text-red-400/80 mb-4">
+            Bu işlem geri alınamaz. Devam etmeden önce aşağıdakileri oku:
+          </p>
+          <ul className="list-disc pl-5 text-sm text-red-400/70 space-y-2 mb-6">
+            <li>Kullanıcı adın ve e-postan serbest bırakılır, hesabına bir daha giriş yapamazsın.</li>
+            <li>Toplulukta paylaştığın dublajlar, oynadığın oyunların parçası olduğu için kalır.</li>
+            <li>Ödeme ve kredi kayıtları muhasebe yükümlülüğü gereği saklanır.</li>
+            <li>Silinen hesap geri getirilemez; istersen yeni bir hesap açabilirsin.</li>
+          </ul>
+          <p className="text-xs text-red-500/50 mb-6">
+            Verilerinin nasıl işlendiğini KVKK aydınlatma metninde okuyabilirsin.
           </p>
           <button className="px-6 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition">
-            Hesabımı Kalıcı Olarak Sil
+            Hesabımı silmek istiyorum
           </button>
         </div>
       </div>
