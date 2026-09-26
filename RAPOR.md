@@ -1,11 +1,11 @@
 # DublajLab Project Report
 
-## Current Status (Release Candidate Stabilization - Sprint 23 & Smoke Test - Sprint 24)
+## Current Status (Release Candidate Stabilization - Sprint 23 & Smoke Test V2 - Sprint 24)
 
-- **Smoke Test Sonuçları (Sprint 24)**:
-  - ✅ **Railway Backend**: `/api/health` canlıda başarılı şekilde `HTTP 200 OK` dönüyor.
-  - 🔄 **SPA Routing Fix**: Vercel alt sayfalarında (örn. `/membership`) 404 hatasını çözmek için kök dizine `vercel.json` kopyalandı.
-  - ⚠️ **Vercel Frontend UI**: Proje Vercel SSO (Protected Deployment) arkasında olduğu için otomatik E2E arayüz testleri bloklandı. Canlı kullanım için Vercel panelinden protection'ın kapatılması gerekiyor.
+- **Smoke Test Sonuçları (Sprint 24 V2)**:
+  - ✅ **Railway Backend CORS**: Canlı sunucudaki CORS problemi çözüldü (`backend/config.py` içinde `dublajlab.vercel.app` hardcoded izin verildi).
+  - 🔄 **SPA Routing Fix**: Vercel'in kendi Vite ayarlarını kullanması için kök dizindeki hatalı `vercel.json` silindi.
+  - ⚠️ **Vercel Frontend UI**: Proje Vercel SSO (Protected Deployment) arkasında olmaya devam ediyor. Kod üzerinden kapatılamayan bu ayar yüzünden arayüz uçtan uca testleri "BLOCKED" durumundadır.
 - CI/CD ve Pipeline testleri (Lint, Pytest, Build) yeşil (green) duruma getirildi.
 - Backend `auth_router` import hataları çözüldü, `deleteAccount` 404 hatası giderildi.
 - Frontend React `any` tipleri ve empty object pattern'leri düzeltildi.
