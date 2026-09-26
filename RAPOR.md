@@ -4,7 +4,7 @@
 
 - **Vercel Deployment Audit Sonuçları (Sprint 24)**:
   - 🛑 **Domain Çakışması**: `dublajlab.vercel.app` domaini kullanıcının kişisel hesabındaki eski (Discord landing) projede takılı kalmıştır. Yeni takıma (`berat1834s-projects`) taşınması gerekmektedir.
-  - 🛑 **Yanlış Kök Dizin Ayarı**: Yeni Vercel projesinin `Root Directory` ayarı `frontend` yerine boş (repo kökü) bırakıldığı ve `Framework` ayarı `Vite` seçilmediği için build başarısız olmakta ve 404 dönmektedir.
+  - ✅ **Yanlış Kök Dizin Ayarı Çözüldü**: Yeni Vercel projesinin `Root Directory` ayarı `frontend` olarak, `Framework` ayarı `Vite` olarak Vercel CLI üzerinden güncellendi ve başarılı bir build alınması sağlandı.
   - ✅ **Railway Backend**: API sorunsuz çalışmaktadır ve CORS izinleri ayarlanmıştır.
 - Canlı ortam arayüz testleri (Smoke Test), kullanıcı Vercel panel ayarlarını (Domain ve Root Directory) düzeltene kadar beklemeye alınmıştır. Kod bazlı bir sorun yoktur.
 - CI/CD ve Pipeline testleri (Lint, Pytest, Build) yeşil (green) duruma getirildi.
