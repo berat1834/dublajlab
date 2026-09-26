@@ -2,11 +2,12 @@
 
 ## Current Status (Release Candidate Stabilization - Sprint 23 & Vercel Audit - Sprint 24)
 
-- **Vercel Deployment Audit Sonuçları (Sprint 24)**:
-  - 🛑 **Domain Çakışması**: `dublajlab.vercel.app` domaini kullanıcının kişisel hesabındaki eski (Discord landing) projede takılı kalmıştır. Yeni takıma (`berat1834s-projects`) taşınması gerekmektedir.
-  - ✅ **Yanlış Kök Dizin Ayarı Çözüldü**: Yeni Vercel projesinin `Root Directory` ayarı `frontend` olarak, `Framework` ayarı `Vite` olarak Vercel CLI üzerinden güncellendi ve başarılı bir build alınması sağlandı.
-  - ✅ **Railway Backend**: API sorunsuz çalışmaktadır ve CORS izinleri ayarlanmıştır.
-- Canlı ortam arayüz testleri (Smoke Test), kullanıcı Vercel panel ayarlarını (Domain ve Root Directory) düzeltene kadar beklemeye alınmıştır. Kod bazlı bir sorun yoktur.
+- **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
+  - ✅ **Canlı URL (Canonical)**: Şu anki doğru ve çalışan canlı site adresimiz **`https://dublajlab-sigma.vercel.app`**'tir. (`dublajlab.vercel.app` adresi Vercel üzerinde kullanıcının eski projesinde takılı kaldığı için şimdilik alias/domain hatası vermektedir).
+  - ✅ **Yanlış Kök Dizin Ayarı Çözüldü**: Yeni Vercel projesinin `Root Directory` ayarı `frontend` olarak, `Framework` ayarı `Vite` olarak Vercel CLI üzerinden güncellendi ve başarılı bir build alınarak 404 hatası giderildi.
+  - ✅ **Railway Backend & CORS**: API sorunsuz çalışmaktadır ve tüm Vercel canlı domainleri CORS iznine sahiptir (`api/health` 200 OK).
+  - ✅ **Uçtan Uca API Smoke Test**: Canlı sunucular üzerinde Register, Login, Token alımı (`/me`), Templates listeleme, Kataloğum (`api/me/projects`) ve Dublajlar public feed (`api/public/dubs`) rotalarının tamamı başarıyla test edildi ve 200 HTTP dönüşleri alındı.
+  - 🚀 **Sonuç**: Proje mimarisi "Release Candidate" olarak tam stabildir. Yeni özellik eklenebilecek durumdadır.
 - CI/CD ve Pipeline testleri (Lint, Pytest, Build) yeşil (green) duruma getirildi.
 - Backend `auth_router` import hataları çözüldü, `deleteAccount` 404 hatası giderildi.
 - Frontend React `any` tipleri ve empty object pattern'leri düzeltildi.
