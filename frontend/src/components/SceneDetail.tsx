@@ -128,7 +128,7 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetail
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => onToast('Oda kurma (Multiplayer) özelliği çok yakında eklenecektir.')} className="rounded-xl bg-lime px-6 py-3.5 text-sm font-bold text-ink hover:bg-[#d5ff78] transition shadow-glow flex-1 flex justify-center items-center gap-2">
+            <button onClick={() => setActiveTab('oda_kur')} className="rounded-xl bg-lime px-6 py-3.5 text-sm font-bold text-ink hover:bg-[#d5ff78] transition shadow-glow flex-1 flex justify-center items-center gap-2">
               <Users className="h-4 w-4" /> Bu sahneyle oda kur
             </button>
             <button onClick={() => onPlay(template.id)} className="rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/10 transition flex-1 flex justify-center items-center gap-2">

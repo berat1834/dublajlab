@@ -11,7 +11,7 @@ export function VipPromo({ onToast }: VipPromoProps) {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-500 mb-4">
           <Crown className="h-3 w-3" /> VIP Sürüm
         </span>
-        <h2 className="text-2xl font-black text-white">Daha yüksek kalite export çok yakında.</h2>
+        <h2 className="text-2xl font-black text-white">Daha yüksek kalite export seçeneği.</h2>
         <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
           Ücretsiz public demo'da 480p export sunulmaktadır. (Bu alan canlı ürünleşme için eklenmiş bir tasarım placeholder'ıdır.)
         </p>

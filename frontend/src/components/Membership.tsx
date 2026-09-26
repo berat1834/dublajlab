@@ -36,9 +36,9 @@ export function Membership({ setActiveTab, onToast }: MembershipProps) {
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <button onClick={() => onToast('VIP satın alma altyapısı yakında!', 'error')} className="px-5 py-2.5 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-400 transition flex items-center gap-2">
+              <a href="mailto:sales@dublajlab.com?subject=VIP%20Abonelik" className="px-5 py-2.5 rounded-xl bg-amber-500 text-black text-sm font-bold hover:bg-amber-400 transition flex items-center gap-2">
                 <Diamond className="h-4 w-4" /> VIP Ol
-              </button>
+              </a>
               <button onClick={() => {
                 document.getElementById('compare-table')?.scrollIntoView({ behavior: 'smooth' })
               }} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">

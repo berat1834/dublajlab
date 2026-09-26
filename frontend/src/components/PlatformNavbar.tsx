@@ -48,7 +48,10 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             <button onClick={() => setLanguage(language === 'TR' ? 'EN' : 'TR')} className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition w-[50px] justify-center">
               <Globe className="h-4 w-4" /> {language}
             </button>
-            <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 text-zinc-400 hover:text-white">
+            <button onClick={() => {
+              const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+              window.location.href = `${baseUrl}/api/auth/discord/login`
+            }} className="flex items-center gap-1.5 text-zinc-400 hover:text-white">
               <MessageSquare className="h-4 w-4" /> Discord
             </button>
             <div className="h-4 w-[1px] bg-white/10"></div>
@@ -130,8 +133,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
                 <button onClick={() => setActiveTab('register')} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">{t('nav.register')}</button>
               </>
             )}
-            <button onClick={handleFeatureSoon} className="flex items-center gap-1.5 rounded-lg border border-lime/30 bg-lime/10 px-3 py-1.5 font-bold text-lime transition hover:bg-lime/20">
-              <Crown className="h-4 w-4" /> VIP ol
+            <button onClick={() => setActiveTab('membership')} className="flex items-center gap-1.5 rounded-lg border border-lime/30 bg-lime/10 px-3 py-1.5 font-bold text-lime transition hover:bg-lime/20">
+              <Crown className="h-4 w-4" /> {t('vip.button')}
             </button>
           </div>
           <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -147,8 +150,11 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
             <button onClick={() => { setActiveTab('dubs'); setMobileMenuOpen(false); }} className="text-left">Dublajlar</button>
             <button onClick={() => { setActiveTab('daily'); setMobileMenuOpen(false); }} className="text-left">Günün Dublajı</button>
             <hr className="border-white/10" />
-            <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><Globe className="h-4 w-4" /> TR</button>
-            <button onClick={handleFeatureSoon} className="text-left flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Discord</button>
+            <button onClick={() => setLanguage(language === 'TR' ? 'EN' : 'TR')} className="text-left flex items-center gap-2 py-3"><Globe className="h-4 w-4" /> {language}</button>
+            <button onClick={() => {
+              const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+              window.location.href = `${baseUrl}/api/auth/discord/login`
+            }} className="text-left flex items-center gap-2 py-3 text-sm font-bold text-zinc-300 hover:text-white transition"><MessageSquare className="h-4 w-4" /> Discord</button>
             {currentUser ? (
               <>
                 {currentUser.role === 'admin' && (
@@ -166,7 +172,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mob
                 <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">Kayıt ol</button>
               </>
             )}
-            <button onClick={handleFeatureSoon} className="text-left text-lime flex items-center gap-2"><Crown className="h-4 w-4" /> VIP ol</button>
+            <button onClick={() => { setActiveTab('membership'); setMobileMenuOpen(false); }} className="text-left text-lime flex items-center gap-2 py-3 text-sm font-bold transition"><Crown className="h-4 w-4" /> {t('vip.button')}</button>
           </div>
         </div>
       )}

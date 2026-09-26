@@ -30,7 +30,7 @@ export function DailyDub({ setActiveTab, handleFeatureSoon }: DailyDubProps) {
             "Tüm gün süren o toplantı beş dakika sürecek dediler... Sonra herkes kahve molasına çıktı ama mikrofonum açık kalmış!"
           </p>
           <div className="mt-6 flex flex-wrap gap-4">
-            <button onClick={handleFeatureSoon} className="rounded-xl bg-lime px-6 py-3 text-sm font-bold text-ink hover:bg-[#d5ff78] transition shadow-glow">
+            <button onClick={() => setActiveTab('scenes')} className="rounded-xl bg-lime px-6 py-3 text-sm font-bold text-ink hover:bg-[#d5ff78] transition shadow-glow">
               Dublajı İzle
             </button>
             <button onClick={() => setActiveTab('play')} className="rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition">

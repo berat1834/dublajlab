@@ -20,16 +20,16 @@ export function PlatformFooter({ setActiveTab, handleFeatureSoon, handleLegalLin
               Bu proje bir kişisel portföy çalışması olup, video işleme (FFmpeg) ve asenkron web teknolojilerinin sunumunu hedefler. <br/>Tüm işlemler "demo" modundadır.
             </p>
             <div className="mt-6 flex items-center gap-4 text-zinc-400">
-              <button onClick={handleFeatureSoon} className="hover:text-white transition">X</button>
-              <button onClick={handleFeatureSoon} className="hover:text-white transition">IG</button>
-              <button onClick={handleFeatureSoon} className="hover:text-white transition">DC</button>
-              <button onClick={handleFeatureSoon} className="hover:text-white transition">IN</button>
+              <a href="https://twitter.com/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">X</a>
+              <a href="https://instagram.com/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">IG</a>
+              <a href="https://discord.gg/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">DC</a>
+              <a href="https://linkedin.com/company/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">IN</a>
             </div>
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Oyna</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={handleFeatureSoon} className="hover:text-white">Oda kur</button></li>
+              <li><button onClick={() => setActiveTab('oda_kur')} className="hover:text-white">Oda kur</button></li>
               <li><button onClick={() => setActiveTab('scenes')} className="hover:text-white">Sahneler</button></li>
               <li><button onClick={() => setShowHowTo(true)} className="hover:text-white">Nasıl oynanır</button></li>
             </ul>
@@ -45,8 +45,8 @@ export function PlatformFooter({ setActiveTab, handleFeatureSoon, handleLegalLin
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Kurumsal</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={handleFeatureSoon} className="hover:text-white">Hakkımızda</button></li>
-              <li><button onClick={handleFeatureSoon} className="hover:text-white">İletişim</button></li>
+              <li><a href="mailto:info@dublajlab.com" className="hover:text-white">Hakkımızda</a></li>
+              <li><a href="mailto:iletisim@dublajlab.com" className="hover:text-white">İletişim</a></li>
             </ul>
           </div>
           <div>

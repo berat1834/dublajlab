@@ -169,7 +169,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
             </div>
             <div className="text-sm text-zinc-400">
               Şifreni değiştirmek için e-postana bir sıfırlama bağlantısı iste:{' '}
-              <button onClick={() => onToast('Şifre sıfırlama bağlantısı e-postanıza gönderildi!', 'success')} className="text-white font-bold underline hover:text-lime-400 transition">Sıfırlama bağlantısı iste</button>
+              <a href="mailto:destek@dublajlab.com?subject=Şifre%20Sıfırlama" className="text-white font-bold underline hover:text-lime-400 transition">Destek ile iletişime geç</a>
             </div>
           </div>
         </div>

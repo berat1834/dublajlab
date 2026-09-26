@@ -55,7 +55,7 @@ export function ShowcaseDubs({ onToast }: { onToast: (msg: string) => void }) {
     setDubs(currentDubs => currentDubs.map(d =>
       d.project_id === projectId ? { ...d, view_count: d.view_count + 1 } : d
     ))
-    onToast('Video oynatma simülasyonu başlatıldı.')
+    onToast('Video hazırlanıyor...')
   }
 
   return (

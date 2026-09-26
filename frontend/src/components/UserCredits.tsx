@@ -26,9 +26,9 @@ export function UserCredits({ setActiveTab, onToast }: UserCreditsProps) {
               <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-1">Kullanılabilir</div>
               <div className="text-5xl font-black text-white">35</div>
             </div>
-            <button onClick={() => onToast('Kredi satın alma sistemi yakında aktif edilecek!', 'error')} className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-zinc-200 transition">
+            <a href="mailto:sales@dublajlab.com?subject=Kredi%20Sat%C4%B1n%20Alma" className="px-6 py-2.5 rounded-xl bg-white text-black text-sm font-bold hover:bg-zinc-200 transition">
               Kredi Al
-            </button>
+            </a>
           </div>
           
           <div className="grid grid-cols-4 divide-x divide-white/10 border-t border-white/10 pt-6">

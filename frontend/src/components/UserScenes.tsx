@@ -46,9 +46,9 @@ export function UserScenes({ setActiveTab, onToast }: UserScenesProps) {
             </div>
           </div>
           <div className="w-[1px] h-12 bg-white/10 hidden sm:block"></div>
-          <button onClick={() => onToast('Sahne stüdyosu çok yakında!', 'success')} className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition shadow-[0_0_15px_rgba(220,38,38,0.3)] shrink-0">
+          <a href="mailto:iletisim@dublajlab.com?subject=Sahne%20Stüdyosu" className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition shadow-[0_0_15px_rgba(220,38,38,0.3)] shrink-0">
             Yeni Sahne
-          </button>
+          </a>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ export function UserScenes({ setActiveTab, onToast }: UserScenesProps) {
         ))}
       </div>
       
-      <p className="text-xs text-zinc-500 mb-8 font-medium">Gönderdiğin içeriğin haklarına sahip olmalısın. Ayrıntılar: <span onClick={() => onToast('Telif kuralları sayfası yakında eklenecek.')} className="underline cursor-pointer hover:text-white">Telif bildirimi</span></p>
+      <p className="text-xs text-zinc-500 mb-8 font-medium">Gönderdiğin içeriğin haklarına sahip olmalısın. Ayrıntılar: <a href="https://github.com/berat1834/dublajlab/blob/main/LICENSE" target="_blank" rel="noopener noreferrer" className="underline cursor-pointer hover:text-white">Telif bildirimi</a></p>
 
       {/* Empty State */}
       <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] py-20 px-4 flex flex-col items-center text-center">
@@ -71,9 +71,9 @@ export function UserScenes({ setActiveTab, onToast }: UserScenesProps) {
         <p className="text-sm text-zinc-400 max-w-md mb-8">
           Bir film ya da dizi sahnesinin videosunu yükle, kimin ne zaman konuştuğunu işaretle, arka plan sesini hazırla ve incelemeye gönder.
         </p>
-        <button onClick={() => onToast('Sahne stüdyosu çok yakında!', 'success')} className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
+        <a href="mailto:iletisim@dublajlab.com?subject=Sahne%20Yükleme" className="px-6 py-3 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
           İlk Sahneni Oluştur
-        </button>
+        </a>
       </div>
 
       {/* VIP Footer */}
