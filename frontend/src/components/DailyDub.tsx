@@ -3,10 +3,9 @@ import type { Tab } from '../types'
 
 interface DailyDubProps {
   setActiveTab: (tab: Tab) => void
-  handleFeatureSoon: () => void
 }
 
-export function DailyDub({ setActiveTab, handleFeatureSoon }: DailyDubProps) {
+export function DailyDub({ setActiveTab }: DailyDubProps) {
   return (
     <div className="py-4 lg:py-10">
       <div className="mb-8 text-center">

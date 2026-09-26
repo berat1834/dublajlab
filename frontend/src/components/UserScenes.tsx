@@ -3,10 +3,9 @@ import type { Tab } from '../types'
 
 interface UserScenesProps {
   setActiveTab: (tab: Tab) => void
-  onToast: (msg: string, type?: 'success' | 'error') => void
 }
 
-export function UserScenes({ setActiveTab, onToast }: UserScenesProps) {
+export function UserScenes({ setActiveTab }: UserScenesProps) {
   const steps = [
     { title: 'Video', desc: 'MP4 yükle, süre ve ses otomatik ölçülür.', icon: Film },
     { title: 'Karakterler', desc: 'Sahnede konuşan her kişiyi ekle.', icon: Users },

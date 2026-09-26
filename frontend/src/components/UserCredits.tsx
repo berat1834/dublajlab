@@ -4,10 +4,9 @@ import type { Tab } from '../types'
 
 interface UserCreditsProps {
   setActiveTab: (tab: Tab) => void
-  onToast: (msg: string, type?: 'error' | 'success') => void
 }
 
-export function UserCredits({ setActiveTab, onToast }: UserCreditsProps) {
+export function UserCredits({ setActiveTab }: UserCreditsProps) {
   const [filter, setFilter] = useState<'all' | 'earned' | 'spent'>('all')
   return (
     <div className="py-8 max-w-4xl mx-auto pb-24 px-4 sm:px-0">

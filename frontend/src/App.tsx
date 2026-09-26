@@ -210,11 +210,6 @@ function App() {
     setTimeout(() => setToastMessage(''), 4000)
   }
 
-  const handleFeatureSoon = () => {
-    setToastMessage('Bu özellik canlı demo sonrasında eklenecek.')
-    setTimeout(() => setToastMessage(''), 3000)
-  }
-
   const handleTabTemplateSelect = (templateId: string) => {
     setDetailTemplateId(templateId);
     setActiveTab('scene_detail');
@@ -507,7 +502,6 @@ function App() {
       <PlatformNavbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
-        handleFeatureSoon={handleFeatureSoon} 
         mobileMenuOpen={mobileMenuOpen} 
         setMobileMenuOpen={setMobileMenuOpen} 
         currentUser={currentUser}
@@ -1051,6 +1045,7 @@ function App() {
               onBack={() => setActiveTab('scenes')}
               onPlay={handlePlayFromDetail}
               onToast={showToast}
+              setActiveTab={setActiveTab}
             />
           ) : activeTab === 'scenes' ? (
             <div className="py-4">
@@ -1073,17 +1068,17 @@ function App() {
           ) : activeTab === 'profile' && currentUser ? (
             <PublicProfile currentUser={currentUser} setActiveTab={setActiveTab} />
           ) : activeTab === 'membership' ? (
-            <Membership setActiveTab={setActiveTab} onToast={showToast} />
+            <Membership setActiveTab={setActiveTab} />
           ) : activeTab === 'user_scenes' ? (
-            <UserScenes setActiveTab={setActiveTab} onToast={showToast} />
+            <UserScenes setActiveTab={setActiveTab} />
           ) : activeTab === 'user_favorites' ? (
             <UserFavorites setActiveTab={setActiveTab} />
           ) : activeTab === 'user_credits' ? (
-            <UserCredits setActiveTab={setActiveTab} onToast={showToast} />
+            <UserCredits setActiveTab={setActiveTab} />
           ) : activeTab === 'login' || activeTab === 'register' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (
-            <DailyDub setActiveTab={setActiveTab} handleFeatureSoon={handleFeatureSoon} />
+            <DailyDub setActiveTab={setActiveTab} />
           )}
         </div>
       </main>
@@ -1092,7 +1087,7 @@ function App() {
         <HowToModal setShowHowTo={setShowHowTo} setActiveTab={setActiveTab} />
       )}
 
-      <PlatformFooter setActiveTab={setActiveTab} handleFeatureSoon={handleFeatureSoon} handleLegalLink={handleLegalLink} setShowHowTo={setShowHowTo} />
+      <PlatformFooter setActiveTab={setActiveTab} handleLegalLink={handleLegalLink} setShowHowTo={setShowHowTo} />
     </div>
   )
 }

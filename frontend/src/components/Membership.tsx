@@ -3,10 +3,9 @@ import type { Tab } from '../types'
 
 interface MembershipProps {
   setActiveTab: (tab: Tab) => void
-  onToast: (msg: string, type?: 'success' | 'error') => void
 }
 
-export function Membership({ setActiveTab, onToast }: MembershipProps) {
+export function Membership({ setActiveTab }: MembershipProps) {
   const vipFeatures = [
     { name: 'Hızlı render', description: 'İşlem kuyruğunda sıranın önüne geçersin.', icon: Zap },
     { name: '1080p çıktı', description: 'Kaynak izin verdiği ölçüde en yüksek kalite.', icon: EyeOff },

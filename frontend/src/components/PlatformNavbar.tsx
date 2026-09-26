@@ -6,14 +6,13 @@ import { useLanguage } from '../LanguageContext'
 interface PlatformNavbarProps {
   activeTab: Tab
   setActiveTab: (tab: Tab) => void
-  handleFeatureSoon: () => void
   mobileMenuOpen: boolean
   setMobileMenuOpen: (open: boolean) => void
   currentUser?: User | null
   setCurrentUser?: (user: User | null) => void
 }
 
-export function PlatformNavbar({ activeTab, setActiveTab, handleFeatureSoon, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
+export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { language, setLanguage, t } = useLanguage()
 

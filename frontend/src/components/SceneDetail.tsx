@@ -7,7 +7,7 @@ import {
   Scale
 } from 'lucide-react'
 import { fetchTemplate } from '../lib/api'
-import type { VideoTemplate } from '../types'
+import type { VideoTemplate, Tab } from '../types'
 import { VipPromo } from './VipPromo'
 
 interface SceneDetailProps {
@@ -15,6 +15,7 @@ interface SceneDetailProps {
   onBack: () => void
   onPlay: (templateId: string) => void
   onToast: (msg: string) => void
+  setActiveTab: (tab: Tab) => void
 }
 
 function thumbClass(category: string): string {
@@ -26,7 +27,7 @@ function thumbClass(category: string): string {
   return 'thumb-default'
 }
 
-export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetailProps) {
+export function SceneDetail({ templateId, onBack, onPlay, onToast, setActiveTab }: SceneDetailProps) {
   const [template, setTemplate] = useState<VideoTemplate | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

@@ -2,12 +2,11 @@ import type { Tab } from '../types'
 
 interface PlatformFooterProps {
   setActiveTab: (tab: Tab) => void
-  handleFeatureSoon: () => void
   handleLegalLink: () => void
   setShowHowTo: (show: boolean) => void
 }
 
-export function PlatformFooter({ setActiveTab, handleFeatureSoon, handleLegalLink, setShowHowTo }: PlatformFooterProps) {
+export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: PlatformFooterProps) {
   return (
     <footer className="mt-auto border-t border-white/10 bg-black/40">
       <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:py-16">
