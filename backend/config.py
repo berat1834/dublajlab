@@ -141,7 +141,15 @@ def ensure_media_directories() -> None:
 
 def allowed_origins() -> list[str]:
     raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
-    return [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+    
+    # Canlı ortam CORS blokajlarını çözmek için fallback originler
+    if "https://dublajlab.vercel.app" not in origins:
+        origins.append("https://dublajlab.vercel.app")
+    if "https://dublajlab-sigma.vercel.app" not in origins:
+        origins.append("https://dublajlab-sigma.vercel.app")
+        
+    return origins
 
 
 def app_environment() -> str:
