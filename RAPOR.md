@@ -1,11 +1,12 @@
 # DublajLab Project Report
 
-## Current Status (Release Candidate Stabilization - Sprint 23 & Smoke Test V2 - Sprint 24)
+## Current Status (Release Candidate Stabilization - Sprint 23 & Vercel Audit - Sprint 24)
 
-- **Smoke Test Sonuçları (Sprint 24 V2)**:
-  - ✅ **Railway Backend CORS**: Canlı sunucudaki CORS problemi çözüldü (`backend/config.py` içinde `dublajlab.vercel.app` hardcoded izin verildi).
-  - 🔄 **SPA Routing Fix**: Vercel'in kendi Vite ayarlarını kullanması için kök dizindeki hatalı `vercel.json` silindi.
-  - ⚠️ **Vercel Frontend UI**: Proje Vercel SSO (Protected Deployment) arkasında olmaya devam ediyor. Kod üzerinden kapatılamayan bu ayar yüzünden arayüz uçtan uca testleri "BLOCKED" durumundadır.
+- **Vercel Deployment Audit Sonuçları (Sprint 24)**:
+  - 🛑 **Domain Çakışması**: `dublajlab.vercel.app` domaini kullanıcının kişisel hesabındaki eski (Discord landing) projede takılı kalmıştır. Yeni takıma (`berat1834s-projects`) taşınması gerekmektedir.
+  - 🛑 **Yanlış Kök Dizin Ayarı**: Yeni Vercel projesinin `Root Directory` ayarı `frontend` yerine boş (repo kökü) bırakıldığı ve `Framework` ayarı `Vite` seçilmediği için build başarısız olmakta ve 404 dönmektedir.
+  - ✅ **Railway Backend**: API sorunsuz çalışmaktadır ve CORS izinleri ayarlanmıştır.
+- Canlı ortam arayüz testleri (Smoke Test), kullanıcı Vercel panel ayarlarını (Domain ve Root Directory) düzeltene kadar beklemeye alınmıştır. Kod bazlı bir sorun yoktur.
 - CI/CD ve Pipeline testleri (Lint, Pytest, Build) yeşil (green) duruma getirildi.
 - Backend `auth_router` import hataları çözüldü, `deleteAccount` 404 hatası giderildi.
 - Frontend React `any` tipleri ve empty object pattern'leri düzeltildi.
