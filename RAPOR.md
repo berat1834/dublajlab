@@ -36,6 +36,7 @@
 | 13 | Scene Detail Page & Template Preview | [sprint-13-scene-detail.md](docs/reports/sprint-13-scene-detail.md) |
 | 14 | Platform Pages Polish & Auth Shell | [sprint-14-platform-pages-polish.md](docs/reports/sprint-14-platform-pages-polish.md) |
 | 15 | Real Auth + Persistent User Foundation | [sprint-15-real-auth.md](docs/reports/sprint-15-real-auth.md) |
+| 15.5 | Auth Security + Persistence QA | [sprint-155-auth-security-qa.md](docs/reports/sprint-155-auth-security-qa.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 

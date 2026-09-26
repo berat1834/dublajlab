@@ -35,13 +35,14 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(models_db.User).filter(models_db.User.email == user.email).first()
+    email_lower = user.email.lower()
+    db_user = db.query(models_db.User).filter(models_db.User.email == email_lower).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Bu e-posta adresi zaten kullanımda.")
     
     hashed_password = auth.get_password_hash(user.password)
     new_user = models_db.User(
-        email=user.email,
+        email=email_lower,
         password_hash=hashed_password,
         display_name=user.display_name
     )
@@ -52,7 +53,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=schemas.Token)
 def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
-    user = db.query(models_db.User).filter(models_db.User.email == user_credentials.email).first()
+    email_lower = user_credentials.email.lower()
+    user = db.query(models_db.User).filter(models_db.User.email == email_lower).first()
     if not user:
         raise HTTPException(status_code=400, detail="E-posta veya şifre hatalı.")
         

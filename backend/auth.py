@@ -5,6 +5,9 @@ from jose import JWTError, jwt
 import os
 
 SECRET_KEY = os.getenv("SECRET_KEY", "demo-super-secret-key-12345")
+if os.getenv("ENVIRONMENT") == "production" and SECRET_KEY == "demo-super-secret-key-12345":
+    raise RuntimeError("Production'da güvenli bir SECRET_KEY ortam değişkeni ayarlanmalıdır!")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 

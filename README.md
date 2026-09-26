@@ -755,6 +755,13 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] JWT (JSON Web Token) tabanlı güvenli `login`, `register` ve `me` endpointleri
 - [x] React frontend içinde token tabanlı oturum yönetimi, giriş yapan kullanıcıyı anında arayüzde (Navbar) gösterme ve çıkış yapma işlevleri
 
+### Faz 15.5 — Auth Security & Persistence QA
+- [x] Kullanıcı kayıt (register) ve giriş (login) e-postaları "case-insensitive" (büyük/küçük harf duyarsız) hale getirildi.
+- [x] Backend testleri (`test_auth.py`), gerçek veritabanını ezmemesi için izole in-memory SQLite ( `sqlite:///:memory:` ) kullanımına geçirildi ve token testleri (geçersiz token, tokunsuz istek vb.) eklendi.
+- [x] Backend uygulamasının `SECRET_KEY` env bağımlılığı güçlendirildi. Eğer ortam `production` ise varsayılan zayıf anahtar engellendi.
+- [x] Projenin kök dizinine, hem frontend hem de backend için örnek ayarları içeren bir `.env.example` dosyası eklendi.
+- [x] Not: JWT şimdilik frontend'de `localStorage` içinde saklanmaktadır. Production aşamasında HTTPS kullanımı **zorunludur**. Mümkünse HttpOnly çerezlere (cookies) geçilmesi tavsiye edilir.
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
