@@ -17,11 +17,7 @@ RUN python -m pip install --requirement /app/backend/requirements.txt
 
 COPY backend /app/backend
 
-RUN useradd --create-home --uid 10001 appuser \
-    && mkdir -p /app/media \
-    && chown -R appuser:appuser /app/media
-
-USER appuser
+RUN mkdir -p /app/media
 
 EXPOSE 8000
 
