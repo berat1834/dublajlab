@@ -167,7 +167,11 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
   const activeJobControllerRef = useRef<AbortController | null>(null)
-  const [isSecuring, setIsSecuring] = useState(true)
+  const [isSecuring, setIsSecuring] = useState(() => {
+    if (sessionStorage.getItem('secured')) return false
+    sessionStorage.setItem('secured', 'true')
+    return true
+  })
   const [stage, setStage] = useState<Stage>('idle')
   const [mode, setMode] = useState<DubbingMode>('my-voice')
   const [sourceMode, setSourceMode] = useState<SourceMode>('upload')
