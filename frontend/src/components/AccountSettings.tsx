@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { User, Shield, Trash2, Edit3, Image as ImageIcon, MessageSquare, Diamond, Fingerprint } from 'lucide-react'
-import type { User as UserType } from '../types'
+import type { User as UserType, Tab } from '../types'
 import { deleteAccount } from '../lib/api'
 import { useLanguage } from '../LanguageContext'
 
@@ -8,7 +8,7 @@ interface AccountSettingsProps {
   currentUser: UserType
   setCurrentUser: (user: UserType | null) => void
   onToast: (msg: string, type?: 'success' | 'error') => void
-  setActiveTab: (tab: any) => void
+  setActiveTab: (tab: Tab) => void
 }
 
 export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiveTab }: AccountSettingsProps) {
@@ -44,8 +44,9 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
       localStorage.removeItem('token')
       setActiveTab('play')
       onToast('Hesabınız kalıcı olarak silindi.', 'success')
-    } catch (err: any) {
-      onToast(err.message, 'error')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Bir hata oluştu'
+      onToast(message, 'error')
     } finally {
       setIsDeleting(false)
     }

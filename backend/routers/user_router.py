@@ -6,7 +6,8 @@ import os
 from backend.database import get_db
 import backend.models_db as models_db
 import backend.schemas as schemas
-from backend.routers.auth_router import get_current_user, get_password_hash, verify_password
+from backend.routers.auth_router import get_current_user
+from backend.auth import get_password_hash, verify_password
 
 router = APIRouter()
 

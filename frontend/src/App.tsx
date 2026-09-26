@@ -1072,7 +1072,7 @@ function App() {
           ) : activeTab === 'profile' && currentUser ? (
             <PublicProfile currentUser={currentUser} setActiveTab={setActiveTab} />
           ) : activeTab === 'membership' ? (
-            <Membership setActiveTab={setActiveTab} />
+            <Membership />
           ) : activeTab === 'user_scenes' ? (
             <UserScenes setActiveTab={setActiveTab} />
           ) : activeTab === 'user_favorites' ? (

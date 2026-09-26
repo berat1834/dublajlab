@@ -1,7 +1,13 @@
 # DublajLab Project Report
 
-## Current Status
+## Current Status (Release Candidate Stabilization - Sprint 23)
 
+- CI/CD ve Pipeline testleri (Lint, Pytest, Build) yeşil (green) duruma getirildi.
+- Backend `auth_router` import hataları çözüldü, `deleteAccount` 404 hatası giderildi.
+- Frontend React `any` tipleri ve empty object pattern'leri düzeltildi.
+- Alembic DB migration'ları SQLite/PostgreSQL uyumu için `render_as_batch=True` ile stabil hale getirildi.
+- Frontend için Vercel SPA routing (vercel.json) ayarlandı ve kullanıma hazır.
+- Yeni `Membership` sayfası özgün tasarım ve Shopier abonelik paketleriyle (Mock) tamamen baştan yazıldı.
 - Faz 1-21 kapsamındaki MVP, platform, kalıcı kullanıcı verisi ve live-readiness çalışmaları yerelde tamamlandı.
 - Ana akış, kullanıcının kendi mikrofon kaydını zamanlanmış repliklere yerleştirir.
 - FastAPI backend video yükleme, doğrulama, export ve indirme API'lerini sunar.

@@ -1,12 +1,7 @@
 import { useState } from 'react'
 import { Check, ShieldCheck, Zap, Star, Crown, ExternalLink } from 'lucide-react'
-import type { Tab } from '../types'
 
-interface MembershipProps {
-  setActiveTab: (tab: Tab) => void
-}
-
-export function Membership({}: MembershipProps) {
+export function Membership() {
   const [selectedPlan, setSelectedPlan] = useState<'pro' | 'max' | null>(null)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
 

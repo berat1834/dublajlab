@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Download, Play, Trash2, Clock, CheckCircle2, AlertCircle, Globe, Lock } from 'lucide-react'
 import { getUserProjects, getUserExports, deleteUserProject, updateProjectVisibility, absoluteApiUrl } from '../lib/api'
-import type { DubbingProject, DubbingExport } from '../types'
+import type { DubbingProject, DubbingExport, Tab } from '../types'
 
 interface UserLibraryProps {
   onToast: (msg: string) => void
-  setActiveTab: (tab: any) => void
+  setActiveTab: (tab: Tab) => void
 }
 
 export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
