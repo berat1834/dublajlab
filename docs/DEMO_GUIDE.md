@@ -50,7 +50,7 @@ Eğer video veya GIF kullanamıyorsanız (veya README için statik görsel lazı
 2. **Sahneler Galerisi:** Dinamik filtreler ve mock kartlar.
 3. **Dublajlar Showcase:** Kullanıcı içerikleri varmış gibi duran placeholder vitrin.
 4. **Günün Dublajı:** Dev boyutlu play butonu olan vitrin kartı.
-5. **Recording Timeline:** Aktif mikrofon ve ses dalgası tasarımı.
+5. **Recording Timeline:** Aktif mikrofon / kayıt durumu / timeline ilerlemesi.
 6. **Export Result:** Başarı ekranı ve indirme butonu.
 7. **Mobil Navbar / Landing:** Telefon görünümü, hamburger menü.
 
