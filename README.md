@@ -737,6 +737,12 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 - [x] Navbar, Footer, HowToModal, ShowcaseDubs, DailyDub ve EthicsNotice bileşenlerinin modüler hale getirilmesi
 - [x] İş mantığı (upload, job queue, FFmpeg) ile sunum (presentation) katmanının ayrıştırılması
 
+### Faz 13 — Scene Detail Page & Template Preview
+- [x] Sahnelere özel `SceneDetail.tsx` komponenti
+- [x] Galeriden stüdyoya geçmeden önce sahne detaylarının (Video, Süre, Karakter) listelendiği ara yüz
+- [x] "Nasıl Oynanır" yönlendirmeleri ve VIP/Premium promo alanı (fake state)
+- [x] Kullanıcı istatistikleri simulasyonu (Oynanma sayısı) ve estetik medya placeholder'ları
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline

@@ -223,7 +223,7 @@ export function TemplateGallery({
                   }`}
                 >
                   {isSelecting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Mic2 className="h-4 w-4" />}
-                  {isSelected ? 'Sahne seçildi' : isSelecting ? 'Sahne hazırlanıyor…' : 'Dublaj yap'}
+                  {isSelected ? 'Seçili' : 'Detayları gör'}
                 </button>
               </div>
             </article>

@@ -106,6 +106,8 @@ class VideoTemplate(BaseModel):
     license: str = Field(min_length=1, max_length=200)
     source: str = Field(min_length=1, max_length=500)
     lines: list[DubbingLine] = Field(min_length=1, max_length=20)
+    play_count: int | None = Field(default=None, ge=0)
+    character_count: int | None = Field(default=None, ge=0)
 
     @field_validator("title", "category", "description", "license", "source")
     @classmethod

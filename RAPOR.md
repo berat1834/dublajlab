@@ -30,8 +30,10 @@
 | 7 | Product Polish + Demo Content UX (Visual QA, Animations) | [sprint-07-product-polish.md](docs/reports/sprint-07-product-polish.md) |
 | 8 | Platform Shell + Navigation + Footer (Multi-tab UX, Auth placeholders) | [sprint-08-platform-shell.md](docs/reports/sprint-08-platform-shell.md) |
 | 9 | Showcase Pages + Placeholder Content (Gallery Filters, Dubs, Daily Dub) | [sprint-09-showcase-pages.md](docs/reports/sprint-09-showcase-pages.md) |
-| 10 | UI Component Refactoring (App.tsx modularization) | (Included in RAPOR.md) |
-| 11 | Demo Launch Readiness + Portfolio Assets | (Included in RAPOR.md) |
+| 10 | UI Component Refactoring (App.tsx modularization) | [sprint-10-ui-refactor.md](docs/reports/sprint-10-ui-refactor.md) |
+| 11 | Demo Launch Readiness + Portfolio Assets | [sprint-11-portfolio-assets.md](docs/reports/sprint-11-portfolio-assets.md) |
+| 12 | Safe Demo Media Integration Plan | [demo-media-plan.md](docs/demo-media-plan.md) |
+| 13 | Scene Detail Page & Template Preview | [sprint-13-scene-detail.md](docs/reports/sprint-13-scene-detail.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 

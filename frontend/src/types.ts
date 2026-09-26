@@ -64,6 +64,8 @@ export interface VideoTemplate {
   license: string
   source: string
   lines: TimelineLine[]
+  play_count?: number
+  character_count?: number
 }
 
-export type Tab = 'play' | 'scenes' | 'dubs' | 'daily'
+export type Tab = 'play' | 'scenes' | 'scene_detail' | 'dubs' | 'daily'

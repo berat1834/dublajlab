@@ -33,6 +33,7 @@ import { HowToModal } from './components/HowToModal'
 import { ShowcaseDubs } from './components/ShowcaseDubs'
 import { DailyDub } from './components/DailyDub'
 import { EthicsNotice } from './components/EthicsNotice'
+import { SceneDetail } from './components/SceneDetail'
 import {
   absoluteApiUrl,
   fetchDemoPolicy,
@@ -174,6 +175,7 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [showHowTo, setShowHowTo] = useState(false)
+  const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null)
 
   const handleLegalLink = () => {
     setToastMessage('Bu sayfa (Gizlilik/Şartlar) canlı yayın öncesi profesyonel metinlerle güncellenecektir.')
@@ -186,8 +188,18 @@ function App() {
   }
 
   const handleTabTemplateSelect = (templateId: string) => {
+    setDetailTemplateId(templateId);
+    setActiveTab('scene_detail');
+  }
+
+  const handlePlayFromDetail = (templateId: string) => {
     setActiveTab('play');
     void handleTemplateSelect(templateId);
+  }
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(''), 3000)
   }
 
   const localPreviewUrl = useMemo(
@@ -999,6 +1011,13 @@ function App() {
         <EthicsNotice />
 
             </>
+          ) : activeTab === 'scene_detail' && detailTemplateId ? (
+            <SceneDetail 
+              templateId={detailTemplateId} 
+              onBack={() => setActiveTab('scenes')}
+              onPlay={handlePlayFromDetail}
+              onToast={showToast}
+            />
           ) : activeTab === 'scenes' ? (
             <div className="py-4">
               <div className="mb-8 max-w-2xl">
