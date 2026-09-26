@@ -1,6 +1,6 @@
 # DublajLab Project Report
 
-## Current Status (Release Candidate Stabilization - Sprint 23 & Vercel Audit - Sprint 24)
+## Current Status (Release Candidate Stabilization - Sprint 23, Vercel Audit - Sprint 24 & Final QA - Sprint 25)
 
 - **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
   - ✅ **Canlı URL (Canonical)**: Şu anki doğru ve çalışan canlı site adresimiz **`https://dublajlab-sigma.vercel.app`**'tir. (`dublajlab.vercel.app` adresi Vercel üzerinde kullanıcının eski projesinde takılı kaldığı için şimdilik alias/domain hatası vermektedir).
@@ -8,6 +8,10 @@
   - ✅ **Railway Backend & CORS**: API sorunsuz çalışmaktadır ve tüm Vercel canlı domainleri CORS iznine sahiptir (`api/health` 200 OK).
   - ✅ **Uçtan Uca API Smoke Test**: Canlı sunucular üzerinde Register, Login, Token alımı (`/me`), Templates listeleme, Kataloğum (`api/me/projects`) ve Dublajlar public feed (`api/public/dubs`) rotalarının tamamı başarıyla test edildi ve 200 HTTP dönüşleri alındı.
   - 🚀 **Sonuç**: Proje mimarisi "Release Candidate" olarak tam stabildir. Yeni özellik eklenebilecek durumdadır.
+
+- **Sprint 25 Final Production Manual QA Durumu**:
+  - 📝 **Otomasyon Sınırları**: Playwright sanal tarayıcı altyapısındaki indirme hataları ve donanımsal mikrofona erişim zorunluluğu nedeniyle, QA (Kalite Kontrol) süreci yapay zeka ajanından kullanıcıya (insan tester) devredilmiştir.
+  - 📋 **QA Checklist Hazırlandı**: Uygulamanın uçtan uca etkileşim testi için 16 adımlık form `docs/reports/sprint-25-final-production-qa.md` içerisinde hazırlandı. Herhangi bir Blocker/hata bulunması durumunda minimal fix uygulanacaktır.
 - CI/CD ve Pipeline testleri (Lint, Pytest, Build) yeşil (green) duruma getirildi.
 - Backend `auth_router` import hataları çözüldü, `deleteAccount` 404 hatası giderildi.
 - Frontend React `any` tipleri ve empty object pattern'leri düzeltildi.
