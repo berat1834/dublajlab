@@ -9,16 +9,14 @@ Kapsamlı bir inceleme sonucunda canlı sitenizde (https://dublajlab.vercel.app)
 Ancak şu an GitHub'a bağlı olan ve bizim üzerinde çalıştığımız güncel Vercel projeniz `berat1834s-projects` takımı altındaki `dublajlab` projesidir (URL'si `dublajlab-sigma.vercel.app` olarak görünüyor).
 **Çözüm:** Vercel paneline girin, eski projenizi (Discord landing olanı) bulun. O projenin `Settings > Domains` kısmından `dublajlab.vercel.app` domainini **silin**. Sonra güncel projenizin (berat1834s-projects takımındaki) `Settings > Domains` sekmesine gelip `dublajlab.vercel.app` domainini **ekleyin**.
 
-## 2. Vercel Project Settings (Kök Dizin) Hatası
-Yeni projeniz GitHub'a bağlı olsa da, Vercel uygulamanızın hangi klasörde olduğunu bilmiyor. Vercel CLI (terminal) üzerinden yaptığım kontrolde şu an projenin `Root Directory` ve `Framework` ayarları `null` (boş) görünüyor.
-Bu yüzden Vercel, repo kökünde `package.json` arıyor, bulamayınca ya hata veriyor ya da 404 Not Found dönüyor.
-**Çözüm:** Vercel Dashboard'da güncel projenizin **Settings > General** sekmesine gidin:
-- **Framework Preset:** `Vite` olarak seçin.
-- **Root Directory:** `frontend` olarak yazın ve kaydedin.
+## 2. Vercel Project Settings (Kök Dizin) Hatası [✅ ÇÖZÜLDÜ]
+Yeni projeniz GitHub'a bağlı olsa da, Vercel uygulamanızın hangi klasörde olduğunu bilmiyordu. Vercel CLI üzerinden yaptığım kontrolde projenin `Root Directory` ve `Framework` ayarları `null` (boş) görünüyordu.
+Bu yüzden Vercel, `frontend` klasörü yerine repoyu doğrudan statik olarak sunmaya çalışıyor ve bu yüzden `dublajlab-sigma.vercel.app` 404 Not Found (veya SPA sayfalarında hata) veriyordu.
+**Çözüm:** Vercel CLI kullanarak projenin ayarlarını uzaktan güncelledim. `Framework: Vite` ve `Root Directory: frontend` olarak ayarlandı.
+**Sonuç:** Bu ayar yapıldıktan sonra otomatik bir deployment tetikledim ve şu an `https://dublajlab-sigma.vercel.app` kusursuz bir şekilde, doğru arayüz ve SPA routing ile **çalışmaktadır.**
 
-## 3. Yeniden Build (Redeploy)
-Ayarları düzelttikten sonra Vercel Dashboard'da **Deployments** sekmesine gidin ve son commite tıklayarak **Redeploy** yapın.
-Bu işlem, güncel `App.tsx` (platform) kodunuzu alacak, `frontend` klasörü içinde Vite ile build edecek ve `dublajlab.vercel.app` adresine sorunsuz bir şekilde yayınlayacaktır.
+## 3. Yeniden Build (Redeploy) [✅ TAMAMLANDI]
+Ayarlar düzeltildikten sonra GitHub'a yapılan bir bildirim (commit) ile yeni build tetiklendi. Şu an Vercel `dublajlab-sigma.vercel.app` üzerinde güncel `App.tsx` kodunuzu çalıştırıyor. Sitenin bu adresi şu an halka açıktır.
 
 ## 4. Frontend Env Değişkenleri
 `VITE_API_BASE_URL` değeri Vercel'e doğru şekilde `https://backend-production-c956d.up.railway.app` olarak tanımlanmış, bunda bir problem bulunmamaktadır. Frontend doğru şekilde Railway ile konuşacaktır.
