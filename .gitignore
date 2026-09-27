@@ -16,6 +16,7 @@ backend/data/*
 !backend/data/.gitkeep
 !backend/data/templates/
 !backend/data/templates/templates.json
+backend/weights/*.pth
 
 # Frontend
 frontend/node_modules/

@@ -94,3 +94,8 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Zaman çizelgesine dalga formu (waveform) ve sürüklenebilir arayüz eklenecek.
 - Faz 16–21 çalışma ağacı ayrı ve anlaşılır commitlerle GitHub'a alınacak; CI yeşil olmadan production deploy yapılmayacak.
 - Railway/Vercel hesap girişleri tamamlandıktan sonra Faz 22 gerçek production smoke testiyle sürdürülecek.
+
+- **Sprint 28: Gerçek Wav2Lip (AI Dudak Senkronizasyonu) Entegrasyonu**:
+  - Yapay Zeka Altyapısı: Simüle edilmiş dudak senkronizasyonu yerine gerçek Wav2Lip model entegrasyonu sağlandı.
+  - Docker & Weights: backend/weights/ klasörü eklendi ve Dockerfile bağımlılıklarla güncellendi.
+  - Test: LipSyncService servisi yazıldı ve test edildi.
