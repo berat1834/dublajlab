@@ -20,12 +20,11 @@ class LipSyncService:
             )
 
         command = [
-            "python", "inference.py",
-            "--checkpoint_path", str(self.wav2lip_path),
-            "--face", str(face_video_path),
-            "--audio", str(audio_path),
-            "--outfile", str(output_path),
-            "--nosmooth"
+            "python", "Wav2Lip/inference.py",
+            "--checkpoint_path", str(self.wav2lip_path.resolve()),
+            "--face", str(face_video_path.resolve()),
+            "--audio", str(audio_path.resolve()),
+            "--outfile", str(output_path.resolve()),
         ]
 
         try:
@@ -39,7 +38,8 @@ class LipSyncService:
 
             if process.returncode != 0:
                 error_msg = stderr.decode().strip() if stderr else "Bilinmeyen hata"
-                raise LipSyncError(f"Wav2Lip işlemi başarısız oldu: {error_msg}")
+                # TODO: We can log error_msg here if needed, but user sees the generic one
+                raise LipSyncError("Dudak senkronizasyonu işlemi yerel motor (Wav2Lip) tarafından reddedildi.")
             
             if not output_path.exists():
                 raise LipSyncError("Wav2Lip başarılı görünüyor ancak çıktı dosyası bulunamadı.")

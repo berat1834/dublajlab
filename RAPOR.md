@@ -99,3 +99,8 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   - Yapay Zeka Altyapısı: Simüle edilmiş dudak senkronizasyonu yerine gerçek Wav2Lip model entegrasyonu sağlandı.
   - Docker & Weights: backend/weights/ klasörü eklendi ve Dockerfile bağımlılıklarla güncellendi.
   - Test: LipSyncService servisi yazıldı ve test edildi.
+
+- **Sprint 29: Local Wav2Lip Inference Test Altyapısı**:
+  - Yapay Zeka Testleri: scripts/run_local_lipsync.ps1 adında, yerel Python/Wav2Lip modelini izole test eden PowerShell betiği eklendi.
+  - Kurulum Talimatları: ackend/weights/README.md içerisine resmi Wav2Lip repo linkleri ve adım adım indirme yönergeleri dahil edildi.
+  - Hata Yönetimi: Model reddi durumunda kullanıcıya gösterilecek Türkçe exception fırlatılması sağlandı.
