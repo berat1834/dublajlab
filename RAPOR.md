@@ -109,3 +109,5 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   - Mimari: Ağır GPU işlemleri (Wav2Lip) için FastAPI sunucusu üzerinden HTTP isteğiyle tetiklenen Serverless webhook mimarisi kuruldu.
   - Kapsam: serverless/modal_lipsync.py taslağı oluşturuldu ve LIPSYNC_MODE değişkenine göre HTTP POST atabilen esnek bir LipSyncService yapısı kodlandı.
   - Test: httpx kütüphanesinin mocklandığı pytest senaryoları (başarılı ve başarısız ağ çağrıları) eklendi ve test edildi.
+
+- **Modal Deployment**: Modal.com Serverless GPU deployment yapıldı ve main branch'e merge edildi.
