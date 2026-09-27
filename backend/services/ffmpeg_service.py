@@ -110,6 +110,30 @@ class FFmpegService:
         return availability
 
     @staticmethod
+    def _failure_detail(error: subprocess.CalledProcessError) -> str:
+        if error.returncode < 0:
+            return (
+                "FFmpeg işlemi sunucu kaynak sınırı nedeniyle sonlandırıldı. "
+                "Video çözünürlüğünü düşürüp tekrar deneyin."
+            )
+
+        diagnostic = (error.stderr or "").strip().splitlines()
+        meaningful_markers = (
+            "error",
+            "failed",
+            "invalid",
+            "cannot",
+            "could not",
+            "no space left",
+            "conversion failed",
+        )
+        for line in reversed(diagnostic):
+            normalized = line.casefold()
+            if any(marker in normalized for marker in meaningful_markers):
+                return line.strip()
+        return diagnostic[-1].strip() if diagnostic else "Bilinmeyen FFmpeg hatası"
+
+    @staticmethod
     def _run(
         command: list[str],
         failure_message: str,
@@ -130,8 +154,7 @@ class FFmpegService:
                 "FFmpeg bulunamadı. FFmpeg'i kurup PATH ayarını kontrol edin."
             ) from exc
         except subprocess.CalledProcessError as exc:
-            diagnostic = (exc.stderr or "").strip().splitlines()
-            detail = diagnostic[-1] if diagnostic else "Bilinmeyen FFmpeg hatası"
+            detail = FFmpegService._failure_detail(exc)
             raise MediaProcessingError(f"{failure_message} ({detail})") from exc
         except subprocess.TimeoutExpired as exc:
             raise MediaProcessingError(
@@ -261,8 +284,13 @@ class FFmpegService:
         for recording_path in recording_paths:
             command.extend(["-i", str(recording_path)])
 
+        video_filter = (
+            r"scale=w=min(1920\,iw):h=min(1080\,ih):"
+            "force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1"
+        )
         filters: list[str] = [
-            f"[0:v]ass=filename='{self._filter_path(subtitle_path)}'[vout]"
+            f"[0:v]{video_filter},"
+            f"ass=filename='{self._filter_path(subtitle_path)}'[vout]"
         ]
         if mute_original_audio or not has_original_audio:
             filters.append(
@@ -308,7 +336,9 @@ class FFmpegService:
                 "-c:v",
                 "libx264",
                 "-preset",
-                "medium",
+                "veryfast",
+                "-threads",
+                "1",
                 "-crf",
                 "23",
                 "-pix_fmt",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from pathlib import Path
 from threading import RLock
 from uuid import uuid4
@@ -10,6 +11,9 @@ from backend.services.ffmpeg_service import FFmpegService
 from backend.services.file_storage import FileStorageService
 from backend.services.subtitle_service import SubtitleService
 from backend.services.tts_service import TTSService
+
+
+logger = logging.getLogger(__name__)
 
 
 class JobRegistry:
@@ -154,6 +158,7 @@ class DubbingJobService:
             )
             self.registry.complete(job_id, output_id)
         except Exception as exc:
+            logger.exception("AI dubbing job %s failed: %s", job_id, exc)
             if output_path:
                 output_path.unlink(missing_ok=True)
             self.registry.fail(job_id, str(exc) or "Video işlenirken bilinmeyen hata oluştu.")
@@ -220,6 +225,7 @@ class DubbingJobService:
             )
             self.registry.complete(job_id, output_id)
         except Exception as exc:
+            logger.exception("Recording dubbing job %s failed: %s", job_id, exc)
             if output_path:
                 output_path.unlink(missing_ok=True)
             self.registry.fail(job_id, str(exc) or "Video işlenirken bilinmeyen hata oluştu.")

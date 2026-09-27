@@ -26,6 +26,12 @@ from backend.services.job_service import dubbing_job_service, job_registry
 from backend.services.rate_limit_service import enforce_public_demo_export_limit
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
+
+TIMELINE_DURATION_EPSILON_SECONDS = 0.01
+TIMELINE_DURATION_ERROR = (
+    "Replik bitiş zamanı video süresini aşıyor. "
+    "Lütfen son repliği video bitişinden önce tamamlayın."
+)
 timeline_adapter = TypeAdapter(list[DubbingLine])
 
 async def run_ai_job_with_db(job_id: str, payload: ProcessRequest, project_id: str | None = None):
@@ -116,9 +122,15 @@ def validate_recording_timeline(
             status_code=422,
             detail="Replik bitişi başlangıcından sonra olmalıdır.",
         )
-    if any(line.end > duration + 0.05 for line in lines):
-        raise HTTPException(status_code=422, detail="Replik zamanları video süresini aşamaz.")
-    return lines, parsed_recording_ids
+    if any(
+        line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS for line in lines
+    ):
+        raise HTTPException(status_code=422, detail=TIMELINE_DURATION_ERROR)
+
+    normalized_lines = [
+        line.model_copy(update={"end": min(line.end, duration)}) for line in lines
+    ]
+    return normalized_lines, parsed_recording_ids
 
 
 @router.post(

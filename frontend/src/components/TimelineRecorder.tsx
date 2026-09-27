@@ -15,6 +15,10 @@ import {
 import type { RefObject } from 'react'
 import type { TimelineLine } from '../types'
 
+const TIMELINE_DURATION_EPSILON_SECONDS = 0.01
+const TIMELINE_DURATION_ERROR =
+  'Replik bitiş zamanı video süresini aşıyor. Lütfen son repliği video bitişinden önce tamamlayın.'
+
 interface RecordedClip {
   blob: Blob
   url: string
@@ -103,13 +107,16 @@ export function TimelineRecorder({
               !line.text.trim() ||
               line.start < 0 ||
               line.end <= line.start ||
-              line.end > duration + 0.05,
+              line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS,
           )
           .map((line) => line.id),
       ),
     [duration, lines],
   )
   const missingCount = lines.length - completedCount
+  const hasDurationOverflow = lines.some(
+    (line) => line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS,
+  )
   const completionPercent = Math.round((completedCount / lines.length) * 100)
   const exportBlockReason = exportUnavailableReason
     ? exportUnavailableReason
@@ -118,7 +125,9 @@ export function TimelineRecorder({
     : activeLineId
       ? 'Devam etmek için aktif kaydı durdurun.'
       : invalidLineIds.size
-        ? `${invalidLineIds.size} repliğin metnini veya zaman aralığını düzeltin.`
+        ? hasDurationOverflow
+          ? TIMELINE_DURATION_ERROR
+          : `${invalidLineIds.size} repliğin metnini veya zaman aralığını düzeltin.`
         : missingCount
           ? `Export için ${missingCount} repliği daha kaydedin.`
           : ''
@@ -156,7 +165,11 @@ export function TimelineRecorder({
       onError('Tarayıcınız mikrofon kaydını desteklemiyor. Güncel Chrome, Edge veya Safari kullanın.')
       return
     }
-    if (!line.text.trim() || line.end <= line.start || line.end > duration + 0.05) {
+    if (line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS) {
+      onError(TIMELINE_DURATION_ERROR)
+      return
+    }
+    if (!line.text.trim() || line.end <= line.start) {
       onError('Replik metnini ve zaman aralığını kontrol edin.')
       return
     }
@@ -252,6 +265,10 @@ export function TimelineRecorder({
   }
 
   const submit = async () => {
+    if (hasDurationOverflow) {
+      onError(TIMELINE_DURATION_ERROR)
+      return
+    }
     if (invalidLineIds.size) {
       onError('Tüm replik metinlerini ve zaman aralıklarını kontrol edin.')
       return
