@@ -10,7 +10,7 @@ app = modal.App("dublajlab-lipsync")
 wav2lip_image = (
     modal.Image.debian_slim(python_version="3.10")
     .apt_install("ffmpeg", "libgl1-mesa-glx", "libglib2.0-0", "wget", "git")
-    .pip_install("torch", "torchvision", "torchaudio", "opencv-python", "librosa", "numpy", "requests")
+    .pip_install("torch", "torchvision", "torchaudio", "opencv-python", "librosa", "numpy", "requests", "fastapi[standard]")
     # In a real environment, you might clone the Wav2Lip repo here and download weights
     # .run_commands("git clone https://github.com/Rudrabha/Wav2Lip.git /Wav2Lip")
     # .run_commands("wget -O /Wav2Lip/checkpoints/wav2lip_gan.pth <YOUR_PRESIGNED_URL>")
