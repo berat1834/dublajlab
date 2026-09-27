@@ -21,7 +21,7 @@ wav2lip_image = (
     gpu="T4",
     timeout=600
 )
-@modal.web_endpoint(method="POST")
+@modal.fastapi_endpoint(method="POST")
 async def lipsync_webhook(request: Request):
     """
     Taslak Webhook Endpoint.

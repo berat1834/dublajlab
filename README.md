@@ -48,6 +48,7 @@ Bu proje, bir modern web uygulamasının teknik derinliğini sergilemek amacıyl
 - **FFmpeg Video Processing:** Sunucu tarafında sub-process ile video-ses mix, trim ve altyazı render işlemleri.
 - **Timeline-based Microphone Recording:** Tarayıcı API'leri üzerinden satır satır mikrofon kaydı yakalama ve yönetme.
 - **Job Queue + Progress Polling:** Uzun süren medya işlemlerini bloklanmadan yönetme, `job_id` ile progress bar besleme.
+- **Serverless GPU Offloading:** FastAPI'nin 1GB'lık bellek limitlerinde OOM (Out of Memory) hatalarını önlemek ve ana API'yi darboğazdan kurtarmak için ağır AI (Wav2Lip) çıkarım yükünün Modal.com üzerindeki Serverless GPU'lara asenkron webhook'larla dağıtılması (Scale to zero).
 - **Docker Setup:** Tek komutla backend, frontend ve FFmpeg ortamlarını ayağa kaldırma (`docker-compose`).
 - **Public Demo Safety Limits:** DDoS ve maliyet yönetimi için dosya boyutu, TTL (Time-to-Live) silme ve günlük endpoint limitleri.
 
