@@ -23,6 +23,7 @@ import {
   Info
 } from 'lucide-react'
 import { TimelineRecorder } from './components/TimelineRecorder'
+import { JobFailurePanel } from './components/JobFailurePanel'
 import { TemplateGallery } from './components/TemplateGallery'
 import { Toggle } from './components/Toggle'
 import { UploadZone } from './components/UploadZone'
@@ -188,6 +189,7 @@ function App() {
   const [retryLabel, setRetryLabel] = useState('')
   const [jobProgress, setJobProgress] = useState(0)
   const [jobMessage, setJobMessage] = useState('')
+  const [jobError, setJobError] = useState('')
   const [demoPolicy, setDemoPolicy] = useState<DemoPolicy | null>(null)
   const [activeTab, setActiveTab] = useState<Tab>('play')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -336,6 +338,7 @@ function App() {
     setOutputUrl('')
     setJobProgress(0)
     setJobMessage('Export isteği hazırlanıyor.')
+    setJobError('')
     setStage('processing')
   }
 
@@ -353,12 +356,13 @@ function App() {
     processError: unknown,
     retryAction: () => Promise<void>,
   ) => {
-    setStage('ready')
-    setError(
+    const message =
       processError instanceof Error
         ? processError.message
-        : 'Video işlenirken bir hata oluştu.',
-    )
+        : 'Video işlenirken bir hata oluştu.'
+    setStage('ready')
+    setError(message)
+    setJobError(message)
     retryActionRef.current = retryAction
     setRetryLabel('Export\u2019u tekrar dene')
   }
@@ -464,6 +468,7 @@ function App() {
     setOutputUrl('')
     setJobProgress(0)
     setJobMessage('')
+    setJobError('')
     clearFeedback()
   }
 
@@ -980,6 +985,12 @@ function App() {
                   Durum backend job servisinden düzenli olarak güncelleniyor.
                 </p>
               </div>
+            )}
+            {jobError && stage !== 'processing' && (
+              <JobFailurePanel
+                message={jobError}
+                onRetry={() => void retryActionRef.current?.()}
+              />
             )}
           </section>
         </div>

@@ -19,6 +19,12 @@ from backend.services.tts_service import TTSService
 
 
 router = APIRouter(prefix="/api/video", tags=["video"])
+
+TIMELINE_DURATION_EPSILON_SECONDS = 0.01
+TIMELINE_DURATION_ERROR = (
+    "Replik bitiş zamanı video süresini aşıyor. "
+    "Lütfen son repliği video bitişinden önce tamamlayın."
+)
 storage_service = FileStorageService()
 ffmpeg_service = FFmpegService()
 tts_service = TTSService()
@@ -176,11 +182,15 @@ async def process_recordings(
                 status_code=422,
                 detail=f"'{line.text}' repliğinin bitişi başlangıcından sonra olmalıdır.",
             )
-        if line.end > duration + 0.05:
+        if line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS:
             raise HTTPException(
                 status_code=422,
-                detail="Replik zamanları video süresini aşamaz.",
+                detail=TIMELINE_DURATION_ERROR,
             )
+
+    lines = [
+        line.model_copy(update={"end": min(line.end, duration)}) for line in lines
+    ]
 
     enforce_public_demo_export_limit(request)
     job_id = str(uuid4())

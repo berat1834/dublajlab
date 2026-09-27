@@ -225,6 +225,19 @@ def test_recording_ffmpeg_command_places_clips_on_timeline(tmp_path: Path) -> No
     assert "adelay=3250:all=1[voice2]" in filters
     assert "volume=0.20[base]" in filters
     assert "amix=inputs=3" in filters
+    assert r"scale=w=min(1920\,iw):h=min(1080\,ih)" in filters
+    assert command[command.index("-preset") + 1] == "veryfast"
+    assert command[command.index("-threads") + 1] == "1"
+
+
+def test_ffmpeg_signal_failure_returns_resource_message() -> None:
+    error = subprocess.CalledProcessError(
+        returncode=-9,
+        cmd=["ffmpeg"],
+        stderr="frame=42 time=00:00:01.67",
+    )
+
+    assert "sunucu kaynak sınırı" in FFmpegService._failure_detail(error)
 
 
 def test_recordings_endpoint_processes_timeline(
@@ -318,4 +331,7 @@ def test_recording_timeline_cannot_exceed_video(
     )
 
     assert response.status_code == 422
-    assert response.json()["detail"] == "Replik zamanları video süresini aşamaz."
+    assert response.json()["detail"] == (
+        "Replik bitiş zamanı video süresini aşıyor. "
+        "Lütfen son repliği video bitişinden önce tamamlayın."
+    )

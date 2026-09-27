@@ -116,6 +116,26 @@ def test_recording_job_is_created_after_files_are_saved(
     assert saved_recording.is_file()
 
 
+def test_recording_job_rejects_timeline_after_video_end() -> None:
+    response = client.post(
+        "/api/jobs/dubbing-recordings",
+        data={
+            "video_id": str(uuid4()),
+            "timeline": '[{"id":"line-1","start":5.0,"end":6.02,"text":"Taşan replik"}]',
+            "recording_ids": '["line-1"]',
+            "mute_original_audio": "true",
+            "burn_subtitles": "true",
+        },
+        files={"recordings": ("line-1.webm", b"voice", "audio/webm")},
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"] == (
+        "Replik bitiş zamanı video süresini aşıyor. "
+        "Lütfen son repliği video bitişinden önce tamamlayın."
+    )
+
+
 def test_completed_job_returns_download_url() -> None:
     job = jobs_router.job_registry.create()
     completed = jobs_router.job_registry.complete(job.job_id, str(uuid4()))

@@ -42,3 +42,52 @@ Eğer yukarıdaki adımlardan herhangi birinde başarısızlık yaşarsanız, ha
 - 2. ...
 
 *(Tüm kutucuklar işaretlendiğinde proje resmi olarak lansmana/üretim aşamasına hazırdır!)*
+
+## Production Blocker İncelemesi ve Düzeltmesi
+
+26 Eylül 2026 tarihli manuel testte kullanıcı sesli export, `%55` seviyesinde
+`Kayıtlar zaman çizelgesine yerleştiriliyor` mesajından sonra başarısız oldu.
+Frontend, job `failed` durumunu üst bildirim dışında kalıcı bir sonuç panelinde
+göstermediği için akış kullanıcı açısından sessizce durmuş gibi görünüyordu.
+
+### Bulgular
+
+- Başarısız job kimlikleri: `dc98bdb1-dc13-44af-ab97-5e41c9d1b996` ve
+  `062cc324-7a05-4b6d-b210-fac805a8efbe`.
+- Her iki job da backend yanıtında `failed`, `%55` ve FFmpeg hata metni döndürdü.
+- Yüklenen videonun FFprobe süresi `5.208333` saniye, son replik bitişi `5.21`
+  saniyeydi. Aradaki yaklaşık `0.001667` saniye yalnızca UI yuvarlamasıdır.
+- Video `2560x1440` H.264 ve ses kanalı olmayan bir girdiydi.
+- Eski hata ayrıştırması FFmpeg stderr çıktısının yalnızca son ilerleme satırını
+  saklıyordu. Railway servisi 1 GB RAM ile sınırlı olduğundan, bulgular FFmpeg
+  alt sürecinin yüksek çözünürlüklü encode sırasında kaynak sınırı nedeniyle
+  sonlandırıldığına işaret ediyor.
+
+### Uygulanan minimal düzeltme
+
+- Timeline için `0.01` saniyelik tolerans tanımlandı. Bu aralıktaki yalnızca
+  yuvarlama kaynaklı taşmalar video süresine kırpılıyor; daha büyük taşmalar
+  frontend ve backend tarafından reddediliyor.
+- Gerçek taşmada şu mesaj gösteriliyor: “Replik bitiş zamanı video süresini
+  aşıyor. Lütfen son repliği video bitişinden önce tamamlayın.”
+- Job `failed` durumu artık erişilebilir, görünür bir hata panelinde backend
+  mesajıyla ve `Export’u tekrar dene` eylemiyle gösteriliyor.
+- Backend job worker hataları job kimliğiyle logluyor; FFmpeg negatif dönüş
+  kodları kaynak sınırı mesajına çevriliyor.
+- Kullanıcı sesli export, en fazla `1920x1080`, `veryfast` preset ve tek FFmpeg
+  thread ile çalıştırılarak production bellek baskısı azaltıldı.
+
+### Otomatik doğrulama
+
+- Backend: `70/70` pytest geçti.
+- Hedefli backend ve gerçek FFmpeg entegrasyonu: `25/25` geçti.
+- Frontend failed-job panel testi: `1/1` geçti.
+- Frontend ESLint: geçti.
+- TypeScript + Vite production build: geçti.
+
+### Canlı tekrar test durumu
+
+Düzeltme production'a dağıtıldıktan sonra aynı yüksek çözünürlüklü video ve iki
+ses kaydıyla API seviyesinde export tekrar sınanacaktır. Gerçek mikrofon izni ve
+tarayıcı MediaRecorder akışının nihai doğrulaması fiziksel tarayıcıda tekrar
+yapılmalıdır; bu ayrım sonuç raporunda açıkça belirtilecektir.

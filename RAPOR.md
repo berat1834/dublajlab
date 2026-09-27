@@ -62,13 +62,14 @@
 | 20 | Comments for Public Dubs | [sprint-20-comments.md](docs/reports/sprint-20-comments.md) |
 | 21 | Live Deployment Readiness Audit | [sprint-21-live-readiness.md](docs/reports/sprint-21-live-readiness.md) |
 | 22 | First Production Deployment Attempt — partial | [sprint-22-first-deployment.md](docs/reports/sprint-22-first-deployment.md) |
+| 25 | Final Production QA ve export blocker düzeltmesi | [sprint-25-final-production-qa.md](docs/reports/sprint-25-final-production-qa.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
 ## Latest Validation
 
-- Backend tests: 68/68 passed (includes real FFmpeg integration test)
-- Frontend lint/build: Passed (ESLint & Vite production build)
+- Backend tests: 70/70 passed (gerçek FFmpeg entegrasyon testi dahil)
+- Frontend test/lint/build: Vitest 1/1, ESLint ve Vite production build geçti
 - Docker smoke test: backend container `healthy`; Alembic, FFmpeg, auth, template ve CORS kontrolleri geçti
 - CI status: GitHub `main` üzerindeki son run başarısız; frontend yeşil, backend eksik dependency nedeniyle kırmızı. Düzeltme henüz commitlenmedi.
 
@@ -78,6 +79,7 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Railway volume: Mevcut deployment planına göre data volume'u kullanıldığında scale-out (çoklu replica) sorunları çıkabilir.
 - Public demo limits: Memory tabanlı rate limiter process restart durumunda sıfırlanır.
 - Edge TTS dependency: Dış servis bağımlılığı, ileride TTS çalışmazsa fallback mekanizması gerektirebilir.
+- Production export kaynak kullanımı: Railway'in 1 GB bellek sınırında yüksek çözünürlüklü girdiler 1080p ile sınırlandırılır; daha uzun videolar ayrıca izlenmelidir.
 
 ## Next Steps
 
