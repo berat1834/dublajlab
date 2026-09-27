@@ -105,7 +105,10 @@ export async function processVideo(payload: {
   try {
     const response = await fetch(`${API_BASE_URL}/api/jobs/dubbing-ai`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(payload),
     })
     return parseResponse<JobResponse>(response)

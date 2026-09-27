@@ -9,6 +9,7 @@ from backend.database import get_db
 import backend.models_db as models_db
 import backend.schemas as schemas
 import backend.auth as auth
+from backend.services.membership_service import has_active_vip
 
 router = APIRouter()
 
@@ -64,7 +65,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+    response = schemas.UserResponse.model_validate(new_user)
+    return response.model_copy(update={"has_active_vip": has_active_vip(new_user)})
 
 @router.post("/login", response_model=schemas.Token)
 def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
@@ -84,4 +86,5 @@ def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: models_db.User = Depends(get_current_user)):
-    return current_user
+    response = schemas.UserResponse.model_validate(current_user)
+    return response.model_copy(update={"has_active_vip": has_active_vip(current_user)})

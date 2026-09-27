@@ -119,9 +119,10 @@ def test_ffmpeg_timeout_returns_turkish_error(
 
 
 @pytest.mark.parametrize("text", ["", "   "])
-def test_blank_text_is_rejected(text: str) -> None:
+def test_blank_text_is_rejected(text: str, auth_headers_factory) -> None:
     response = client.post(
         "/api/video/process",
+        headers=auth_headers_factory(membership_tier="vip"),
         json={
             "video_id": str(uuid4()),
             "text": text,
@@ -133,9 +134,10 @@ def test_blank_text_is_rejected(text: str) -> None:
     assert response.json()["errors"][0]["message"] == "Dublaj metni boş bırakılamaz."
 
 
-def test_text_longer_than_500_characters_is_rejected() -> None:
+def test_text_longer_than_500_characters_is_rejected(auth_headers_factory) -> None:
     response = client.post(
         "/api/video/process",
+        headers=auth_headers_factory(membership_tier="vip"),
         json={
             "video_id": str(uuid4()),
             "text": "a" * 501,
@@ -147,9 +149,10 @@ def test_text_longer_than_500_characters_is_rejected() -> None:
     assert "500" in response.json()["errors"][0]["message"]
 
 
-def test_invalid_voice_style_is_rejected() -> None:
+def test_invalid_voice_style_is_rejected(auth_headers_factory) -> None:
     response = client.post(
         "/api/video/process",
+        headers=auth_headers_factory(membership_tier="vip"),
         json={
             "video_id": str(uuid4()),
             "text": "Merhaba dünya",
@@ -161,9 +164,10 @@ def test_invalid_voice_style_is_rejected() -> None:
     assert response.json()["errors"][0]["message"] == "Geçersiz ses stili seçildi."
 
 
-def test_invalid_video_id_returns_not_found() -> None:
+def test_invalid_video_id_returns_not_found(auth_headers_factory) -> None:
     response = client.post(
         "/api/video/process",
+        headers=auth_headers_factory(membership_tier="vip"),
         json={
             "video_id": str(uuid4()),
             "text": "Merhaba dünya",
@@ -228,6 +232,21 @@ def test_recording_ffmpeg_command_places_clips_on_timeline(tmp_path: Path) -> No
     assert r"scale=w=min(1920\,iw):h=min(1080\,ih)" in filters
     assert command[command.index("-preset") + 1] == "veryfast"
     assert command[command.index("-threads") + 1] == "1"
+
+    free_command = service.build_recording_process_command(
+        video_path=tmp_path / "video.mp4",
+        recording_paths=[tmp_path / "line-1.webm"],
+        timeline=[(0.25, 2.0)],
+        subtitle_path=tmp_path / "subtitles.ass",
+        output_path=tmp_path / "free-output.mp4",
+        duration_seconds=4.0,
+        mute_original_audio=True,
+        has_original_audio=False,
+        max_video_width=1280,
+        max_video_height=720,
+    )
+    free_filters = free_command[free_command.index("-filter_complex") + 1]
+    assert r"scale=w=min(1280\,iw):h=min(720\,ih)" in free_filters
 
 
 def test_ffmpeg_signal_failure_returns_resource_message() -> None:

@@ -36,7 +36,10 @@ def job_dependencies_are_available(
     )
 
 
-def test_ai_job_is_created_and_can_be_polled(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ai_job_is_created_and_can_be_polled(
+    monkeypatch: pytest.MonkeyPatch,
+    auth_headers_factory,
+) -> None:
     async def keep_queued(*_args, **_kwargs) -> None:
         return None
 
@@ -47,6 +50,7 @@ def test_ai_job_is_created_and_can_be_polled(monkeypatch: pytest.MonkeyPatch) ->
     )
     response = client.post(
         "/api/jobs/dubbing-ai",
+        headers=auth_headers_factory(membership_tier="vip"),
         json={
             "video_id": str(uuid4()),
             "text": "Merhaba dünya",
@@ -73,6 +77,21 @@ def test_ai_job_is_created_and_can_be_polled(monkeypatch: pytest.MonkeyPatch) ->
     assert polled.json()["status"] == "processing"
     assert polled.json()["progress"] == 55
     assert polled.json()["message"] == "Video birleştiriliyor."
+
+
+def test_ai_job_is_locked_for_free_members(auth_headers_factory) -> None:
+    response = client.post(
+        "/api/jobs/dubbing-ai",
+        headers=auth_headers_factory(membership_tier="free"),
+        json={
+            "video_id": str(uuid4()),
+            "text": "Merhaba dünya",
+            "voice_style": "dramatic",
+        },
+    )
+
+    assert response.status_code == 403
+    assert "VIP üyelere özeldir" in response.json()["detail"]
 
 
 def test_recording_job_is_created_after_files_are_saved(

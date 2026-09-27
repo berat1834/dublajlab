@@ -1,19 +1,44 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from backend.database import get_db
 import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
+from backend.services.membership_service import has_active_vip
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
 
 def get_admin_user(current_user: models_db.User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Yalnızca yöneticiler erişebilir.")
     return current_user
+
+
+@router.patch("/users/{user_id}/membership", response_model=schemas.UserResponse)
+def update_user_membership(
+    user_id: str,
+    payload: schemas.MembershipAdminUpdate,
+    db: Session = Depends(get_db),
+    admin: models_db.User = Depends(get_admin_user),
+):
+    user = db.query(models_db.User).filter(models_db.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı.")
+
+    user.membership_tier = payload.tier
+    user.membership_expires_at = (
+        datetime.now(timezone.utc) + timedelta(days=payload.duration_days)
+        if payload.tier == "vip"
+        else None
+    )
+    db.commit()
+    db.refresh(user)
+    response = schemas.UserResponse.model_validate(user)
+    return response.model_copy(update={"has_active_vip": has_active_vip(user)})
 
 @router.get("/reports", response_model=List[schemas.ContentReportResponse])
 def get_reports(db: Session = Depends(get_db), admin: models_db.User = Depends(get_admin_user)):

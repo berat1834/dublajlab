@@ -95,18 +95,20 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
       <div className="space-y-6">
         {/* Membership Card (Custom Lab Theme) */}
         <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent p-6">
-          <div className="absolute top-0 left-0 w-1 h-full bg-zinc-700"></div>
+          <div className={`absolute top-0 left-0 w-1 h-full ${currentUser.has_active_vip ? 'bg-amber-300' : 'bg-zinc-700'}`}></div>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
               <h3 className="text-xs font-black uppercase tracking-widest text-zinc-500 mb-1">Deney Statüsü</h3>
-              <div className="text-xl font-bold text-white mb-2">Standart Erişim</div>
+              <div className="text-xl font-bold text-white mb-2">{currentUser.has_active_vip ? 'VIP Erişim' : 'Ücretsiz Erişim'}</div>
               <p className="text-sm text-zinc-400 max-w-xl">
-                Temel laboratuvar araçlarına erişimin var. VIP protokollere geçerek arkadaşlarınla özel odalar kurabilir ve render önceliği alabilirsin.
+                {currentUser.has_active_vip
+                  ? '1080p export ve AI sesle dublaj özelliklerin aktif.'
+                  : 'Kendi sesinle dublaj ve 720p MP4 export kullanabilirsin. VIP ile 1080p ve AI ses modunu açabilirsin.'}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <button onClick={() => setActiveTab('membership')} className="px-5 py-2.5 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 text-sm font-bold hover:bg-amber-500/20 transition flex items-center gap-2">
-                <Diamond className="h-4 w-4" /> VIP Ol
+                <Diamond className="h-4 w-4" /> {currentUser.has_active_vip ? 'VIP Detayları' : 'VIP Ol'}
               </button>
               <button onClick={() => setActiveTab('user_credits')} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
                 Krediler

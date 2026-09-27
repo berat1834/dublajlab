@@ -76,6 +76,9 @@ export interface User {
   display_name: string
   avatar_url?: string | null
   role: string
+  membership_tier: 'free' | 'vip'
+  membership_expires_at?: string | null
+  has_active_vip: boolean
   discord_linked?: boolean
 }
 

@@ -203,8 +203,14 @@ class FFmpegService:
         duration_seconds: float,
         mute_original_audio: bool,
         has_original_audio: bool,
+        max_video_width: int = 1920,
+        max_video_height: int = 1080,
     ) -> list[str]:
         subtitle_filter = f"ass=filename='{self._filter_path(subtitle_path)}'"
+        video_filter = (
+            f"scale=w=min({max_video_width}\\,iw):h=min({max_video_height}\\,ih):"
+            "force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1"
+        )
         if mute_original_audio or not has_original_audio:
             audio_filter = "[1:a]apad[aout]"
         else:
@@ -221,7 +227,7 @@ class FFmpegService:
             "-i",
             str(audio_path),
             "-filter_complex",
-            f"[0:v]{subtitle_filter}[vout];{audio_filter}",
+            f"[0:v]{video_filter},{subtitle_filter}[vout];{audio_filter}",
             "-map",
             "[vout]",
             "-map",
@@ -231,7 +237,9 @@ class FFmpegService:
             "-c:v",
             "libx264",
             "-preset",
-            "medium",
+            "veryfast",
+            "-threads",
+            "1",
             "-crf",
             "23",
             "-pix_fmt",
@@ -254,6 +262,8 @@ class FFmpegService:
         duration_seconds: float,
         mute_original_audio: bool,
         has_original_audio: bool,
+        max_video_width: int = 1920,
+        max_video_height: int = 1080,
     ) -> Path:
         command = self.build_process_command(
             video_path=video_path,
@@ -263,6 +273,8 @@ class FFmpegService:
             duration_seconds=duration_seconds,
             mute_original_audio=mute_original_audio,
             has_original_audio=has_original_audio,
+            max_video_width=max_video_width,
+            max_video_height=max_video_height,
         )
         self._run(command, "Video işlenemedi.")
         if not output_path.is_file() or output_path.stat().st_size == 0:
@@ -279,13 +291,15 @@ class FFmpegService:
         duration_seconds: float,
         mute_original_audio: bool,
         has_original_audio: bool,
+        max_video_width: int = 1920,
+        max_video_height: int = 1080,
     ) -> list[str]:
         command = [self.ffmpeg_binary, "-y", "-i", str(video_path)]
         for recording_path in recording_paths:
             command.extend(["-i", str(recording_path)])
 
         video_filter = (
-            r"scale=w=min(1920\,iw):h=min(1080\,ih):"
+            f"scale=w=min({max_video_width}\\,iw):h=min({max_video_height}\\,ih):"
             "force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1"
         )
         filters: list[str] = [
@@ -364,6 +378,8 @@ class FFmpegService:
         duration_seconds: float,
         mute_original_audio: bool,
         has_original_audio: bool,
+        max_video_width: int = 1920,
+        max_video_height: int = 1080,
     ) -> Path:
         command = self.build_recording_process_command(
             video_path,
@@ -374,6 +390,8 @@ class FFmpegService:
             duration_seconds,
             mute_original_audio,
             has_original_audio,
+            max_video_width,
+            max_video_height,
         )
         self._run(command, "Ses kayıtları videoya yerleştirilemedi.")
         if not output_path.is_file() or output_path.stat().st_size == 0:

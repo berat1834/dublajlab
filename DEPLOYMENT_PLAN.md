@@ -96,8 +96,14 @@ Komut build tamamlandıktan sonra, yeni container trafiğe alınmadan önce çal
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
 | Environment | `VITE_API_BASE_URL=https://<railway-api-domain>` |
+| Environment | `VITE_SHOPIER_VIP_URL=https://www.shopier.com/<vip-product>` |
+| Environment | `VITE_VIP_PRICE_LABEL=₺199` |
 
 `VITE_API_BASE_URL` secret değildir ve Vite build sırasında tarayıcı bundle'ına yazılır. Railway backend domain'i değişirse environment değeri güncellenip frontend yeniden deploy edilmelidir.
+
+`VITE_SHOPIER_VIP_URL` ve `VITE_VIP_PRICE_LABEL` da build-time değerleridir.
+Gerçek ödeme sonucu frontend dönüş parametresinden doğrulanmaz; webhook entegrasyonu
+hazır olana kadar doğrulanmış sipariş yönetici endpoint'iyle manuel etkinleştirilir.
 
 ## 5. Medya Temizliği (Cleanup) & Disk Tüketimi Riskleri
 

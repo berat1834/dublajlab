@@ -488,6 +488,8 @@ Gerçek maintenance token repoya, README'ye, frontend environment'ına veya komu
 | `FFPROBE_BINARY` | `ffprobe` | FFprobe komutu veya tam yolu |
 | `MEDIA_ROOT` | `backend/data` | Kaynak, çıktı, metadata ve geçici kayıt klasörü |
 | `VITE_API_BASE_URL` | `http://localhost:8000` | Frontend’in çağıracağı API adresi |
+| `VITE_SHOPIER_VIP_URL` | boş | Shopier'daki gerçek VIP ürün bağlantısı; boşsa ödeme yönlendirmesi yapılmaz |
+| `VITE_VIP_PRICE_LABEL` | `₺199` | Üyelik ekranında gösterilen fiyat etiketi; güvenlik kararı değildir |
 
 Örnek dosyalar: `backend/.env.example` ve `frontend/.env.example`. Backend önce süreç ortamını korur, eksik değerleri `backend/.env` ve proje kökündeki `.env` dosyalarından okuyabilir. Gerçek token ve anahtarları Git'e eklemeyin.
 
@@ -545,6 +547,39 @@ Kurallar:
 - Her replik için aynı sırada bir ses dosyası gönderilmeli
 - Her kayıt normal modda en fazla 10 MB olabilir; public demo modunda policy değeri uygulanır
 
+## Ücretsiz ve VIP üyelik
+
+DublajLab üyelik yetkisini yalnız frontend görünümüne bırakmaz; kullanıcının planı
+veritabanındaki `membership_tier` ve `membership_expires_at` alanlarıyla tutulur
+ve kilitli API'ler backend tarafından kontrol edilir.
+
+| Özellik | Ücretsiz | VIP |
+| --- | --- | --- |
+| Kendi mikrofonunla dublaj | Var | Var |
+| Video yükleme ve hazır sahne | Var | Var |
+| MP4 export | En fazla 720p | En fazla 1080p |
+| AI sesle dublaj | Kilitli | Var |
+| Hesapta VIP rozeti | Yok | Var |
+
+Yeni hesaplar ücretsiz planla açılır. Doğrulanmış ödeme sonrasında yönetici,
+admin endpoint'iyle kullanıcıya süreli VIP erişimi tanımlar:
+
+```bash
+curl -X PATCH "http://localhost:8000/api/admin/users/<USER_ID>/membership" \
+  -H "Authorization: Bearer <ADMIN_JWT>" \
+  -H "Content-Type: application/json" \
+  -d '{"tier":"vip","duration_days":30}'
+```
+
+VIP'i kaldırmak için aynı endpoint'e `{"tier":"free","duration_days":30}`
+gönderilir. Frontend ödeme yönlendirmesi için Vercel veya yerel `.env` içinde
+`VITE_SHOPIER_VIP_URL` tanımlanır. Değer yoksa uygulama sahte ödeme veya VIP
+aktivasyonu yapmaz. Gösterilen fiyat `VITE_VIP_PRICE_LABEL` ile değiştirilebilir.
+
+> Şu an ödeme doğrulaması manuel yönetici onayıyla tamamlanır. Shopier webhook/
+> callback doğrulaması eklenmeden yalnız ödeme dönüş URL'sine güvenerek VIP
+> açılmamalıdır.
+
 ## API endpointleri
 
 | Metot | Endpoint | Açıklama |
@@ -552,6 +587,8 @@ Kurallar:
 | `GET` | `/api/health` | Servis sağlık bilgisi |
 | `GET` | `/api/system/ffmpeg` | FFmpeg/FFprobe kullanılabilirlik ve sürüm bilgisi |
 | `GET` | `/api/system/demo-policy` | Etkin public demo limitlerini frontend'e döndürür |
+| `GET` | `/api/membership/plans` | Ücretsiz/VIP özellik matrisini döndürür |
+| `GET` | `/api/membership/me` | Giriş yapan kullanıcının güncel üyelik durumunu döndürür |
 | `GET` | `/api/templates` | Doğrulanmış hazır sahne kataloğunu listeler |
 | `GET` | `/api/templates/{template_id}` | Tek bir hazır sahnenin metadata ve repliklerini döndürür |
 | `POST` | `/api/video/upload` | `file` alanıyla video yükler ve doğrular |
@@ -563,6 +600,7 @@ Kurallar:
 | `GET` | `/api/video/preview/{video_id}` | Kaynak videoyu tarayıcıya aktarır |
 | `GET` | `/api/video/download/{output_video_id}` | İşlenmiş MP4’ü indirir |
 | `POST` | `/api/maintenance/cleanup` | Eski runtime dosyalarını manuel temizler; query isteğe bağlıdır |
+| `PATCH` | `/api/admin/users/{user_id}/membership` | Yönetici tarafından süreli VIP tanımlar veya kaldırır |
 
 Temizlik endpoint'i yalnızca bilinen `uploads`, `outputs`, `tmp`, `audio`, `subtitles`, `recordings` ve `metadata` klasörlerindeki eşikten eski dosyaları siler. En düşük eşik 1 saattir. `older_than_hours` verilmezse public demo modunda `DEMO_MEDIA_TTL_HOURS`, normal modda 24 saat kullanılır. Query parametresi açıkça verilirse bu varsayılanı ezer.
 
@@ -747,7 +785,7 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 ### Faz 8 — Platform Shell & Navigation
 - [x] Tek sayfalık araç görünümünden "Platform" (çoklu sekme) hissine geçiş
 - [x] Oyna, Sahneler, Dublajlar, Günün Dublajı sekmeleri (internal state router)
-- [x] Placeholder Auth, VIP, Discord linkleri ve bilgilendirici modal/toast'lar
+- [x] Gerçek Auth ve backend kontrollü ücretsiz/VIP üyelik; Discord bağlantısı hâlâ placeholder
 - [x] Geniş ve kurumsal görünümlü footer (Keşfet, Yasal, Kurumsal, Destek)
 
 ### Faz 9 — Showcase Pages & Brand Updates
@@ -765,7 +803,7 @@ Yalnızca DublajLab MVP uygulanmıştır. Diğer ürünler bu repoda kodlanmamı
 ### Faz 13 — Scene Detail Page & Template Preview
 - [x] Sahnelere özel `SceneDetail.tsx` komponenti
 - [x] Galeriden stüdyoya geçmeden önce sahne detaylarının (Video, Süre, Karakter) listelendiği ara yüz
-- [x] "Nasıl Oynanır" yönlendirmeleri ve VIP/Premium promo alanı (fake state)
+- [x] "Nasıl Oynanır" yönlendirmeleri ve backend üyelik durumunu kullanan VIP/Premium promo alanı
 - [x] Kullanıcı istatistikleri simulasyonu (Oynanma sayısı) ve estetik medya placeholder'ları
 
 ### Faz 14 — Platform Pages Polish & Auth Shell
@@ -828,4 +866,4 @@ Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vok
 - Mikrofon formatı tarayıcıya göre WebM/Opus veya MP4/AAC olabilir; FFmpeg’in ilgili decoder ile derlenmiş olması gerekir.
 - Bu geliştirme ortamında FFmpeg kurulu değilse gerçek medya smoke testi yapılamaz.
 - Replik zamanları form alanlarıyla düzenlenir; görsel sürükle-bırak timeline henüz yoktur.
-- Platform arayüzündeki (Faz 8) Discord, Giriş, Kayıt, VIP ve Footer (Gizlilik, Kullanım Koşulları vb.) bağlantıları şu an placeholder (yer tutucu) durumundadır. Canlı sunuma geçmeden önce gerçek yasal metinler ve Discord davet bağlantısı hazırlanarak güncellenmelidir.
+- Platform arayüzündeki Discord ve Footer (Gizlilik, Kullanım Koşulları vb.) bağlantılarının bir kısmı hâlâ placeholder durumundadır. VIP yetkisi backend tarafından uygulanır; ancak otomatik ödeme doğrulaması eklenene kadar doğrulanmış siparişler admin endpoint'iyle etkinleştirilir. Canlı ticari kullanımdan önce gerçek yasal metinler, Discord davet bağlantısı ve ödeme callback doğrulaması hazırlanmalıdır.

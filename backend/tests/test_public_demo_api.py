@@ -108,6 +108,7 @@ def test_public_demo_rejects_video_longer_than_demo_limit(
 def test_public_demo_export_limit_returns_429(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    auth_headers_factory,
 ) -> None:
     _enable_public_demo(monkeypatch)
     service = jobs_router.dubbing_job_service
@@ -131,8 +132,9 @@ def test_public_demo_export_limit_returns_429(
         "voice_style": "dramatic",
     }
 
-    accepted = client.post("/api/jobs/dubbing-ai", json=payload)
-    blocked = client.post("/api/jobs/dubbing-ai", json=payload)
+    headers = auth_headers_factory(membership_tier="vip")
+    accepted = client.post("/api/jobs/dubbing-ai", json=payload, headers=headers)
+    blocked = client.post("/api/jobs/dubbing-ai", json=payload, headers=headers)
 
     assert accepted.status_code == 202
     assert blocked.status_code == 429

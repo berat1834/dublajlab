@@ -6,6 +6,7 @@ import {
   Check,
   CheckCircle2,
   Clock3,
+  Crown,
   Download,
   Film,
   Layers,
@@ -197,6 +198,7 @@ function App() {
   const [showHowTo, setShowHowTo] = useState(false)
   const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const hasVip = Boolean(currentUser?.has_active_vip)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -426,6 +428,11 @@ function App() {
   }
 
   const handleAiProcess = async () => {
+    if (!hasVip) {
+      setError('AI sesle dublaj VIP üyelere özeldir.')
+      setActiveTab('membership')
+      return
+    }
     if (!upload) {
       setError('Önce bir video yükleyin.')
       return
@@ -827,6 +834,9 @@ function App() {
                   02 / Dublaj
                 </p>
                 <h2 className="mt-1 text-xl font-bold">Sahneyi seslendir</h2>
+                <p className={`mt-1 text-xs font-bold ${hasVip ? 'text-amber-200' : 'text-zinc-500'}`}>
+                  {hasVip ? 'VIP · 1080p export' : 'Ücretsiz · 720p export'}
+                </p>
               </div>
               <div className="grid w-full grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1 text-xs font-semibold sm:w-auto">
                 <button
@@ -843,13 +853,18 @@ function App() {
                 <button
                   type="button"
                   onClick={() => {
+                    if (!hasVip) {
+                      showToast(currentUser ? 'AI ses modu VIP üyelere özeldir.' : 'AI ses modu için giriş yapıp VIP üyeliği etkinleştirin.')
+                      setActiveTab('membership')
+                      return
+                    }
                     setMode('ai-voice')
                     clearFeedback()
                   }}
                   disabled={busy || Boolean(selectedTemplate && !upload)}
                   className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 transition ${mode === 'ai-voice' ? 'bg-violet text-white' : 'text-zinc-500 hover:text-white'}`}
                 >
-                  <Bot className="h-3.5 w-3.5" /> AI ses
+                  {hasVip ? <Bot className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5 text-amber-300" />} AI ses · VIP
                 </button>
               </div>
             </div>
@@ -904,6 +919,15 @@ function App() {
                 onError={showEditorError}
                 onProcess={handleRecordingProcess}
               />
+            ) : !hasVip ? (
+              <div className="grid min-h-72 place-items-center rounded-2xl border border-amber-300/20 bg-amber-300/[0.05] p-6 text-center">
+                <div className="max-w-sm">
+                  <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-300/10 text-amber-200"><Crown className="h-7 w-7" /></span>
+                  <h3 className="mt-4 text-lg font-black text-white">AI ses modu VIP özelliğidir</h3>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">Kendi sesinle dublaj ücretsizdir. AI ses ve 1080p export için VIP üyeliğini etkinleştir.</p>
+                  <button type="button" onClick={() => setActiveTab('membership')} className="mt-5 rounded-xl bg-amber-300 px-5 py-3 text-sm font-black text-black hover:bg-amber-200">VIP özelliklerini gör</button>
+                </div>
+              </div>
             ) : (
               <div>
                 <div className="mb-4 rounded-xl border border-violet/20 bg-violet/5 p-3 text-xs leading-5 text-zinc-400">
@@ -1083,7 +1107,7 @@ function App() {
           ) : activeTab === 'profile' && currentUser ? (
             <PublicProfile currentUser={currentUser} setActiveTab={setActiveTab} />
           ) : activeTab === 'membership' ? (
-            <Membership />
+            <Membership currentUser={currentUser} setCurrentUser={setCurrentUser} setActiveTab={setActiveTab} onToast={showToast} />
           ) : activeTab === 'user_scenes' ? (
             <UserScenes setActiveTab={setActiveTab} />
           ) : activeTab === 'user_favorites' ? (

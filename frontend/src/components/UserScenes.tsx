@@ -82,7 +82,7 @@ export function UserScenes({ setActiveTab }: UserScenesProps) {
             DublajLab VIP
           </div>
           <h2 className="text-2xl font-black text-white">Dublaj daha hızlı, daha yüksek kalitede.</h2>
-          <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile sahneleri açar, render sırasını atlar ve 1080p çıktı alırsın.</p>
+          <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile 1080p çıktı ve AI sesle dublaj modunu açarsın.</p>
         </div>
         <button onClick={() => setActiveTab('membership')} className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
           VIP Ol <ArrowRight className="inline h-4 w-4 ml-1" />

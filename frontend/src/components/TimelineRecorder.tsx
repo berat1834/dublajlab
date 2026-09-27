@@ -15,7 +15,7 @@ import {
 import type { RefObject } from 'react'
 import type { TimelineLine } from '../types'
 
-const TIMELINE_DURATION_EPSILON_SECONDS = 0.01
+const TIMELINE_DURATION_EPSILON_SECONDS = 0.001
 const TIMELINE_DURATION_ERROR =
   'Replik bitiş zamanı video süresini aşıyor. Lütfen son repliği video bitişinden önce tamamlayın.'
 

@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import TypeAdapter, ValidationError
 
@@ -16,6 +16,9 @@ from backend.services.file_storage import FileStorageService
 from backend.services.rate_limit_service import enforce_public_demo_export_limit
 from backend.services.subtitle_service import SubtitleService
 from backend.services.tts_service import TTSService
+from backend import models_db
+from backend.routers.auth_router import get_current_user
+from backend.services.membership_service import require_active_vip
 
 
 router = APIRouter(prefix="/api/video", tags=["video"])
@@ -81,7 +84,12 @@ async def upload_video(file: UploadFile = File(...)) -> UploadResponse:
 
 
 @router.post("/process", response_model=ProcessResponse)
-async def process_video(request: Request, payload: ProcessRequest) -> ProcessResponse:
+async def process_video(
+    request: Request,
+    payload: ProcessRequest,
+    current_user: models_db.User = Depends(get_current_user),
+) -> ProcessResponse:
+    require_active_vip(current_user)
     ensure_media_tools()
     video_path = storage_service.get_video_path(payload.video_id)
     metadata = storage_service.get_video_metadata(payload.video_id)
@@ -112,6 +120,8 @@ async def process_video(request: Request, payload: ProcessRequest) -> ProcessRes
             float(metadata["duration_seconds"]),
             payload.mute_original_audio,
             bool(metadata.get("has_audio", False)),
+            1920,
+            1080,
         )
         storage_service.register_output(
             output_id,
@@ -219,6 +229,8 @@ async def process_recordings(
             duration,
             mute_original_audio,
             bool(metadata.get("has_audio", False)),
+            1280,
+            720,
         )
         storage_service.register_output(
             output_id,

@@ -101,9 +101,9 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                       <div className="px-4 py-3 border-b border-white/10">
                         <div className="flex items-center gap-2 mb-1">
                           <Diamond className="h-3 w-3 text-amber-500" />
-                          <span className="text-xs font-black text-white">VIP ol</span>
+                          <span className="text-xs font-black text-white">{currentUser.has_active_vip ? 'VIP aktif' : 'VIP ol'}</span>
                         </div>
-                        <p className="text-[10px] text-zinc-500">VIP sahneler, hızlı render ve 1080p çıktı.</p>
+                        <p className="text-[10px] text-zinc-500">{currentUser.has_active_vip ? '1080p ve AI ses özelliklerin açık.' : '1080p çıktı ve AI ses modunu aç.'}</p>
                       </div>
 
                       <div className="py-2">
@@ -132,8 +132,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                 <button onClick={() => setActiveTab('register')} className="rounded-lg bg-white/5 px-4 py-1.5 text-sm font-bold text-white transition hover:bg-white/10">{t('nav.register')}</button>
               </>
             )}
-            <button onClick={() => setActiveTab('membership')} className="flex items-center gap-1.5 rounded-lg border border-lime/30 bg-lime/10 px-3 py-1.5 font-bold text-lime transition hover:bg-lime/20">
-              <Crown className="h-4 w-4" /> {t('vip.button')}
+            <button onClick={() => setActiveTab('membership')} className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-bold transition ${currentUser?.has_active_vip ? 'border-amber-300/30 bg-amber-300/10 text-amber-200 hover:bg-amber-300/15' : 'border-lime/30 bg-lime/10 text-lime hover:bg-lime/20'}`}>
+              <Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? 'VIP Aktif' : t('vip.button')}
             </button>
           </div>
           <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -171,7 +171,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                 <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">Kayıt ol</button>
               </>
             )}
-            <button onClick={() => { setActiveTab('membership'); setMobileMenuOpen(false); }} className="text-left text-lime flex items-center gap-2 py-3 text-sm font-bold transition"><Crown className="h-4 w-4" /> {t('vip.button')}</button>
+            <button onClick={() => { setActiveTab('membership'); setMobileMenuOpen(false); }} className="text-left text-lime flex items-center gap-2 py-3 text-sm font-bold transition"><Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? 'VIP Aktif' : t('vip.button')}</button>
           </div>
         </div>
       )}

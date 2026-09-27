@@ -20,12 +20,19 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = None
     role: str
     is_active: bool
+    membership_tier: str = "free"
+    membership_expires_at: Optional[datetime] = None
+    has_active_vip: bool = False
     created_at: datetime
     updated_at: datetime
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class MembershipAdminUpdate(BaseModel):
+    tier: str = Field(pattern="^(free|vip)$")
+    duration_days: int = Field(default=30, ge=1, le=3650)
 
 class ExportResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

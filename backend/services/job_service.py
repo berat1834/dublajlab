@@ -174,6 +174,9 @@ class DubbingJobService:
         recording_paths: list[Path],
         mute_original_audio: bool,
         burn_subtitles: bool,
+        max_video_width: int = 1280,
+        max_video_height: int = 720,
+        membership_tier: str = "free",
     ) -> None:
         output_path: Path | None = None
         subtitle_path = self.storage_service.subtitle_path(job_id)
@@ -210,6 +213,8 @@ class DubbingJobService:
                 duration,
                 mute_original_audio,
                 bool(metadata.get("has_audio", False)),
+                max_video_width,
+                max_video_height,
             )
             self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
             self.storage_service.register_output(
@@ -220,6 +225,8 @@ class DubbingJobService:
                     "original_filename": metadata["original_filename"],
                     "job_id": job_id,
                     "mode": "user_voice",
+                    "membership_tier": membership_tier,
+                    "max_export_resolution": f"{max_video_width}x{max_video_height}",
                     "timeline": [line.model_dump() for line in lines],
                 },
             )

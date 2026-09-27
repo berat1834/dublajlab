@@ -17,17 +17,18 @@ from fastapi import (
 from sqlalchemy.orm import Session
 from backend.database import get_db, SessionLocal
 import backend.models_db as models_db
-from backend.routers.auth_router import get_current_user_optional
+from backend.routers.auth_router import get_current_user, get_current_user_optional
 from pydantic import TypeAdapter, ValidationError
 
 from backend.models import DubbingLine, JobResponse, ProcessRequest
 from backend.services.ffmpeg_service import MediaProcessingError
 from backend.services.job_service import dubbing_job_service, job_registry
 from backend.services.rate_limit_service import enforce_public_demo_export_limit
+from backend.services.membership_service import has_active_vip, require_active_vip
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
-TIMELINE_DURATION_EPSILON_SECONDS = 0.01
+TIMELINE_DURATION_EPSILON_SECONDS = 0.001
 TIMELINE_DURATION_ERROR = (
     "Replik bitiş zamanı video süresini aşıyor. "
     "Lütfen son repliği video bitişinden önce tamamlayın."
@@ -56,8 +57,29 @@ async def run_ai_job_with_db(job_id: str, payload: ProcessRequest, project_id: s
         finally:
             db.close()
 
-async def run_recording_job_with_db(job_id: str, video_id: str, lines: list[DubbingLine], recording_paths: list[Path], mute_original: bool, burn_subtitles: bool, project_id: str | None = None):
-    await dubbing_job_service.run_recording_job(job_id, video_id, lines, recording_paths, mute_original, burn_subtitles)
+async def run_recording_job_with_db(
+    job_id: str,
+    video_id: str,
+    lines: list[DubbingLine],
+    recording_paths: list[Path],
+    mute_original: bool,
+    burn_subtitles: bool,
+    project_id: str | None = None,
+    max_video_width: int = 1280,
+    max_video_height: int = 720,
+    membership_tier: str = "free",
+):
+    await dubbing_job_service.run_recording_job(
+        job_id,
+        video_id,
+        lines,
+        recording_paths,
+        mute_original,
+        burn_subtitles,
+        max_video_width,
+        max_video_height,
+        membership_tier,
+    )
     if project_id:
         db = SessionLocal()
         try:
@@ -143,8 +165,9 @@ async def create_ai_job(
     payload: ProcessRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: models_db.User | None = Depends(get_current_user_optional)
+    current_user: models_db.User = Depends(get_current_user)
 ) -> JobResponse:
+    require_active_vip(current_user)
     ensure_media_tools()
     dubbing_job_service.storage_service.get_video_path(payload.video_id)
     metadata = dubbing_job_service.storage_service.get_video_metadata(payload.video_id)
@@ -199,6 +222,10 @@ async def create_recording_job(
     job = job_registry.create("Mikrofon kayıtları export sırasına alındı.")
 
     project_id = None
+    vip_enabled = has_active_vip(current_user)
+    max_video_width = 1920 if vip_enabled else 1280
+    max_video_height = 1080 if vip_enabled else 720
+    membership_tier = "vip" if vip_enabled else "free"
     if current_user:
         project = models_db.DubbingProject(
             user_id=current_user.id,
@@ -235,7 +262,10 @@ async def create_recording_job(
         recording_paths,
         mute_original_audio,
         burn_subtitles,
-        project_id
+        project_id,
+        max_video_width,
+        max_video_height,
+        membership_tier,
     )
     return job
 

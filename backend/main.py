@@ -16,6 +16,7 @@ from backend.routers.jobs import router as jobs_router
 from backend.routers.maintenance import router as maintenance_router
 from backend.routers.templates import router as templates_router
 from backend.routers.video import ffmpeg_service, router as video_router
+from backend.routers.membership import router as membership_router
 
 
 logger = logging.getLogger("dublajlab")
@@ -58,6 +59,7 @@ app.include_router(video_router)
 app.include_router(templates_router)
 app.include_router(jobs_router)
 app.include_router(maintenance_router)
+app.include_router(membership_router)
 
 from backend.routers.auth_router import router as auth_router
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
