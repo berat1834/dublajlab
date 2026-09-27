@@ -87,7 +87,21 @@ göstermediği için akış kullanıcı açısından sessizce durmuş gibi gör�
 
 ### Canlı tekrar test durumu
 
-Düzeltme production'a dağıtıldıktan sonra aynı yüksek çözünürlüklü video ve iki
-ses kaydıyla API seviyesinde export tekrar sınanacaktır. Gerçek mikrofon izni ve
-tarayıcı MediaRecorder akışının nihai doğrulaması fiziksel tarayıcıda tekrar
-yapılmalıdır; bu ayrım sonuç raporunda açıkça belirtilecektir.
+Düzeltme `701db517c0b4b53280ccd4341ba07ca03d2f8112` SHA'sıyla production'a
+dağıtıldı. Railway deployment `14e24f0e-3bea-4026-820c-a849e9ad4f79`, Vercel
+deployment `dpl_SyttjD87dDLFoPB8iM9bM2JetkzV` başarıyla tamamlandı.
+
+- Canonical frontend `200`, backend `/api/health` `ok` döndürdü.
+- Aynı `2560x1440`, `5.208333` saniyelik video; iki sentetik WebM mikrofon kaydı
+  ve son replik `end=5.21` ile canlı export tamamlandı.
+- Production job `2a286e88-8664-4778-9487-648275e64cea`, `%55` seviyesinden
+  `%100 completed` durumuna geçti ve MP4 download URL üretti.
+- `end=5.23` ile yapılan gerçek taşma kontrolü canlı backend'de `422` ve istenen
+  Türkçe açıklamayı döndürdü.
+- Canlı Vercel bundle'ında `Video oluşturulamadı` paneli ve timeline taşma mesajı
+  bulundu.
+
+API/FFmpeg production smoke testi başarılıdır. Sentetik WebM dosyaları tarayıcı
+MediaRecorder çıktısıyla aynı codec/container yolunu sınar; fiziksel mikrofon
+izni ve kullanıcının gerçek ses kaydıyla son kontrol tarayıcıda kullanıcı
+tarafından tekrarlanmalıdır.
