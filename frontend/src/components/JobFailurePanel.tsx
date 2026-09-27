@@ -2,10 +2,9 @@ import { AlertCircle, RefreshCw } from 'lucide-react'
 
 interface JobFailurePanelProps {
   message: string
-  onRetry: () => void
 }
 
-export function JobFailurePanel({ message, onRetry }: JobFailurePanelProps) {
+export function JobFailurePanel({ message }: JobFailurePanelProps) {
   return (
     <div
       role="alert"
@@ -21,13 +20,6 @@ export function JobFailurePanel({ message, onRetry }: JobFailurePanelProps) {
           </p>
         </div>
       </div>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg border border-red-300/20 bg-red-300/10 px-4 py-2.5 text-xs font-bold text-red-100 transition hover:bg-red-300/15"
-      >
-        <RefreshCw className="h-3.5 w-3.5" /> Export’u tekrar dene
-      </button>
     </div>
   )
 }

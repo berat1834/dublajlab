@@ -1011,10 +1011,7 @@ function App() {
               </div>
             )}
             {jobError && stage !== 'processing' && (
-              <JobFailurePanel
-                message={jobError}
-                onRetry={() => void retryActionRef.current?.()}
-              />
+              <JobFailurePanel message={jobError} />
             )}
           </section>
         </div>
