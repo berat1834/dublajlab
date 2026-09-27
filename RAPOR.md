@@ -12,6 +12,7 @@
 - **Sprint 25 Final Production Manual QA Durumu**:
   - 📝 **Otomasyon Sınırları**: Playwright sanal tarayıcı altyapısındaki indirme hataları ve donanımsal mikrofona erişim zorunluluğu nedeniyle, QA (Kalite Kontrol) süreci yapay zeka ajanından kullanıcıya (insan tester) devredilmiştir.
   - 📋 **QA Checklist Hazırlandı**: Uygulamanın uçtan uca etkileşim testi için 16 adımlık form `docs/reports/sprint-25-final-production-qa.md` içerisinde hazırlandı. Herhangi bir Blocker/hata bulunması durumunda minimal fix uygulanacaktır.
+  - ✅ **Export Blocker Çözüldü**: Aynı 2560×1440 video ve `5.21` saniyelik son replikle production export `%100 completed` oldu. Gerçek süre taşması `422` ile reddediliyor ve failed job mesajı frontend'de görünür durumda.
 - CI/CD ve Pipeline testleri (Lint, Pytest, Build) yeşil (green) duruma getirildi.
 - Backend `auth_router` import hataları çözüldü, `deleteAccount` 404 hatası giderildi.
 - Frontend React `any` tipleri ve empty object pattern'leri düzeltildi.
