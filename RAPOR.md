@@ -104,3 +104,8 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   - Yapay Zeka Testleri: scripts/run_local_lipsync.ps1 adında, yerel Python/Wav2Lip modelini izole test eden PowerShell betiği eklendi.
   - Kurulum Talimatları: ackend/weights/README.md içerisine resmi Wav2Lip repo linkleri ve adım adım indirme yönergeleri dahil edildi.
   - Hata Yönetimi: Model reddi durumunda kullanıcıya gösterilecek Türkçe exception fırlatılması sağlandı.
+
+- **Sprint 30: Serverless GPU (Modal.com) Entegrasyon Taslağı**:
+  - Mimari: Ağır GPU işlemleri (Wav2Lip) için FastAPI sunucusu üzerinden HTTP isteğiyle tetiklenen Serverless webhook mimarisi kuruldu.
+  - Kapsam: serverless/modal_lipsync.py taslağı oluşturuldu ve LIPSYNC_MODE değişkenine göre HTTP POST atabilen esnek bir LipSyncService yapısı kodlandı.
+  - Test: httpx kütüphanesinin mocklandığı pytest senaryoları (başarılı ve başarısız ağ çağrıları) eklendi ve test edildi.

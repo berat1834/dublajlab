@@ -1,5 +1,7 @@
 import asyncio
+import httpx
 from pathlib import Path
+from backend.config import LIPSYNC_MODE, LIPSYNC_WEBHOOK_URL
 
 class LipSyncError(Exception):
     pass
@@ -14,6 +16,27 @@ class LipSyncService:
         """
         Applies lip synchronization to a video using the given audio.
         """
+        if LIPSYNC_MODE == "serverless":
+            if not LIPSYNC_WEBHOOK_URL:
+                raise LipSyncError("LIPSYNC_WEBHOOK_URL yapılandırılmamış.")
+                
+            try:
+                async with httpx.AsyncClient() as client:
+                    payload = {
+                        "face_url": f"file://{face_video_path.resolve()}",
+                        "audio_url": f"file://{audio_path.resolve()}",
+                        "callback_url": "dummy"
+                    }
+                    response = await client.post(LIPSYNC_WEBHOOK_URL, json=payload, timeout=10.0)
+                    response.raise_for_status()
+                    
+                    # For the stub, we just create an empty output file so the pipeline can continue
+                    output_path.write_bytes(b"mock_serverless_output")
+                    return output_path
+            except Exception:
+                raise LipSyncError("Uzak GPU sunucusuna ulaşılamadı, işlem iptal edildi.")
+                
+        # Local mode execution
         if not self.wav2lip_path.exists() or not self.s3fd_path.exists():
             raise LipSyncError(
                 "Dudak senkronizasyonu model dosyaları sunucuda bulunamadı. Lütfen sistem yöneticisiyle iletişime geçin."
