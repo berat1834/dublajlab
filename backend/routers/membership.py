@@ -6,6 +6,7 @@ import hashlib
 import json
 
 from backend import models_db, schemas, config
+from backend.routers.auth_router import get_current_user
 from backend.services.membership_service import has_active_vip
 
 
