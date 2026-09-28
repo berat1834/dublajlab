@@ -101,6 +101,7 @@ export async function processVideo(payload: {
   voice_style: VoiceStyle
   mute_original_audio: boolean
   burn_subtitles: boolean
+  apply_lip_sync: boolean
 }): Promise<JobResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/jobs/dubbing-ai`, {
@@ -126,6 +127,7 @@ export async function processRecordings(payload: {
   recordings: Map<string, Blob>
   muteOriginalAudio: boolean
   burnSubtitles: boolean
+  applyLipSync: boolean
 }): Promise<JobResponse> {
   const formData = new FormData()
   const recordingIds = payload.timeline.map((line) => line.id)
@@ -134,6 +136,7 @@ export async function processRecordings(payload: {
   formData.append('recording_ids', JSON.stringify(recordingIds))
   formData.append('mute_original_audio', String(payload.muteOriginalAudio))
   formData.append('burn_subtitles', String(payload.burnSubtitles))
+  formData.append('apply_lip_sync', String(payload.applyLipSync))
   for (const id of recordingIds) {
     const recording = payload.recordings.get(id)
     if (!recording) throw new Error('Her replik için bir kayıt alın.')
@@ -144,6 +147,7 @@ export async function processRecordings(payload: {
   try {
     const response = await fetch(`${API_BASE_URL}/api/jobs/dubbing-recordings`, {
       method: 'POST',
+      headers: getAuthHeaders(),
       body: formData,
     })
     return parseResponse<JobResponse>(response)

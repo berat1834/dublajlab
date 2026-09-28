@@ -26,18 +26,33 @@ Bu sprintte, mevcut simülasyon ( `asyncio.sleep` temelli mock) yerine, gerçek 
 
 ### Son doğrulama sonuçları
 
-- Backend pytest: 87/87 geçti.
+- Backend pytest: 92/92 geçti.
 - Hedefli Wav2Lip testleri: 6/6 geçti.
-- Frontend Vitest: 3/3 geçti.
+- Frontend Vitest: 5/5 geçti.
 - Frontend ESLint: geçti.
 - TypeScript/Vite production build: geçti.
 - npm audit: 0 güvenlik açığı.
 - Backend Docker image: CPU-only PyTorch ile build edildi.
 - Container AI import smoke testi: geçti (`torch`, `torchvision`, `torchaudio`, `cv2`, `librosa`, `numpy`).
 
-## Entegrasyon Önkoşulu
+## Export akışı bağlantısı
 
-Bu branch hazırlanırken `main` üzerinde Faz 27'de tanımlanan `apply_lip_sync` API/job/UI bağlantısının bulunmadığı tespit edildi. Bu sprint frontend kapsamı dışında olduğu için frontend yeniden yazılmadı. `LipSyncService` gerçek yerel inference komutunu çalıştırmaya hazırdır; ancak export akışından tetiklenebilmesi için Faz 27 bağlantısının güncel mimariye ayrıca alınması gerekir.
+`apply_lip_sync` seçeneği güncel job mimarisine yeniden bağlandı. AI ses ve
+mikrofon export endpoint'leri seçeneği kabul eder; Free kullanıcılar backend
+seviyesinde Türkçe `403` ile engellenir. Mikrofon modunda bütün kayıtlar önce
+replik zamanlarına göre tek bir geçici WAV dosyasında birleştirilir. Lip-sync
+çıktısı daha sonra mevcut FFmpeg mix, altyazı, watermark ve indirme akışından
+geçer. Frontend her iki modda deneysel toggle ve gerçek job progress mesajlarını
+gösterir.
 
 ## Bilinen Riskler ve Notlar
 > ⚠️ **Uyarı**: Sistem CPU üzerinde çalışmaktadır, GPU hızlandırması (CUDA) yapılandırılmamıştır. Yüksek çözünürlüklü videolarda işlem süresi çok uzun olabilir.
+
+> ⚠️ **Lisans**: Resmî açık Wav2Lip kodu ve model ağırlıkları yalnız kişisel,
+> akademik ve araştırma kullanımı içindir. Ticari/VIP production kullanımında
+> etkinleştirilmemeli; ticari lisanslı alternatif seçilmelidir.
+
+Gerçek inference testi repoya model veya medya eklenmeden hazırlanmıştır; ancak
+bu çalışma ortamında gerekli iki `.pth` ağırlığı ve kullanıcıya ait yüz videosu
+bulunmadığı için gerçek model çıktısı üretildiği iddia edilmemektedir. Servis,
+eksik model/motor durumunu kullanıcıya anlaşılır Türkçe job hatası olarak döndürür.

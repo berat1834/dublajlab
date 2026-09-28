@@ -10,6 +10,7 @@ import {
   Download,
   Film,
   Layers,
+  LockKeyhole,
   LoaderCircle,
   Mic2,
   Play,
@@ -186,6 +187,7 @@ function App() {
   const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>('dramatic')
   const [muteOriginal, setMuteOriginal] = useState(true)
   const [burnSubtitles, setBurnSubtitles] = useState(true)
+  const [applyLipSync, setApplyLipSync] = useState(false)
   const [outputUrl, setOutputUrl] = useState('')
   const [error, setError] = useState('')
   const [retryLabel, setRetryLabel] = useState('')
@@ -200,6 +202,10 @@ function App() {
   const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const hasVip = Boolean(currentUser?.has_active_vip)
+
+  useEffect(() => {
+    if (!hasVip) setApplyLipSync(false)
+  }, [hasVip])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -416,6 +422,7 @@ function App() {
         recordings,
         muteOriginalAudio,
         burnSubtitles: shouldBurnSubtitles,
+        applyLipSync,
       })
       const completedJob = await monitorJob(createdJob)
       if (!completedJob.download_url) {
@@ -451,6 +458,7 @@ function App() {
         voice_style: voiceStyle,
         mute_original_audio: muteOriginal,
         burn_subtitles: burnSubtitles,
+        apply_lip_sync: applyLipSync,
       })
       const completedJob = await monitorJob(createdJob)
       if (!completedJob.download_url) {
@@ -473,6 +481,7 @@ function App() {
     setSelectedTemplate(null)
     setSelectingTemplateId('')
     setText('')
+    setApplyLipSync(false)
     setOutputUrl('')
     setJobProgress(0)
     setJobMessage('')
@@ -868,6 +877,21 @@ function App() {
                   {hasVip ? <Bot className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5 text-amber-300" />} AI ses · VIP
                 </button>
               </div>
+            </div>
+
+            <div className="mb-5">
+              <Toggle
+                checked={applyLipSync}
+                onChange={setApplyLipSync}
+                label="Dudak Senkronizasyonu (Deneysel)"
+                description={hasVip ? 'Yüz hareketlerini dublaj sesine göre işler' : 'VIP üyelik gerektirir'}
+                disabled={busy || !hasVip}
+              />
+              {!hasVip && (
+                <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-300/80">
+                  <LockKeyhole className="h-3.5 w-3.5" /> Yalnızca aktif VIP üyeler kullanabilir.
+                </p>
+              )}
             </div>
 
             {!projectReady ? (

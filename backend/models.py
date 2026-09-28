@@ -52,6 +52,7 @@ class ProcessRequest(BaseModel):
     voice_style: VoiceStyle
     mute_original_audio: bool = True
     burn_subtitles: bool = True
+    apply_lip_sync: bool = False
 
     @field_validator("text")
     @classmethod

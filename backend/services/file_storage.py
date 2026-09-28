@@ -16,6 +16,7 @@ from backend.config import (
     OUTPUT_DIR,
     RECORDING_DIR,
     SUBTITLE_DIR,
+    TEMP_DIR,
     UPLOAD_DIR,
     ALLOWED_RECORDING_EXTENSIONS,
     active_max_file_size_bytes,
@@ -192,6 +193,14 @@ class FileStorageService:
     @staticmethod
     def subtitle_path(job_id: str) -> Path:
         return SUBTITLE_DIR / f"{job_id}.ass"
+
+    @staticmethod
+    def lip_sync_video_path(job_id: str) -> Path:
+        return TEMP_DIR / f"{job_id}-lip-sync.mp4"
+
+    @staticmethod
+    def lip_sync_audio_path(job_id: str) -> Path:
+        return TEMP_DIR / f"{job_id}-lip-sync.wav"
 
     @staticmethod
     def safe_download_name(original_filename: str) -> str:

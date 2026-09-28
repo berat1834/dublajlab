@@ -52,9 +52,30 @@ Bu proje, bir modern web uygulamasının teknik derinliğini sergilemek amacıyl
 - **Docker Setup:** Tek komutla backend, frontend ve FFmpeg ortamlarını ayağa kaldırma (`docker-compose`).
 - **Public Demo Safety Limits:** DDoS ve maliyet yönetimi için dosya boyutu, TTL (Time-to-Live) silme ve günlük endpoint limitleri.
 
+### Deneysel dudak senkronizasyonu
+
+Aktif VIP kullanıcılar AI ses ve mikrofon dublajı sırasında deneysel dudak
+senkronizasyonu seçeneğini açabilir. Yetki yalnız arayüzde değil, backend job
+endpoint'lerinde de doğrulanır. Mikrofon kayıtları önce zaman çizelgesine göre
+tek bir ses dosyasında hazırlanır; ardından lip-sync çıktısı normal FFmpeg
+altyazı/export akışına girer.
+
+Yerel motor `backend/weights/wav2lip_gan.pth`, `backend/weights/s3fd.pth` ve
+proje kökündeki `Wav2Lip/inference.py` dosyasını bekler. Büyük model dosyaları
+ve üçüncü taraf Wav2Lip kaynak ağacı Git'e eklenmez. Ayrıntılar için
+[`backend/weights/README.md`](backend/weights/README.md) belgesine bakın.
+
+> **Production/lisans uyarısı:** Resmî açık Wav2Lip modeli yalnızca kişisel,
+> akademik ve araştırma amaçlı kullanıma izin verir; ticari kullanım yasaktır.
+> Bu nedenle mevcut açık ağırlıklar canlı VIP/ücretli hizmette etkinleştirilmemelidir.
+> Production için ticari lisanslı bir model veya sağlayıcı gerekir.
+
 ## Live Demo / Screenshots / Demo GIF
 
-**Live demo:** İlk deployment denemesi **partial deployment** durumundadır; henüz herkese açık Railway veya Vercel URL'si üretilmedi. Yerel doğrulamalar geçti, ancak GitHub CI ve provider girişleri tamamlanmadan production deploy başlatılmadı. Ayrıntılar: [Faz 22 deployment raporu](docs/reports/sprint-22-first-deployment.md). Yerel demo için [kurulum](#backend-kurulumu) ve [demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
+**Live demo:** [https://dublajlab-sigma.vercel.app](https://dublajlab-sigma.vercel.app).
+Bu branch'teki deneysel lip-sync değişiklikleri merge ve yeniden deploy edilene
+kadar canlı sürümde görünmez. Yerel demo için [kurulum](#backend-kurulumu) ve
+[demo rehberi](docs/DEMO_GUIDE.md) kullanılabilir.
 
 ### Screenshots
 

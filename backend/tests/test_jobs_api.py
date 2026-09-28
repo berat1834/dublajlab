@@ -94,6 +94,22 @@ def test_ai_job_is_locked_for_free_members(auth_headers_factory) -> None:
     assert "VIP üyelere özeldir" in response.json()["detail"]
 
 
+def test_lip_sync_is_locked_for_free_ai_job(auth_headers_factory) -> None:
+    response = client.post(
+        "/api/jobs/dubbing-ai",
+        headers=auth_headers_factory(membership_tier="free"),
+        json={
+            "video_id": str(uuid4()),
+            "text": "Merhaba dünya",
+            "voice_style": "dramatic",
+            "apply_lip_sync": True,
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Bu özellik sadece VIP kullanıcılara özeldir."
+
+
 def test_recording_job_is_created_after_files_are_saved(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -133,6 +149,65 @@ def test_recording_job_is_created_after_files_are_saved(
     assert response.status_code == 202
     assert response.json()["status"] == "queued"
     assert saved_recording.is_file()
+
+
+def test_lip_sync_is_locked_for_free_recording_job(auth_headers_factory) -> None:
+    response = client.post(
+        "/api/jobs/dubbing-recordings",
+        headers=auth_headers_factory(membership_tier="free"),
+        data={
+            "video_id": str(uuid4()),
+            "timeline": '[{"id":"line-1","start":0.5,"end":2.0,"text":"Merhaba"}]',
+            "recording_ids": '["line-1"]',
+            "apply_lip_sync": "true",
+        },
+        files={"recordings": ("line-1.webm", b"voice", "audio/webm")},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Bu özellik sadece VIP kullanıcılara özeldir."
+
+
+def test_vip_recording_job_forwards_lip_sync_flag(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    auth_headers_factory,
+) -> None:
+    saved_recording = tmp_path / "line-1.webm"
+    captured: dict[str, object] = {}
+
+    async def fake_save_recordings(_uploads, _ids, _job_id):
+        saved_recording.write_bytes(b"voice")
+        return [saved_recording]
+
+    async def capture_job(*args, **_kwargs) -> None:
+        captured["apply_lip_sync"] = args[-1]
+
+    monkeypatch.setattr(
+        jobs_router.dubbing_job_service.storage_service,
+        "save_recordings",
+        fake_save_recordings,
+    )
+    monkeypatch.setattr(
+        jobs_router.dubbing_job_service,
+        "run_recording_job",
+        capture_job,
+    )
+
+    response = client.post(
+        "/api/jobs/dubbing-recordings",
+        headers=auth_headers_factory(membership_tier="vip"),
+        data={
+            "video_id": str(uuid4()),
+            "timeline": '[{"id":"line-1","start":0.5,"end":2.0,"text":"Merhaba"}]',
+            "recording_ids": '["line-1"]',
+            "apply_lip_sync": "true",
+        },
+        files={"recordings": ("line-1.webm", b"voice", "audio/webm")},
+    )
+
+    assert response.status_code == 202
+    assert captured["apply_lip_sync"] is True
 
 
 def test_recording_job_rejects_timeline_after_video_end() -> None:
@@ -237,6 +312,74 @@ def test_ai_worker_completes_job(
     assert completed.output_video_id == output_id
     assert not audio_path.exists()
     assert not subtitle_path.exists()
+
+
+def test_ai_worker_applies_lip_sync_before_ffmpeg(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    service = jobs_router.dubbing_job_service
+    job = jobs_router.job_registry.create()
+    audio_path = tmp_path / "voice.mp3"
+    subtitle_path = tmp_path / "subtitle.ass"
+    lip_sync_path = tmp_path / "lip-sync.mp4"
+    output_path = tmp_path / "output.mp4"
+    output_id = str(uuid4())
+    pipeline_order: list[str] = []
+    progress_messages: list[str] = []
+    original_update = service.registry.update
+
+    async def fake_tts(_text, _style, destination):
+        destination.write_bytes(b"audio")
+
+    async def fake_lip_sync(_video, _audio, destination):
+        pipeline_order.append("lip-sync")
+        destination.write_bytes(b"lip-sync-video")
+        return destination
+
+    def fake_subtitle(**kwargs):
+        kwargs["output_path"].write_text("subtitle", encoding="utf-8")
+
+    def fake_process(*_args, **_kwargs):
+        pipeline_order.append("ffmpeg")
+        output_path.write_bytes(b"mp4")
+        return output_path
+
+    def capture_progress(*args, **kwargs):
+        if kwargs.get("message"):
+            progress_messages.append(kwargs["message"])
+        return original_update(*args, **kwargs)
+
+    monkeypatch.setattr(service.storage_service, "audio_path", lambda _id: audio_path)
+    monkeypatch.setattr(service.storage_service, "subtitle_path", lambda _id: subtitle_path)
+    monkeypatch.setattr(service.storage_service, "lip_sync_video_path", lambda _id: lip_sync_path)
+    monkeypatch.setattr(service.storage_service, "new_output_path", lambda: (output_id, output_path))
+    monkeypatch.setattr(service.storage_service, "register_output", lambda *_: None)
+    monkeypatch.setattr(service.registry, "update", capture_progress)
+    monkeypatch.setattr(service.tts_service, "generate_voiceover", fake_tts)
+    monkeypatch.setattr(service.lip_sync_service, "apply_lip_sync", fake_lip_sync)
+    monkeypatch.setattr(service.subtitle_service, "create_ass", fake_subtitle)
+    monkeypatch.setattr(service.ffmpeg_service, "process_video", fake_process)
+
+    asyncio.run(
+        service.run_ai_job(
+            job.job_id,
+            ProcessRequest(
+                video_id=str(uuid4()),
+                text="Merhaba",
+                voice_style="dramatic",
+                apply_lip_sync=True,
+            ),
+            membership_tier="vip",
+        )
+    )
+
+    completed = jobs_router.job_registry.get(job.job_id)
+    assert completed is not None
+    assert completed.status == JobStatus.COMPLETED
+    assert pipeline_order == ["lip-sync", "ffmpeg"]
+    assert "Yüz analiz ediliyor..." in progress_messages
+    assert "Dudak senkronizasyonu uygulanıyor..." in progress_messages
 
 
 def test_ai_worker_marks_job_failed(

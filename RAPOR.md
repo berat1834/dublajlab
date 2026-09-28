@@ -70,20 +70,21 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 
 ## Latest Validation
 
-- Sprint 28 doğrulaması: backend testleri ve Wav2Lip bağımlılık/komut testleri geçti.
+- Sprint 28 doğrulaması: backend 92/92 ve Wav2Lip bağımlılık/komut testleri geçti.
 - Sprint 28 doğrulaması: frontend Vitest, ESLint, Vite production build ve `npm audit` geçti.
 - Sprint 28 doğrulaması: CPU-only PyTorch bağımlılıklarıyla backend Docker image build ve container import smoke testi geçti.
-- Backend tests: 87/87 passed (gerçek FFmpeg entegrasyon testi dahil)
-- Frontend test/lint/build: Vitest 3/3, ESLint ve Vite production build geçti
+- Backend tests: 92/92 passed (gerçek FFmpeg entegrasyon testi dahil)
+- Frontend test/lint/build: Vitest 5/5, ESLint ve Vite production build geçti
 - Frontend dependency audit: 0 vulnerability
 - Üyelik migration'ı önceki revision üzerinden başarıyla doğrulandı
 - Docker smoke test: backend container `healthy`; Alembic, FFmpeg, auth, template ve CORS kontrolleri geçti
-- CI status: GitHub `main` üzerindeki son run başarısız; frontend yeşil, backend eksik dependency nedeniyle kırmızı. Düzeltme henüz commitlenmedi.
+- CI status: Yerel doğrulamalar yeşil; branch pushlandıktan sonra remote CI sonucu ayrıca kontrol edilmelidir.
 
 ## Known Risks
 
 - Wav2Lip CPU üzerinde çalışmaktadır; GPU hızlandırması (CUDA) yapılandırılmamıştır. Yüksek çözünürlüklü videolarda işlem süresi çok uzun olabilir.
-- Faz 27 `apply_lip_sync` API/job/UI bağlantısı güncel `main` üzerinde bulunmadığından gerçek servis henüz export akışından tetiklenmemektedir.
+- Açık Wav2Lip kodu/ağırlıkları ticari kullanıma izin vermez; canlı VIP özelliği için ticari lisanslı model veya sağlayıcı seçilmelidir.
+- Yerel gerçek inference, iki `.pth` model ağırlığı ve kullanıcıya ait test yüz videosu gerektirir; bu dosyalar repoya eklenmez.
 - Memory job registry: Backend process restart kayıplarına yol açabilir (Dağıtık ortamda Redis gerektirir).
 - Railway volume: Mevcut deployment planına göre data volume'u kullanıldığında scale-out (çoklu replica) sorunları çıkabilir.
 - Public demo limits: Memory tabanlı rate limiter process restart durumunda sıfırlanır.

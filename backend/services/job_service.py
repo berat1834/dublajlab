@@ -9,6 +9,7 @@ from uuid import uuid4
 from backend.models import DubbingLine, JobResponse, JobStatus, ProcessRequest
 from backend.services.ffmpeg_service import FFmpegService
 from backend.services.file_storage import FileStorageService
+from backend.services.lip_sync_service import LipSyncService
 from backend.services.subtitle_service import SubtitleService
 from backend.services.tts_service import TTSService
 
@@ -97,17 +98,20 @@ class DubbingJobService:
         ffmpeg_service: FFmpegService | None = None,
         tts_service: TTSService | None = None,
         subtitle_service: SubtitleService | None = None,
+        lip_sync_service: LipSyncService | None = None,
     ) -> None:
         self.registry = registry
         self.storage_service = storage_service or FileStorageService()
         self.ffmpeg_service = ffmpeg_service or FFmpegService()
         self.tts_service = tts_service or TTSService()
         self.subtitle_service = subtitle_service or SubtitleService()
+        self.lip_sync_service = lip_sync_service or LipSyncService()
 
     async def run_ai_job(self, job_id: str, payload: ProcessRequest, membership_tier: str = "free") -> None:
         output_path: Path | None = None
         audio_path = self.storage_service.audio_path(job_id)
         subtitle_path = self.storage_service.subtitle_path(job_id)
+        lip_sync_video_path = self.storage_service.lip_sync_video_path(job_id)
         try:
             self.registry.update(
                 job_id,
@@ -122,7 +126,20 @@ class DubbingJobService:
                 payload.voice_style,
                 audio_path,
             )
-            self.registry.update(job_id, progress=35, message="Altyazı hazırlanıyor.")
+            processing_video_path = video_path
+            if payload.apply_lip_sync:
+                self.registry.update(job_id, progress=35, message="Yüz analiz ediliyor...")
+                self.registry.update(
+                    job_id,
+                    progress=48,
+                    message="Dudak senkronizasyonu uygulanıyor...",
+                )
+                processing_video_path = await self.lip_sync_service.apply_lip_sync(
+                    video_path,
+                    audio_path,
+                    lip_sync_video_path,
+                )
+            self.registry.update(job_id, progress=60, message="Altyazı hazırlanıyor.")
             self.subtitle_service.create_ass(
                 text=payload.text,
                 duration_seconds=float(metadata["duration_seconds"]),
@@ -132,18 +149,18 @@ class DubbingJobService:
             output_id, output_path = self.storage_service.new_output_path()
             self.registry.update(
                 job_id,
-                progress=55,
+                progress=72,
                 message="Video, ses ve altyazı birleştiriliyor.",
             )
             await asyncio.to_thread(
                 self.ffmpeg_service.process_video,
-                video_path,
+                processing_video_path,
                 audio_path,
                 subtitle_path,
                 output_path,
                 float(metadata["duration_seconds"]),
-                payload.mute_original_audio,
-                bool(metadata.get("has_audio", False)),
+                payload.mute_original_audio if not payload.apply_lip_sync else True,
+                bool(metadata.get("has_audio", False)) if not payload.apply_lip_sync else False,
                 max_video_width=1920,
                 max_video_height=1080,
                 add_watermark=(membership_tier != "vip")
@@ -157,6 +174,7 @@ class DubbingJobService:
                     "original_filename": metadata["original_filename"],
                     "job_id": job_id,
                     "mode": "ai_voice",
+                    "lip_sync_applied": payload.apply_lip_sync,
                 },
             )
             self.registry.complete(job_id, output_id)
@@ -168,6 +186,7 @@ class DubbingJobService:
         finally:
             audio_path.unlink(missing_ok=True)
             subtitle_path.unlink(missing_ok=True)
+            lip_sync_video_path.unlink(missing_ok=True)
 
     async def run_recording_job(
         self,
@@ -180,9 +199,12 @@ class DubbingJobService:
         max_video_width: int = 1280,
         max_video_height: int = 720,
         membership_tier: str = "free",
+        apply_lip_sync: bool = False,
     ) -> None:
         output_path: Path | None = None
         subtitle_path = self.storage_service.subtitle_path(job_id)
+        lip_sync_video_path = self.storage_service.lip_sync_video_path(job_id)
+        lip_sync_audio_path = self.storage_service.lip_sync_audio_path(job_id)
         try:
             self.registry.update(
                 job_id,
@@ -193,29 +215,49 @@ class DubbingJobService:
             video_path = self.storage_service.get_video_path(video_id)
             metadata = self.storage_service.get_video_metadata(video_id)
             duration = float(metadata["duration_seconds"])
+            processing_video_path = video_path
+            if apply_lip_sync:
+                self.registry.update(job_id, progress=28, message="Yüz analiz ediliyor...")
+                await asyncio.to_thread(
+                    self.ffmpeg_service.prepare_recording_audio,
+                    recording_paths,
+                    [(line.start, line.end) for line in lines],
+                    lip_sync_audio_path,
+                    duration,
+                )
+                self.registry.update(
+                    job_id,
+                    progress=45,
+                    message="Dudak senkronizasyonu uygulanıyor...",
+                )
+                processing_video_path = await self.lip_sync_service.apply_lip_sync(
+                    video_path,
+                    lip_sync_audio_path,
+                    lip_sync_video_path,
+                )
             self.subtitle_service.create_timeline_ass(
                 lines=lines,
                 duration_seconds=duration,
                 output_path=subtitle_path,
                 burn_subtitles=burn_subtitles,
             )
-            self.registry.update(job_id, progress=35, message="Altyazılar hazırlandı.")
+            self.registry.update(job_id, progress=60, message="Altyazılar hazırlandı.")
             output_id, output_path = self.storage_service.new_output_path()
             self.registry.update(
                 job_id,
-                progress=55,
+                progress=72,
                 message="Kayıtlar zaman çizelgesine yerleştiriliyor.",
             )
             await asyncio.to_thread(
                 self.ffmpeg_service.process_recordings,
-                video_path,
+                processing_video_path,
                 recording_paths,
                 [(line.start, line.end) for line in lines],
                 subtitle_path,
                 output_path,
                 duration,
-                mute_original_audio,
-                bool(metadata.get("has_audio", False)),
+                mute_original_audio if not apply_lip_sync else True,
+                bool(metadata.get("has_audio", False)) if not apply_lip_sync else False,
                 max_video_width,
                 max_video_height,
                 add_watermark=(membership_tier != "vip")
@@ -232,6 +274,7 @@ class DubbingJobService:
                     "membership_tier": membership_tier,
                     "max_export_resolution": f"{max_video_width}x{max_video_height}",
                     "timeline": [line.model_dump() for line in lines],
+                    "lip_sync_applied": apply_lip_sync,
                 },
             )
             self.registry.complete(job_id, output_id)
@@ -242,6 +285,8 @@ class DubbingJobService:
             self.registry.fail(job_id, str(exc) or "Video işlenirken bilinmeyen hata oluştu.")
         finally:
             subtitle_path.unlink(missing_ok=True)
+            lip_sync_video_path.unlink(missing_ok=True)
+            lip_sync_audio_path.unlink(missing_ok=True)
             for recording_path in recording_paths:
                 recording_path.unlink(missing_ok=True)
 
