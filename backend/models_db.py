@@ -91,5 +91,6 @@ class DubbingExport(Base):
     download_url = Column(String(500), nullable=True)
     duration_seconds = Column(String(50), nullable=True)
     file_size_bytes = Column(String(50), nullable=True)
+    retention_expires_at = Column(DateTime(timezone=True), nullable=True) # None = permanent, or specific date
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

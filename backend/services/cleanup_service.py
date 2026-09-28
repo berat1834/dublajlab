@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from datetime import datetime, timezone
 
 from backend.config import (
     AUDIO_DIR,
@@ -58,12 +59,39 @@ class CleanupService:
         deleted_files = 0
         freed_bytes = 0
 
+        # Protect active exports based on retention_expires_at
+        try:
+            from backend.database import SessionLocal
+            import backend.models_db as models_db
+            db = SessionLocal()
+            try:
+                now_dt = datetime.now(timezone.utc)
+                active_exports = db.query(models_db.DubbingExport.output_video_id).filter(
+                    (models_db.DubbingExport.retention_expires_at > now_dt) |
+                    (models_db.DubbingExport.retention_expires_at.is_(None))
+                ).all()
+                active_output_ids = {e[0] for e in active_exports if e[0]}
+            finally:
+                db.close()
+        except Exception:
+            active_output_ids = set()
+
         for directory in self.directories:
             if not directory.is_dir():
                 continue
             for path in directory.iterdir():
                 if path.name.startswith(".") or not path.is_file():
                     continue
+
+                if directory == OUTPUT_DIR:
+                    file_id = path.stem
+                    if file_id in active_output_ids:
+                        continue
+                elif directory == METADATA_DIR and path.name.startswith("output-"):
+                    file_id = path.stem.replace("output-", "")
+                    if file_id in active_output_ids:
+                        continue
+
                 try:
                     stat = path.stat()
                     if stat.st_mtime >= cutoff:

@@ -28,6 +28,8 @@ from backend.services.membership_service import has_active_vip, require_active_v
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
+from datetime import datetime, timedelta, timezone
+
 TIMELINE_DURATION_EPSILON_SECONDS = 0.001
 TIMELINE_DURATION_ERROR = (
     "Replik bitiş zamanı video süresini aşıyor. "
@@ -35,7 +37,12 @@ TIMELINE_DURATION_ERROR = (
 )
 timeline_adapter = TypeAdapter(list[DubbingLine])
 
-async def run_ai_job_with_db(job_id: str, payload: ProcessRequest, project_id: str | None = None):
+def get_retention_date(membership_tier: str) -> datetime:
+    if membership_tier == "vip":
+        return datetime.now(timezone.utc) + timedelta(days=30)
+    return datetime.now(timezone.utc) + timedelta(hours=24)
+
+async def run_ai_job_with_db(job_id: str, payload: ProcessRequest, project_id: str | None = None, membership_tier: str = "vip"):
     await dubbing_job_service.run_ai_job(job_id, payload)
     if project_id:
         db = SessionLocal()
@@ -48,7 +55,8 @@ async def run_ai_job_with_db(job_id: str, payload: ProcessRequest, project_id: s
                     export = models_db.DubbingExport(
                         project_id=project_id,
                         output_video_id=job.output_video_id,
-                        download_url=job.download_url
+                        download_url=job.download_url,
+                        retention_expires_at=get_retention_date(membership_tier)
                     )
                     db.add(export)
                 elif job.status == "failed":
@@ -91,7 +99,8 @@ async def run_recording_job_with_db(
                     export = models_db.DubbingExport(
                         project_id=project_id,
                         output_video_id=job.output_video_id,
-                        download_url=job.download_url
+                        download_url=job.download_url,
+                        retention_expires_at=get_retention_date(membership_tier)
                     )
                     db.add(export)
                 elif job.status == "failed":
@@ -188,7 +197,7 @@ async def create_ai_job(
         db.refresh(project)
         project_id = project.id
 
-    background_tasks.add_task(run_ai_job_with_db, job.job_id, payload, project_id)
+    background_tasks.add_task(run_ai_job_with_db, job.job_id, payload, project_id, "vip")
     return job
 
 
