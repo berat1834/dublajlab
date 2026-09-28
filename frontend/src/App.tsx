@@ -533,7 +533,7 @@ function App() {
       )}
 
       <main className="flex-1 px-3 py-5 sm:px-6 sm:py-6 lg:py-10">
-        <div className="mx-auto max-w-[1440px]">
+        <div className="mx-auto max-w-[1440px] 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
           {activeTab === 'play' ? (
             <>
         {/* ═══════════════════════════ HERO SECTION ═══════════════════════════ */}
@@ -689,7 +689,7 @@ function App() {
         )}
 
         {/* ═══════════════════════════ MAIN TWO-COLUMN LAYOUT ═══════════════════════════ */}
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] 3xl:gap-8">
           {/* ── LEFT: Source panel ── */}
           <section className="glass-panel h-fit rounded-2xl border border-white/10 p-4 shadow-card sm:p-5 lg:sticky lg:top-5">
             <div className="mb-4 flex items-center justify-between">
@@ -1039,7 +1039,7 @@ function App() {
                 <Download className="h-4 w-4" /> MP4 indir
               </a>
             </div>
-            <div className="grid lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="grid lg:grid-cols-[minmax(0,1fr)_280px] 3xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="bg-black p-3 sm:p-5">
                 <video
                   className="mx-auto max-h-[70vh] w-full rounded-xl object-contain"

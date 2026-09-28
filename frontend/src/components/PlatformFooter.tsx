@@ -8,8 +8,8 @@ interface PlatformFooterProps {
 
 export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: PlatformFooterProps) {
   return (
-    <footer className="mt-auto border-t border-white/10 bg-black/40">
-      <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:py-16">
+    <footer className="mt-auto border-t border-white/10 bg-black/40" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:py-16 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
           <div className="col-span-2 lg:col-span-2">
             <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="text-2xl font-black tracking-tight">

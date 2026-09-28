@@ -30,8 +30,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
 
   return (
     <>
-      <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel">
-        <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 sm:px-6">
+      <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+        <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between px-3 sm:h-16 sm:px-6 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
           <div className="flex items-center gap-6 lg:gap-10">
             <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="text-xl font-black tracking-tight">
               Dublaj<span className="text-lime">Lab</span>
@@ -142,7 +142,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
         </div>
       </nav>
       {mobileMenuOpen && (
-        <div className="border-b border-white/10 bg-black/95 px-4 py-4 md:hidden text-sm font-medium">
+        <div className="border-b border-white/10 bg-black/95 px-4 py-4 md:hidden text-sm font-medium" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="flex flex-col gap-4 text-zinc-300">
             <button onClick={() => { setActiveTab('play'); setMobileMenuOpen(false); }} className="text-left">Oyna</button>
             <button onClick={() => { setActiveTab('scenes'); setMobileMenuOpen(false); }} className="text-left">Sahneler</button>

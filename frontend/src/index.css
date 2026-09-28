@@ -150,3 +150,55 @@ video {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Safe area insets for notched phones (iPhone X+, Pixel 6+) ── */
+
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ── Smooth scroll (respects prefers-reduced-motion via above rule) ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Ultra-wide / TV containment (>2560px) ── */
+@media (min-width: 2560px) {
+  body {
+    font-size: 18px;
+  }
+}
+
+/* ── Mobile touch target improvements ── */
+@media (max-width: 639px) {
+  button,
+  a,
+  label,
+  input[type="checkbox"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent iOS zoom on input focus */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* More breathing room on tiny screens */
+  .glass-panel {
+    border-radius: 1rem;
+  }
+}
+
+/* ── Tablet landscape optimizations (768px–1024px) ── */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  body {
+    font-size: 15px;
+  }
+}
