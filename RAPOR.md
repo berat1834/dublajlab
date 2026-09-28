@@ -118,3 +118,5 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 
 - **Modal Deployment**: Modal.com Serverless GPU deployment yapıldı ve main branch'e merge edildi.
 - **Sprint 35: Watermark + External Sharing + VIP Upsell**: Free kullanıcı exportlarına DublajLab watermark eklendi. Çıktı panelinde sosyal medya paylaşım bağlantıları ve VIP Upsell alanı oluşturuldu.
+-   * * S p r i n t   3 6 :   L i p - s y n c   P R   H a r d e n i n g * * :   T i c a r i   t e l i f   h a k l a r 1  n e d e n i y l e   W a v 2 L i p   � z e l l i i   L I P S Y N C _ E N A B L E D   e n v   f l a g   a r k a s 1n a   a l 1n a r a k   g i z l e n d i .   V I P   i � i n   i l e r i d e   a y r 1  b i r   t i c a r i   l i s a n s l 1  A P I   k u l l a n 1l a c a k t 1r .  
+ 

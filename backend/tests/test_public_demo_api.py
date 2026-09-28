@@ -59,6 +59,7 @@ def test_demo_policy_endpoint_returns_runtime_limits(
         "max_exports_per_ip_per_day": 1,
         "media_ttl_hours": 12,
         "files_are_temporary": True,
+        "lipsync_enabled": False,
     }
 
 

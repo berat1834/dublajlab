@@ -22,6 +22,8 @@ METADATA_DIR = MEDIA_ROOT / "metadata"
 
 FFMPEG_BINARY = os.getenv("FFMPEG_BINARY", "ffmpeg")
 FFPROBE_BINARY = os.getenv("FFPROBE_BINARY", "ffprobe")
+LIPSYNC_ENABLED = os.getenv("LIPSYNC_ENABLED", "false").lower() in ("true", "1", "yes", "on")
+LIPSYNC_PROVIDER = os.getenv("LIPSYNC_PROVIDER", "disabled")
 LIPSYNC_MODE = os.getenv("LIPSYNC_MODE", "local")
 LIPSYNC_WEBHOOK_URL = os.getenv("LIPSYNC_WEBHOOK_URL", "")
 MAX_FILE_SIZE = 50 * 1024 * 1024

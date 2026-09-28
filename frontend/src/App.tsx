@@ -879,20 +879,22 @@ function App() {
               </div>
             </div>
 
-            <div className="mb-5">
-              <Toggle
-                checked={applyLipSync}
-                onChange={setApplyLipSync}
-                label="Dudak Senkronizasyonu (Deneysel)"
-                description={hasVip ? 'Yüz hareketlerini dublaj sesine göre işler' : 'VIP üyelik gerektirir'}
-                disabled={busy || !hasVip}
-              />
-              {!hasVip && (
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-300/80">
-                  <LockKeyhole className="h-3.5 w-3.5" /> Yalnızca aktif VIP üyeler kullanabilir.
-                </p>
-              )}
-            </div>
+            {demoPolicy?.lipsync_enabled && (
+              <div className="mb-5">
+                <Toggle
+                  checked={applyLipSync}
+                  onChange={setApplyLipSync}
+                  label="Dudak Senkronizasyonu (Deneysel)"
+                  description={hasVip ? 'Yüz hareketlerini dublaj sesine göre işler' : 'VIP üyelik gerektirir'}
+                  disabled={busy || !hasVip}
+                />
+                {!hasVip && (
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-300/80">
+                    <LockKeyhole className="h-3.5 w-3.5" /> Yalnızca aktif VIP üyeler kullanabilir.
+                  </p>
+                )}
+              </div>
+            )}
 
             {!projectReady ? (
               <div className="grid min-h-72 place-items-center rounded-2xl border border-dashed border-white/10 bg-black/10 px-4 py-6 text-center sm:min-h-80 sm:px-6">

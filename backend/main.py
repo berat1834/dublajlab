@@ -124,6 +124,7 @@ async def ffmpeg_status() -> dict[str, str | bool | None]:
     tags=["system"],
 )
 async def demo_policy() -> DemoPolicyResponse:
+    from backend.config import LIPSYNC_ENABLED
     policy = public_demo_policy()
     return DemoPolicyResponse(
         enabled=policy.enabled,
@@ -132,4 +133,5 @@ async def demo_policy() -> DemoPolicyResponse:
         max_recording_size_mb=policy.max_recording_size_mb,
         max_exports_per_ip_per_day=policy.max_exports_per_ip_per_day,
         media_ttl_hours=policy.media_ttl_hours,
+        lipsync_enabled=LIPSYNC_ENABLED,
     )

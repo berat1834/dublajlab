@@ -94,7 +94,11 @@ def test_ai_job_is_locked_for_free_members(auth_headers_factory) -> None:
     assert "VIP üyelere özeldir" in response.json()["detail"]
 
 
-def test_lip_sync_is_locked_for_free_ai_job(auth_headers_factory) -> None:
+def test_lip_sync_is_locked_for_free_ai_job(
+    monkeypatch: pytest.MonkeyPatch,
+    auth_headers_factory,
+) -> None:
+    monkeypatch.setattr(jobs_router, "LIPSYNC_ENABLED", True)
     response = client.post(
         "/api/jobs/dubbing-ai",
         headers=auth_headers_factory(membership_tier="free"),
@@ -151,7 +155,11 @@ def test_recording_job_is_created_after_files_are_saved(
     assert saved_recording.is_file()
 
 
-def test_lip_sync_is_locked_for_free_recording_job(auth_headers_factory) -> None:
+def test_lip_sync_is_locked_for_free_recording_job(
+    monkeypatch: pytest.MonkeyPatch,
+    auth_headers_factory,
+) -> None:
+    monkeypatch.setattr(jobs_router, "LIPSYNC_ENABLED", True)
     response = client.post(
         "/api/jobs/dubbing-recordings",
         headers=auth_headers_factory(membership_tier="free"),
@@ -194,6 +202,7 @@ def test_vip_recording_job_forwards_lip_sync_flag(
         capture_job,
     )
 
+    monkeypatch.setattr(jobs_router, "LIPSYNC_ENABLED", True)
     response = client.post(
         "/api/jobs/dubbing-recordings",
         headers=auth_headers_factory(membership_tier="vip"),

@@ -34,6 +34,7 @@ class DemoPolicyResponse(BaseModel):
     max_exports_per_ip_per_day: int
     media_ttl_hours: int
     files_are_temporary: bool = True
+    lipsync_enabled: bool = False
 
 
 class UploadResponse(BaseModel):

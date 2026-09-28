@@ -54,6 +54,8 @@ Bu proje, bir modern web uygulamasının teknik derinliğini sergilemek amacıyl
 
 ### Deneysel dudak senkronizasyonu
 
+*(Not: Experimental, disabled by default, requires commercial license or approved provider. Canlı ortamda telif riskleri nedeniyle LIPSYNC_ENABLED=false varsayılanı ile gizlenmiştir.)*
+
 Aktif VIP kullanıcılar AI ses ve mikrofon dublajı sırasında deneysel dudak
 senkronizasyonu seçeneğini açabilir. Yetki yalnız arayüzde değil, backend job
 endpoint'lerinde de doğrulanır. Mikrofon kayıtları önce zaman çizelgesine göre

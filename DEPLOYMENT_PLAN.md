@@ -26,6 +26,7 @@ Kullanıcı
 - **Veritabanı:** Railway PostgreSQL eklentisi
 - **Medya:** Railway volume, `/app/media` mount noktası
 - **Ölçek sınırı:** Bu mimari MVP için yeterlidir ancak uzun vadede medya depolama (S3/R2) ve kalıcı job kuyruğu (Redis/Celery) gerekecektir.
+- **Lip-Sync Uyarısı:** Production Wav2Lip local open-source weights are not allowed for commercial VIP usage. Bu yüzden LIPSYNC_ENABLED env değişkeni canlı ortamda varsayılan olarak "false" bırakılmalıdır. İleride ayrı bir ticari API veya GPU worker yapılandırıldığında VIP için aktif edilebilir.
 
 ## 2. Ortam Değişkenleri ve Sırlar (Secrets)
 
