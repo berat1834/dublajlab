@@ -173,3 +173,9 @@ def get_jwt_algorithm() -> str:
 
 def get_jwt_expire_minutes() -> int:
     return _positive_int_setting("ACCESS_TOKEN_EXPIRE_MINUTES", 4320)
+
+def get_shopier_api_key() -> str:
+    return os.getenv("SHOPIER_API_KEY", "")
+
+def get_shopier_api_secret() -> str:
+    return os.getenv("SHOPIER_API_SECRET", "")
