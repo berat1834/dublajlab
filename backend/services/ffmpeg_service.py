@@ -205,12 +205,16 @@ class FFmpegService:
         has_original_audio: bool,
         max_video_width: int = 1920,
         max_video_height: int = 1080,
+        add_watermark: bool = False,
     ) -> list[str]:
         subtitle_filter = f"ass=filename='{self._filter_path(subtitle_path)}'"
         video_filter = (
             f"scale=w=min({max_video_width}\\,iw):h=min({max_video_height}\\,ih):"
             "force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1"
         )
+        watermark_filter = (
+            ",drawtext=text='DublajLab':fontcolor=white@0.5:fontsize=h/25:x=w-tw-15:y=h-th-15:shadowcolor=black@0.5:shadowx=1:shadowy=1"
+        ) if add_watermark else ""
         if mute_original_audio or not has_original_audio:
             audio_filter = "[1:a]apad[aout]"
         else:
@@ -227,7 +231,7 @@ class FFmpegService:
             "-i",
             str(audio_path),
             "-filter_complex",
-            f"[0:v]{video_filter},{subtitle_filter}[vout];{audio_filter}",
+            f"[0:v]{video_filter}{watermark_filter},{subtitle_filter}[vout];{audio_filter}",
             "-map",
             "[vout]",
             "-map",
@@ -264,6 +268,7 @@ class FFmpegService:
         has_original_audio: bool,
         max_video_width: int = 1920,
         max_video_height: int = 1080,
+        add_watermark: bool = False,
     ) -> Path:
         command = self.build_process_command(
             video_path=video_path,
@@ -275,6 +280,7 @@ class FFmpegService:
             has_original_audio=has_original_audio,
             max_video_width=max_video_width,
             max_video_height=max_video_height,
+            add_watermark=add_watermark,
         )
         self._run(command, "Video işlenemedi.")
         if not output_path.is_file() or output_path.stat().st_size == 0:
@@ -293,6 +299,7 @@ class FFmpegService:
         has_original_audio: bool,
         max_video_width: int = 1920,
         max_video_height: int = 1080,
+        add_watermark: bool = False,
     ) -> list[str]:
         command = [self.ffmpeg_binary, "-y", "-i", str(video_path)]
         for recording_path in recording_paths:
@@ -302,8 +309,11 @@ class FFmpegService:
             f"scale=w=min({max_video_width}\\,iw):h=min({max_video_height}\\,ih):"
             "force_original_aspect_ratio=decrease:force_divisible_by=2,setsar=1"
         )
+        watermark_filter = (
+            ",drawtext=text='DublajLab':fontcolor=white@0.5:fontsize=h/25:x=w-tw-15:y=h-th-15:shadowcolor=black@0.5:shadowx=1:shadowy=1"
+        ) if add_watermark else ""
         filters: list[str] = [
-            f"[0:v]{video_filter},"
+            f"[0:v]{video_filter}{watermark_filter},"
             f"ass=filename='{self._filter_path(subtitle_path)}'[vout]"
         ]
         if mute_original_audio or not has_original_audio:
@@ -380,6 +390,7 @@ class FFmpegService:
         has_original_audio: bool,
         max_video_width: int = 1920,
         max_video_height: int = 1080,
+        add_watermark: bool = False,
     ) -> Path:
         command = self.build_recording_process_command(
             video_path,
@@ -392,6 +403,7 @@ class FFmpegService:
             has_original_audio,
             max_video_width,
             max_video_height,
+            add_watermark,
         )
         self._run(command, "Ses kayıtları videoya yerleştirilemedi.")
         if not output_path.is_file() or output_path.stat().st_size == 0:

@@ -104,7 +104,7 @@ class DubbingJobService:
         self.tts_service = tts_service or TTSService()
         self.subtitle_service = subtitle_service or SubtitleService()
 
-    async def run_ai_job(self, job_id: str, payload: ProcessRequest) -> None:
+    async def run_ai_job(self, job_id: str, payload: ProcessRequest, membership_tier: str = "free") -> None:
         output_path: Path | None = None
         audio_path = self.storage_service.audio_path(job_id)
         subtitle_path = self.storage_service.subtitle_path(job_id)
@@ -144,6 +144,9 @@ class DubbingJobService:
                 float(metadata["duration_seconds"]),
                 payload.mute_original_audio,
                 bool(metadata.get("has_audio", False)),
+                max_video_width=1920,
+                max_video_height=1080,
+                add_watermark=(membership_tier != "vip")
             )
             self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
             self.storage_service.register_output(
@@ -215,6 +218,7 @@ class DubbingJobService:
                 bool(metadata.get("has_audio", False)),
                 max_video_width,
                 max_video_height,
+                add_watermark=(membership_tier != "vip")
             )
             self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
             self.storage_service.register_output(

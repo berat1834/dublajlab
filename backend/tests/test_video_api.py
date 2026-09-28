@@ -299,7 +299,7 @@ def test_recordings_endpoint_processes_timeline(
     )
     monkeypatch.setattr(video_router.storage_service, "register_output", lambda *_: None)
 
-    def fake_process(*_args):
+    def fake_process(*_args, **kwargs):
         output_path.write_bytes(b"mp4")
         return output_path
 

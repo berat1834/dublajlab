@@ -111,3 +111,4 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   - Test: httpx kütüphanesinin mocklandığı pytest senaryoları (başarılı ve başarısız ağ çağrıları) eklendi ve test edildi.
 
 - **Modal Deployment**: Modal.com Serverless GPU deployment yapıldı ve main branch'e merge edildi.
+- **Sprint 35: Watermark + External Sharing + VIP Upsell**: Free kullanıcı exportlarına DublajLab watermark eklendi. Çıktı panelinde sosyal medya paylaşım bağlantıları ve VIP Upsell alanı oluşturuldu.

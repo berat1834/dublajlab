@@ -203,7 +203,7 @@ def test_ai_worker_completes_job(
     def fake_subtitle(**kwargs):
         kwargs["output_path"].write_text("subtitle", encoding="utf-8")
 
-    def fake_process(*_args):
+    def fake_process(*_args, **kwargs):
         output_path.write_bytes(b"mp4")
         return output_path
 

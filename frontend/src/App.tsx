@@ -21,7 +21,8 @@ import {
   Subtitles,
   Video,
   WandSparkles,
-  Info
+  Info,
+  Link
 } from 'lucide-react'
 import { TimelineRecorder } from './components/TimelineRecorder'
 import { JobFailurePanel } from './components/JobFailurePanel'
@@ -1051,22 +1052,49 @@ function App() {
               <div className="flex flex-col justify-center gap-3 border-t border-white/10 p-4 lg:border-l lg:border-t-0 lg:p-5">
                 <p className="text-sm font-bold text-white">Sırada ne var?</p>
                 <p className="text-xs leading-5 text-zinc-500">
-                  Sonucu indirebilir, kayıtları koruyarak tekrar düzenleyebilir veya yeni bir projeye başlayabilirsin.
+                  Sonucu indirebilir, sosyal medyada paylaşabilir veya yeni projeye başlayabilirsin.
                 </p>
-                <button
-                  type="button"
-                  onClick={retrySameVideo}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-bold text-zinc-200 transition hover:bg-white/10"
-                >
-                  <RefreshCw className="h-4 w-4" /> Aynı video ile yeniden dene
-                </button>
-                <button
-                  type="button"
-                  onClick={reset}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-xs font-bold text-zinc-400 transition hover:border-white/20 hover:text-white"
-                >
-                  <RotateCcw className="h-4 w-4" /> Yeni video ile başla
-                </button>
+                <div className="grid grid-cols-2 gap-2 mt-1 mb-2">
+                  <button onClick={() => { navigator.clipboard.writeText(outputUrl); showToast('Bağlantı kopyalandı!') }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white transition hover:bg-white/20">
+                    <Link className="h-3.5 w-3.5" /> Linki Kopyala
+                  </button>
+                  <a href={`https://twitter.com/intent/tweet?text=Dublajım%20hazır!&url=${encodeURIComponent(outputUrl)}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-[11px] font-bold text-sky-400 transition hover:bg-sky-500/30">
+                    X'te Paylaş
+                  </a>
+                  <button onClick={() => showToast('Videonuzu indirip TikTok uygulamasından yükleyebilirsiniz.')} className="inline-flex items-center justify-center gap-2 rounded-xl border border-pink-500/20 bg-pink-500/10 px-3 py-2.5 text-[11px] font-bold text-pink-400 transition hover:bg-pink-500/20">
+                    TikTok
+                  </button>
+                  <button onClick={() => showToast('Videonuzu indirip Reels olarak paylaşabilirsiniz.')} className="inline-flex items-center justify-center gap-2 rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-3 py-2.5 text-[11px] font-bold text-fuchsia-400 transition hover:bg-fuchsia-500/20">
+                    IG Reels
+                  </button>
+                </div>
+                {!hasVip && (
+                  <div className="rounded-xl border border-amber-300/20 bg-amber-300/10 p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-300">VIP ile daha fazlası</h4>
+                      <p className="text-[10px] text-amber-200/80 mt-0.5">Filigransız ve 1080p kalitesinde export al.</p>
+                    </div>
+                    <button onClick={() => setActiveTab('membership')} className="shrink-0 rounded-lg bg-amber-300 px-3 py-2 text-[10px] font-black text-black hover:bg-amber-400 transition">
+                      Geçiş Yap
+                    </button>
+                  </div>
+                )}
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={retrySameVideo}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-3 text-[10px] font-bold text-zinc-300 transition hover:bg-white/10"
+                  >
+                    <RefreshCw className="h-3 w-3" /> Aynı video ile dene
+                  </button>
+                  <button
+                    type="button"
+                    onClick={reset}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-2 py-3 text-[10px] font-bold text-zinc-400 transition hover:border-white/20 hover:text-white"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Yeni video
+                  </button>
+                </div>
               </div>
             </div>
           </section>
