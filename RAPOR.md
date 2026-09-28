@@ -70,7 +70,10 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 
 ## Latest Validation
 
-- Backend tests: 75/75 passed (gerçek FFmpeg entegrasyon testi dahil)
+- Sprint 28 doğrulaması: backend testleri ve Wav2Lip bağımlılık/komut testleri geçti.
+- Sprint 28 doğrulaması: frontend Vitest, ESLint, Vite production build ve `npm audit` geçti.
+- Sprint 28 doğrulaması: CPU-only PyTorch bağımlılıklarıyla backend Docker image build ve container import smoke testi geçti.
+- Backend tests: 87/87 passed (gerçek FFmpeg entegrasyon testi dahil)
 - Frontend test/lint/build: Vitest 3/3, ESLint ve Vite production build geçti
 - Frontend dependency audit: 0 vulnerability
 - Üyelik migration'ı önceki revision üzerinden başarıyla doğrulandı
@@ -79,6 +82,8 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 
 ## Known Risks
 
+- Wav2Lip CPU üzerinde çalışmaktadır; GPU hızlandırması (CUDA) yapılandırılmamıştır. Yüksek çözünürlüklü videolarda işlem süresi çok uzun olabilir.
+- Faz 27 `apply_lip_sync` API/job/UI bağlantısı güncel `main` üzerinde bulunmadığından gerçek servis henüz export akışından tetiklenmemektedir.
 - Memory job registry: Backend process restart kayıplarına yol açabilir (Dağıtık ortamda Redis gerektirir).
 - Railway volume: Mevcut deployment planına göre data volume'u kullanıldığında scale-out (çoklu replica) sorunları çıkabilir.
 - Public demo limits: Memory tabanlı rate limiter process restart durumunda sıfırlanır.
