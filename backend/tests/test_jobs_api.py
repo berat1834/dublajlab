@@ -7,12 +7,20 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from backend import config as app_config
 from backend.main import app
 from backend.models import JobStatus, ProcessRequest
 from backend.routers import jobs as jobs_router
+from backend.services.lip_sync_service import LipSyncService
 
 
 client = TestClient(app)
+
+
+def enable_local_lip_sync(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", True)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", "local")
+    monkeypatch.setenv("APP_ENV", "development")
 
 
 @pytest.fixture(autouse=True)
@@ -98,7 +106,7 @@ def test_lip_sync_is_locked_for_free_ai_job(
     monkeypatch: pytest.MonkeyPatch,
     auth_headers_factory,
 ) -> None:
-    monkeypatch.setattr(jobs_router, "LIPSYNC_ENABLED", True)
+    enable_local_lip_sync(monkeypatch)
     response = client.post(
         "/api/jobs/dubbing-ai",
         headers=auth_headers_factory(membership_tier="free"),
@@ -118,6 +126,7 @@ def test_recording_job_is_created_after_files_are_saved(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", False)
     saved_recording = tmp_path / "line-1.webm"
 
     async def fake_save_recordings(_uploads, _ids, _job_id):
@@ -159,7 +168,7 @@ def test_lip_sync_is_locked_for_free_recording_job(
     monkeypatch: pytest.MonkeyPatch,
     auth_headers_factory,
 ) -> None:
-    monkeypatch.setattr(jobs_router, "LIPSYNC_ENABLED", True)
+    enable_local_lip_sync(monkeypatch)
     response = client.post(
         "/api/jobs/dubbing-recordings",
         headers=auth_headers_factory(membership_tier="free"),
@@ -202,7 +211,7 @@ def test_vip_recording_job_forwards_lip_sync_flag(
         capture_job,
     )
 
-    monkeypatch.setattr(jobs_router, "LIPSYNC_ENABLED", True)
+    enable_local_lip_sync(monkeypatch)
     response = client.post(
         "/api/jobs/dubbing-recordings",
         headers=auth_headers_factory(membership_tier="vip"),
@@ -217,6 +226,76 @@ def test_vip_recording_job_forwards_lip_sync_flag(
 
     assert response.status_code == 202
     assert captured["apply_lip_sync"] is True
+
+
+def test_lip_sync_is_rejected_for_vip_when_feature_is_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+    auth_headers_factory,
+) -> None:
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", False)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", "disabled")
+
+    response = client.post(
+        "/api/jobs/dubbing-ai",
+        headers=auth_headers_factory(membership_tier="vip"),
+        json={
+            "video_id": str(uuid4()),
+            "text": "Merhaba dünya",
+            "voice_style": "dramatic",
+            "apply_lip_sync": True,
+        },
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == (
+        "Dudak senkronizasyonu özelliği şu anda kullanıma kapalıdır."
+    )
+
+
+def test_vip_lip_sync_job_fails_cleanly_when_local_models_are_missing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    auth_headers_factory,
+) -> None:
+    enable_local_lip_sync(monkeypatch)
+    service = jobs_router.dubbing_job_service
+    audio_path = tmp_path / "voice.mp3"
+    subtitle_path = tmp_path / "subtitle.ass"
+
+    async def fake_tts(_text, _style, destination):
+        destination.write_bytes(b"audio")
+
+    monkeypatch.setattr(service.storage_service, "audio_path", lambda _id: audio_path)
+    monkeypatch.setattr(service.storage_service, "subtitle_path", lambda _id: subtitle_path)
+    monkeypatch.setattr(service.tts_service, "generate_voiceover", fake_tts)
+    monkeypatch.setattr(
+        service,
+        "lip_sync_service",
+        LipSyncService(
+            weights_dir=tmp_path / "missing-weights",
+            inference_script=tmp_path / "missing-inference.py",
+        ),
+    )
+
+    response = client.post(
+        "/api/jobs/dubbing-ai",
+        headers=auth_headers_factory(membership_tier="vip"),
+        json={
+            "video_id": str(uuid4()),
+            "text": "Merhaba dünya",
+            "voice_style": "dramatic",
+            "apply_lip_sync": True,
+        },
+    )
+
+    assert response.status_code == 202
+    polled = client.get(f"/api/jobs/{response.json()['job_id']}")
+    assert polled.status_code == 200
+    assert polled.json()["status"] == "failed"
+    assert polled.json()["error"] == (
+        "Dudak senkronizasyonu model dosyaları sunucuda bulunamadı. "
+        "Lütfen sistem yöneticisiyle iletişime geçin."
+    )
 
 
 def test_recording_job_rejects_timeline_after_video_end() -> None:

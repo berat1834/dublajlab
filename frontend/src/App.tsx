@@ -59,6 +59,7 @@ import {
   waitForJobCompletion,
   getMe,
 } from './lib/api'
+import { shouldShowLipSync } from './lib/lipSync'
 import type {
   DemoPolicy,
   Tab,
@@ -204,8 +205,8 @@ function App() {
   const hasVip = Boolean(currentUser?.has_active_vip)
 
   useEffect(() => {
-    if (!hasVip) setApplyLipSync(false)
-  }, [hasVip])
+    if (!hasVip || !shouldShowLipSync(demoPolicy)) setApplyLipSync(false)
+  }, [demoPolicy, hasVip])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -879,7 +880,7 @@ function App() {
               </div>
             </div>
 
-            {demoPolicy?.lipsync_enabled && (
+            {shouldShowLipSync(demoPolicy) && (
               <div className="mb-5">
                 <Toggle
                   checked={applyLipSync}

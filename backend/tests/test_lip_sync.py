@@ -23,9 +23,28 @@ def test_lip_sync_service_initialization():
     assert hasattr(service, "wav2lip_path")
     assert hasattr(service, "s3fd_path")
 
+
+def test_open_local_provider_is_blocked_in_production(monkeypatch):
+    from backend import config as app_config
+
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", True)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", "local")
+    monkeypatch.setenv("APP_ENV", "production")
+
+    available, reason = app_config.lip_sync_availability()
+
+    assert available is False
+    assert reason is not None
+    assert "ticari kullanım" in reason
+
 @pytest.mark.asyncio
-async def test_lip_sync_service_missing_weights():
+async def test_lip_sync_service_missing_weights(monkeypatch):
     from backend.services.lip_sync_service import LipSyncService, LipSyncError
+    from backend import config as app_config
+
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", True)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", "local")
+    monkeypatch.setenv("APP_ENV", "development")
     
     service = LipSyncService(weights_dir="/tmp/nonexistent-weights")
     with pytest.raises(LipSyncError) as exc_info:
@@ -37,9 +56,11 @@ async def test_lip_sync_service_missing_weights():
 @pytest.mark.asyncio
 async def test_local_lip_sync_runs_inference_command(monkeypatch, tmp_path):
     from backend.services.lip_sync_service import LipSyncService
-    import backend.services.lip_sync_service as lip_sync_module
+    from backend import config as app_config
 
-    monkeypatch.setattr(lip_sync_module, "LIPSYNC_MODE", "local")
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", True)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", "local")
+    monkeypatch.setenv("APP_ENV", "development")
     weights_dir = tmp_path / "weights"
     weights_dir.mkdir()
     (weights_dir / "wav2lip_gan.pth").write_bytes(b"test")
@@ -76,56 +97,38 @@ async def test_local_lip_sync_runs_inference_command(monkeypatch, tmp_path):
     assert str(inference_script.resolve()) in captured_command
 
 @pytest.mark.asyncio
-async def test_lip_sync_serverless_success(monkeypatch, tmp_path):
-    from backend.services.lip_sync_service import LipSyncService
-    import backend.services.lip_sync_service as lip_sync_module
-    
-    monkeypatch.setattr(lip_sync_module, "LIPSYNC_MODE", "serverless")
-    monkeypatch.setattr(lip_sync_module, "LIPSYNC_WEBHOOK_URL", "http://mock.test/webhook")
-    
-    class MockResponse:
-        def raise_for_status(self):
-            pass
-            
-    class MockClient:
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc, tb):
-            pass
-        async def post(self, url, json, timeout):
-            return MockResponse()
-            
-    monkeypatch.setattr(lip_sync_module.httpx, "AsyncClient", MockClient)
-    
-    service = LipSyncService()
-    output_path = tmp_path / "out.mp4"
-    result = await service.apply_lip_sync(tmp_path / "vid.mp4", tmp_path / "aud.wav", output_path)
-    
-    assert result == output_path
-    assert output_path.exists()
-    assert output_path.read_bytes() == b"mock_serverless_output"
+async def test_lip_sync_service_rejects_disabled_provider(monkeypatch, tmp_path):
+    from backend import config as app_config
+    from backend.services.lip_sync_service import LipSyncError, LipSyncService
+
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", True)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", "disabled")
+
+    with pytest.raises(LipSyncError) as exc_info:
+        await LipSyncService().apply_lip_sync(
+            tmp_path / "vid.mp4",
+            tmp_path / "aud.wav",
+            tmp_path / "out.mp4",
+        )
+
+    assert "sağlayıcısı yapılandırılmamış" in str(exc_info.value)
+
 
 @pytest.mark.asyncio
-async def test_lip_sync_serverless_failure(monkeypatch, tmp_path):
-    from backend.services.lip_sync_service import LipSyncService, LipSyncError
-    import backend.services.lip_sync_service as lip_sync_module
-    
-    monkeypatch.setattr(lip_sync_module, "LIPSYNC_MODE", "serverless")
-    monkeypatch.setattr(lip_sync_module, "LIPSYNC_WEBHOOK_URL", "http://mock.test/webhook")
-    
-    class MockClientError:
-        async def __aenter__(self):
-            return self
-        async def __aexit__(self, exc_type, exc, tb):
-            pass
-        async def post(self, url, json, timeout):
-            raise Exception("Connection failed")
-            
-    monkeypatch.setattr(lip_sync_module.httpx, "AsyncClient", MockClientError)
-    
-    service = LipSyncService()
+@pytest.mark.parametrize("provider", ["modal", "api"])
+async def test_unimplemented_remote_providers_fail_closed(monkeypatch, tmp_path, provider):
+    from backend import config as app_config
+    from backend.services.lip_sync_service import LipSyncError, LipSyncService
+
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", True)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", provider)
+
     with pytest.raises(LipSyncError) as exc_info:
-        await service.apply_lip_sync(tmp_path / "vid.mp4", tmp_path / "aud.wav", tmp_path / "out.mp4")
-        
-    assert "Uzak GPU sunucusuna ulaşılamadı, işlem iptal edildi." in str(exc_info.value)
+        await LipSyncService().apply_lip_sync(
+            tmp_path / "vid.mp4",
+            tmp_path / "aud.wav",
+            tmp_path / "out.mp4",
+        )
+
+    assert "henüz kullanıma hazır değil" in str(exc_info.value)
 

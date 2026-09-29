@@ -64,9 +64,19 @@ DEMO_MAX_RECORDING_SIZE_MB=5
 DEMO_MAX_EXPORTS_PER_IP_PER_DAY=5
 DEMO_MEDIA_TTL_HOURS=6
 TRUST_PROXY_HEADERS=false
+
+# Lip-sync release güvenliği
+LIPSYNC_ENABLED=false
+LIPSYNC_PROVIDER=disabled
 ```
 
 **Güvenlik Uyarısı:** `APP_ENV=production` iken `JWT_SECRET` varsayılan kalırsa uygulama `ValueError` fırlatacak ve güvenlik sebebiyle başlatılamayacaktır.
+
+`APP_ENV=production` ile `LIPSYNC_PROVIDER=local` kombinasyonu, flag yanlışlıkla
+açılsa dahi backend tarafından reddedilir. Production Wav2Lip local open-source
+weights are not allowed for commercial VIP usage. `modal` ve `api` değerleri
+yalnız gelecek adaptörleri için ayrılmıştır; gerçek çıktı sözleşmesi uygulanıp
+onaylanana kadar fail-closed davranır.
 
 ## 3. Veritabanı Migration (Alembic)
 

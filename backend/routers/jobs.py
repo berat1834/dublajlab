@@ -25,7 +25,7 @@ from backend.services.ffmpeg_service import MediaProcessingError
 from backend.services.job_service import dubbing_job_service, job_registry
 from backend.services.rate_limit_service import enforce_public_demo_export_limit
 from backend.services.membership_service import has_active_vip, require_active_vip
-from backend.config import LIPSYNC_ENABLED
+from backend import config as app_config
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
@@ -130,13 +130,14 @@ def enforce_lip_sync_vip(
 ) -> None:
     if not apply_lip_sync:
         return
-        
-    if not LIPSYNC_ENABLED:
+
+    is_available, unavailable_reason = app_config.lip_sync_availability()
+    if not is_available:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Dudak senkronizasyonu (lip-sync) özelliği şu anda kullanıma kapalıdır.",
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=unavailable_reason,
         )
-        
+
     if not has_active_vip(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

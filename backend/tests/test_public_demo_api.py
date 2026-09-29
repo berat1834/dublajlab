@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from backend import config as app_config
 from backend.config import (
     MAX_FILE_SIZE,
     MAX_RECORDING_SIZE,
@@ -61,6 +62,18 @@ def test_demo_policy_endpoint_returns_runtime_limits(
         "files_are_temporary": True,
         "lipsync_enabled": False,
     }
+
+
+def test_demo_policy_hides_lip_sync_when_provider_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", True)
+    monkeypatch.setattr(app_config, "LIPSYNC_PROVIDER", "disabled")
+
+    response = client.get("/api/system/demo-policy")
+
+    assert response.status_code == 200
+    assert response.json()["lipsync_enabled"] is False
 
 
 def test_public_demo_rejects_oversized_upload(

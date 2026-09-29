@@ -12,20 +12,24 @@
 ## 3. Yapılan Değişiklikler
 
 ### Backend
-- `backend/config.py` içerisine `LIPSYNC_ENABLED` (varsayılan: `False`) ortam değişkeni eklendi.
-- `jobs_router` (`backend/routers/jobs.py`) içerisinde bulunan `enforce_lip_sync_vip` kontrol noktası güncellenerek özellik global olarak kapalıysa doğrudan `403 Forbidden ("Dudak senkronizasyonu (lip-sync) özelliği şu anda kullanıma kapalıdır.")` dönmesi sağlandı.
-- Test dosyaları (`test_jobs_api.py`, `test_public_demo_api.py`) yeni feature flag mantığına göre (LIPSYNC_ENABLED=True mock'lanarak) uyarlandı.
+- `backend/config.py` içerisinde `LIPSYNC_ENABLED` varsayılanı `False`, `LIPSYNC_PROVIDER` varsayılanı `disabled` olarak tanımlandı.
+- Provider değerleri `disabled`, `local`, `modal` ve `api` ile sınırlandı. Hazır olmayan remote adaptörler sahte çıktı üretmek yerine fail-closed davranır.
+- `APP_ENV=production` + `LIPSYNC_PROVIDER=local` kombinasyonu açık modelin ticari lisans riski nedeniyle backend tarafından reddedilir.
+- `jobs_router` içindeki kontrol noktası global özellik/provider kullanılamıyorsa Türkçe `503`, aktif VIP yetkisi yoksa Türkçe `403` döndürür.
+- Docker Compose ve örnek env dosyalarına güvenli `false`/`disabled` varsayılanları eklendi.
 
 ### Frontend
-- `/api/system/demo-policy` endpointine (ve TS arayüzlerine) `lipsync_enabled` özelliği eklendi.
-- `App.tsx` içindeki "Dudak Senkronizasyonu" (Deneysel) toggle arayüzü, yalnız `demoPolicy.lipsync_enabled` `true` olduğunda görüntülenecek şekilde UI katmanında da gizlendi. 
+- `/api/system/demo-policy` endpoint'indeki `lipsync_enabled`, yalnız flag ve hazır provider birlikte uygunsa `true` döner.
+- `App.tsx` içindeki toggle yalnız backend capability değeri `true` olduğunda görüntülenir; capability kapanırsa seçili state de temizlenir.
+- Görünürlük kararı saf fonksiyona ayrıldı ve frontend birim testi eklendi.
 
 ## 4. Test Sonuçları ve Doğrulama
-- 92 backend testi başarıyla yeşil (green) sonuçlandı (LIPSYNC_ENABLED=True simüle edilerek VIP kontrol akışları doğrulandı).
-- Frontend bileşenleri başarıyla build edildi ve ESLint testlerinden (0 hata, 0 uyarı) geçti.
-- Özellik `False` durumundayken dışarıdan hiçbir yolla tetiklenemediği ve arayüzde kafa karışıklığı yaratmadığı onaylandı.
+- Backend pytest: 97/97 geçti.
+- Frontend Vitest: 7/7 geçti.
+- Frontend ESLint ve TypeScript/Vite production build geçti.
+- Flag kapalı normal export, Free/VIP erişim reddi, production local-provider kilidi, eksik model job hatası ve UI gizleme senaryoları doğrulandı.
 
 ## 5. Sonraki Adımlar ve Dağıtım Notları
 - Bu branch, CI denetimleri tamamlandıktan sonra `main` branch'e merge edilebilir.
 - Canlı sunucularda (production) `LIPSYNC_ENABLED` değişkeni açıkça belirtilmedikçe özellik default `False` olarak kilitli kalacaktır. 
-- Gerçek ticari (commercial-friendly) bir API sağlayıcısı bulunduğunda bu flag `True` olarak güncellenip VIP kullanıcılara hizmet verebilir.
+- Gerçek ticari sağlayıcı adaptörü ve çıktı sözleşmesi uygulanıp test edilmeden bu flag production'da açılmamalıdır.

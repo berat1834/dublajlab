@@ -48,7 +48,7 @@ Bu proje, bir modern web uygulamasının teknik derinliğini sergilemek amacıyl
 - **FFmpeg Video Processing:** Sunucu tarafında sub-process ile video-ses mix, trim ve altyazı render işlemleri.
 - **Timeline-based Microphone Recording:** Tarayıcı API'leri üzerinden satır satır mikrofon kaydı yakalama ve yönetme.
 - **Job Queue + Progress Polling:** Uzun süren medya işlemlerini bloklanmadan yönetme, `job_id` ile progress bar besleme.
-- **Serverless GPU Offloading:** FastAPI'nin 1GB'lık bellek limitlerinde OOM (Out of Memory) hatalarını önlemek ve ana API'yi darboğazdan kurtarmak için ağır AI (Wav2Lip) çıkarım yükünün Modal.com üzerindeki Serverless GPU'lara asenkron webhook'larla dağıtılması (Scale to zero).
+- **Deneysel Lip-Sync Sınırı:** Ağır AI işlemi ileride ayrı ve onaylı bir GPU sağlayıcısına taşınabilir; mevcut `modal`/`api` adaptörleri release-ready değildir ve güvenli biçimde kapalıdır.
 - **Docker Setup:** Tek komutla backend, frontend ve FFmpeg ortamlarını ayağa kaldırma (`docker-compose`).
 - **Public Demo Safety Limits:** DDoS ve maliyet yönetimi için dosya boyutu, TTL (Time-to-Live) silme ve günlük endpoint limitleri.
 
@@ -56,11 +56,11 @@ Bu proje, bir modern web uygulamasının teknik derinliğini sergilemek amacıyl
 
 *(Not: Experimental, disabled by default, requires commercial license or approved provider. Canlı ortamda telif riskleri nedeniyle LIPSYNC_ENABLED=false varsayılanı ile gizlenmiştir.)*
 
-Aktif VIP kullanıcılar AI ses ve mikrofon dublajı sırasında deneysel dudak
-senkronizasyonu seçeneğini açabilir. Yetki yalnız arayüzde değil, backend job
-endpoint'lerinde de doğrulanır. Mikrofon kayıtları önce zaman çizelgesine göre
-tek bir ses dosyasında hazırlanır; ardından lip-sync çıktısı normal FFmpeg
-altyazı/export akışına girer.
+Yalnızca flag ve onaylı provider açık olduğunda aktif VIP kullanıcılar AI ses
+ve mikrofon dublajı sırasında deneysel dudak senkronizasyonu seçeneğini görebilir.
+Yetki yalnız arayüzde değil, backend job endpoint'lerinde de doğrulanır. Mikrofon
+kayıtları önce zaman çizelgesine göre tek bir ses dosyasında hazırlanır; ardından
+lip-sync çıktısı normal FFmpeg altyazı/export akışına girer.
 
 Yerel motor `backend/weights/wav2lip_gan.pth`, `backend/weights/s3fd.pth` ve
 proje kökündeki `Wav2Lip/inference.py` dosyasını bekler. Büyük model dosyaları
@@ -508,6 +508,8 @@ Gerçek maintenance token repoya, README'ye, frontend environment'ına veya komu
 | `DEMO_MAX_EXPORTS_PER_IP_PER_DAY` | `5` | IP başına UTC takvim günündeki export kotası |
 | `DEMO_MEDIA_TTL_HOURS` | `24` | Public demo cleanup isteğinde query verilmezse kullanılan eşik |
 | `TRUST_PROXY_HEADERS` | `false` | Güvenilir reverse proxy arkasında `X-Forwarded-For` okumayı etkinleştirir |
+| `LIPSYNC_ENABLED` | `false` | Deneysel lip-sync özelliğinin global feature flag'i; production'da kapalı kalmalıdır |
+| `LIPSYNC_PROVIDER` | `disabled` | `disabled`, `local`, `modal` veya `api`; yalnız `local` geliştirme adaptörü hazırdır |
 | `FFMPEG_BINARY` | `ffmpeg` | FFmpeg komutu veya tam yolu |
 | `FFPROBE_BINARY` | `ffprobe` | FFprobe komutu veya tam yolu |
 | `MEDIA_ROOT` | `backend/data` | Kaynak, çıktı, metadata ve geçici kayıt klasörü |
