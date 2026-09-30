@@ -47,8 +47,32 @@ class FileStorageService:
         if extension not in ALLOWED_EXTENSIONS:
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail="Desteklenmeyen video formatı. MP4, MOV veya WEBM yükleyin.",
+                detail="Bu video biçimi desteklenmiyor.",
             )
+
+        if upload.content_type not in ["video/mp4", "video/quicktime", "video/webm"]:
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail="Bu video biçimi desteklenmiyor.",
+            )
+
+        first_chunk = await upload.read(32)
+        if not first_chunk:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Boş video dosyası yüklenemez.",
+            )
+
+        is_webm = first_chunk.startswith(b"\x1a\x45\xdf\xa3")
+        is_mp4_mov = b"ftyp" in first_chunk or b"moov" in first_chunk or b"mdat" in first_chunk or b"free" in first_chunk
+
+        if not (is_webm or is_mp4_mov):
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail="Yüklenen dosya geçerli bir video değil.",
+            )
+
+        await upload.seek(0)
 
         video_id = str(uuid4())
         destination = UPLOAD_DIR / f"{video_id}{extension}"
@@ -61,10 +85,7 @@ class FileStorageService:
                     if size > max_file_size:
                         raise HTTPException(
                             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            detail=(
-                                "Video en fazla "
-                                f"{max_file_size // MEGABYTE} MB olabilir."
-                            ),
+                            detail="Video boyutu izin verilen sınırı aşıyor.",
                         )
                     output.write(chunk)
         except Exception:

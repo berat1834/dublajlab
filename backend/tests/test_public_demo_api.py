@@ -84,11 +84,11 @@ def test_public_demo_rejects_oversized_upload(
 
     response = client.post(
         "/api/video/upload",
-        files={"file": ("buyuk.mp4", b"x" * (1024 * 1024 + 1), "video/mp4")},
+        files={"file": ("buyuk.mp4", b"fake-video-ftyp-here" * 53000, "video/mp4")},
     )
 
     assert response.status_code == 413
-    assert response.json()["detail"] == "Video en fazla 1 MB olabilir."
+    assert response.json()["detail"] == "Video boyutu izin verilen sınırı aşıyor."
 
 
 def test_public_demo_rejects_video_longer_than_demo_limit(
@@ -97,7 +97,7 @@ def test_public_demo_rejects_video_longer_than_demo_limit(
 ) -> None:
     _enable_public_demo(monkeypatch)
     video_path = tmp_path / "input.mp4"
-    video_path.write_bytes(b"video")
+    video_path.write_bytes(b"fake-video-ftyp-here")
 
     async def fake_save_upload(_upload):
         return str(uuid4()), video_path, 5, "ornek.mp4"
@@ -112,11 +112,11 @@ def test_public_demo_rejects_video_longer_than_demo_limit(
 
     response = client.post(
         "/api/video/upload",
-        files={"file": ("ornek.mp4", b"video", "video/mp4")},
+        files={"file": ("ornek.mp4", b"fake-video-ftyp-here", "video/mp4")},
     )
 
     assert response.status_code == 413
-    assert response.json()["detail"] == "Video süresi en fazla 5 saniye olabilir."
+    assert response.json()["detail"] == "Video süresi izin verilen sınırı aşıyor."
 
 
 def test_public_demo_export_limit_returns_429(
@@ -127,7 +127,7 @@ def test_public_demo_export_limit_returns_429(
     _enable_public_demo(monkeypatch)
     service = jobs_router.dubbing_job_service
     video_path = tmp_path / "input.mp4"
-    video_path.write_bytes(b"video")
+    video_path.write_bytes(b"fake-video-ftyp-here")
 
     async def keep_queued(*_args, **_kwargs) -> None:
         return None

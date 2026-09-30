@@ -116,7 +116,15 @@ Komut build tamamlandıktan sonra, yeni container trafiğe alınmadan önce çal
 Gerçek ödeme sonucu frontend dönüş parametresinden doğrulanmaz; webhook entegrasyonu
 hazır olana kadar doğrulanmış sipariş yönetici endpoint'iyle manuel etkinleştirilir.
 
-## 5. Medya Temizliği (Cleanup) & Disk Tüketimi Riskleri
+## 5. Upload Güvenliği ve Medya Doğrulaması (Production Upload Validation)
+
+Kullanıcıların canlı ortama (Railway) dosya yüklediği `POST /api/video/upload` rotası, backend'i zararlı içeriklerden ve bozuk dosyalardan korumak için sıkı denetimlerden geçer:
+- **Uzunluk ve Boyut Limitleri**: Hem dosya boyutu (MB) hem de medya süresi (sn) aktif profile göre doğrulanır. Limit aşıldığında dosya diskten silinir ve anında 413 hatası döner.
+- **Magic-Byte ve Mime-Type**: `.ext` veya `Content-Type` kontrolüne ek olarak dosyanın ilk byte'ları okunur ve `ftyp` / `webm` mkv imza doğrulaması yapılır.
+- **FFprobe Video Stream Kontrolü**: Dosya FFprobe tarafından derinlemesine okunur. İçinde gerçek bir `video` kanalı yoksa, sıfır saniyelik veya bozuksa dosya kabul edilmez.
+- Geçersiz bir işlemde bırakılan geçici dosya `path.unlink(missing_ok=True)` ile derhal yok edilir.
+
+## 6. Medya Temizliği (Cleanup) & Disk Tüketimi Riskleri
 
 Platform, giriş yapmış (authenticated) kullanıcılar için "Kataloğum" altında oluşturulan export'ları saklar.
 - MVP'deki `cleanup_service.py` genellikle demo videolarını (TTL bazlı) siler.

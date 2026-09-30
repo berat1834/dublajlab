@@ -544,6 +544,12 @@ Gerçek maintenance token repoya, README'ye, frontend environment'ına veya komu
 
 `PUBLIC_DEMO_MODE=true` olduğunda backend aynı policy'yi upload, mikrofon kaydı ve export başlangıcında uygular. Frontend `/api/system/demo-policy` endpoint'inden etkin değerleri okuyup bilgi panelinde ve yükleme alanında gösterir. Demo paneli kullanıcıya dosyaların kalıcı saklanmadığını açıkça bildirir.
 
+**Dosya Yükleme Güvenliği (Upload Validation):**
+- **Extension & Content-Type:** Yalnızca `.mp4`, `.mov`, `.webm` uzantıları ve geçerli video `Content-Type` başlıkları kabul edilir.
+- **Magic-Byte İmzası:** Sahte uzantılı zararlı içerikleri önlemek için ilk 32 byte içinde medya imzası (ör. `ftyp`, `moov`, `webm` mkv header) doğrulanır.
+- **FFprobe Onayı:** Diske yazılan dosya anında FFprobe ile derinlemesine incelenir. İçinde `video` stream'i bulunmayan veya bozuk olan dosyalar anında sistemden silinir.
+- Geçersiz bir yükleme girişimi başarısız olur ve diski kirletmez.
+
 Varsayılan public demo politikası:
 
 - En fazla 20 MB ve 30 saniyelik video

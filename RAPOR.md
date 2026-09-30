@@ -67,6 +67,7 @@
 | 26 | Ücretsiz/VIP üyelik ve backend entitlement kontrolü | [sprint-26-free-vip-membership.md](docs/reports/sprint-26-free-vip-membership.md) |
 | 36 | Lip-sync PR hardening, feature flag ve production güvenliği | [sprint-36-lipsync-pr-hardening.md](docs/reports/sprint-36-lipsync-pr-hardening.md) |
 | 38 | Marka kimliği, favicon, manifest ve sosyal metadata | [sprint-38-brand-identity-assets.md](docs/reports/sprint-38-brand-identity-assets.md) |
+| 39 | Upload Security Hardening + Media Validation | [sprint-39-upload-security-hardening.md](docs/reports/sprint-39-upload-security-hardening.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
@@ -121,3 +122,4 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - **Sprint 35: Watermark + External Sharing + VIP Upsell**: Free kullanıcı exportlarına DublajLab watermark eklendi. Çıktı panelinde sosyal medya paylaşım bağlantıları ve VIP Upsell alanı oluşturuldu.
 - **Sprint 36: Lip-sync PR Hardening**: Feature flag/provider kontrolü fail-closed hale getirildi; production local Wav2Lip engellendi ve UI capability tabanlı gizlendi. Ayrıntılar: [sprint-36-lipsync-pr-hardening.md](docs/reports/sprint-36-lipsync-pr-hardening.md).
 - **Sprint 38: Brand Identity Assets**: Özgün DublajLab logo/mark sistemi, favicon, PWA ikonları, sosyal paylaşım kartı ve metadata seti eklendi. Ayrıntılar: [sprint-38-brand-identity-assets.md](docs/reports/sprint-38-brand-identity-assets.md).
+- **Sprint 39: Upload Security Hardening**: Video yükleme uç noktası (endpoint) katı bir `magic-byte`, `content-type` ve `FFprobe` doğrulamasından geçirilerek sahte veya bozuk dosyaların sunucuya yazılması engellendi. Ayrıntılar: [sprint-39-upload-security-hardening.md](docs/reports/sprint-39-upload-security-hardening.md).

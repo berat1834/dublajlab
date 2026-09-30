@@ -68,12 +68,12 @@ class LipSyncService:
                 error_msg = stderr.decode().strip() if stderr else "Bilinmeyen hata"
                 logger.error("Wav2Lip inference failed: %s", error_msg)
                 raise LipSyncError("Dudak senkronizasyonu işlemi yerel motor (Wav2Lip) tarafından reddedildi.")
-            
+
             if not output_path.exists():
                 raise LipSyncError("Wav2Lip başarılı görünüyor ancak çıktı dosyası bulunamadı.")
-                
+
             return output_path
-            
+
         except Exception as exc:
             if isinstance(exc, LipSyncError):
                 raise

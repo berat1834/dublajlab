@@ -181,7 +181,12 @@ class FFmpegService:
             duration = float(payload["format"]["duration"])
             streams = payload.get("streams", [])
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
-            raise MediaProcessingError("Video dosyası okunamadı veya bozuk.") from exc
+            raise MediaProcessingError("Yüklenen dosya geçerli bir video değil.") from exc
+
+        has_video = any(stream.get("codec_type") == "video" for stream in streams)
+        if not has_video:
+            raise MediaProcessingError("Yüklenen dosya geçerli bir video değil.")
+
         if duration <= 0:
             raise MediaProcessingError("Video dosyası boş veya bozuk.")
         return VideoInfo(

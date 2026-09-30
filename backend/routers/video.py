@@ -55,7 +55,7 @@ async def upload_video(file: UploadFile = File(...)) -> UploadResponse:
         if info.duration_seconds > max_duration:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail=f"Video süresi en fazla {max_duration:g} saniye olabilir.",
+                detail="Video süresi izin verilen sınırı aşıyor.",
             )
         storage_service.save_video_metadata(
             video_id,

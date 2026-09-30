@@ -39,7 +39,7 @@ def test_health_endpoint() -> None:
 def test_supported_video_is_accepted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     video_id = str(uuid4())
     video_path = tmp_path / f"{video_id}.mp4"
-    video_path.write_bytes(b"fake-video")
+    video_path.write_bytes(b"fake-video-ftyp-here")
 
     async def fake_save_upload(_upload):
         return video_id, video_path, video_path.stat().st_size, "ornek.mp4"
@@ -54,7 +54,7 @@ def test_supported_video_is_accepted(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     response = client.post(
         "/api/video/upload",
-        files={"file": ("ornek.mp4", b"fake-video", "video/mp4")},
+        files={"file": ("ornek.mp4", b"fake-video-ftyp-here" * 1024, "video/mp4")},
     )
 
     assert response.status_code == 201
@@ -65,11 +65,11 @@ def test_supported_video_is_accepted(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 def test_unsupported_video_format_is_rejected() -> None:
     response = client.post(
         "/api/video/upload",
-        files={"file": ("video.avi", b"fake-video", "video/x-msvideo")},
+        files={"file": ("video.avi", b"fake-video-ftyp-here", "video/x-msvideo")},
     )
 
     assert response.status_code == 415
-    assert "Desteklenmeyen" in response.json()["detail"]
+    assert "Bu video biçimi desteklenmiyor" in response.json()["detail"]
 
 
 def test_missing_ffmpeg_returns_turkish_service_error(
@@ -84,7 +84,7 @@ def test_missing_ffmpeg_returns_turkish_service_error(
 
     response = client.post(
         "/api/video/upload",
-        files={"file": ("ornek.mp4", b"fake-video", "video/mp4")},
+        files={"file": ("ornek.mp4", b"fake-video-ftyp-here", "video/mp4")},
     )
 
     assert response.status_code == 503
