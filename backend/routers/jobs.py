@@ -25,12 +25,14 @@ from backend.services.ffmpeg_service import MediaProcessingError
 from backend.services.job_service import dubbing_job_service, job_registry
 from backend.services.rate_limit_service import enforce_public_demo_export_limit
 from backend.services.membership_service import has_active_vip, require_active_vip
+from backend import config as app_config
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 from datetime import datetime, timedelta, timezone
 
 TIMELINE_DURATION_EPSILON_SECONDS = 0.001
+LIP_SYNC_VIP_REQUIRED_ERROR = "Bu özellik sadece VIP kullanıcılara özeldir."
 TIMELINE_DURATION_ERROR = (
     "Replik bitiş zamanı video süresini aşıyor. "
     "Lütfen son repliği video bitişinden önce tamamlayın."
@@ -43,7 +45,7 @@ def get_retention_date(membership_tier: str) -> datetime:
     return datetime.now(timezone.utc) + timedelta(hours=24)
 
 async def run_ai_job_with_db(job_id: str, payload: ProcessRequest, project_id: str | None = None, membership_tier: str = "vip"):
-    await dubbing_job_service.run_ai_job(job_id, payload)
+    await dubbing_job_service.run_ai_job(job_id, payload, membership_tier)
     if project_id:
         db = SessionLocal()
         try:
@@ -76,6 +78,7 @@ async def run_recording_job_with_db(
     max_video_width: int = 1280,
     max_video_height: int = 720,
     membership_tier: str = "free",
+    apply_lip_sync: bool = False,
 ):
     await dubbing_job_service.run_recording_job(
         job_id,
@@ -87,6 +90,7 @@ async def run_recording_job_with_db(
         max_video_width,
         max_video_height,
         membership_tier,
+        apply_lip_sync,
     )
     if project_id:
         db = SessionLocal()
@@ -118,6 +122,27 @@ def ensure_media_tools() -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
         ) from exc
+
+
+def enforce_lip_sync_vip(
+    apply_lip_sync: bool,
+    current_user: models_db.User | None,
+) -> None:
+    if not apply_lip_sync:
+        return
+
+    is_available, unavailable_reason = app_config.lip_sync_availability()
+    if not is_available:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=unavailable_reason,
+        )
+
+    if not has_active_vip(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=LIP_SYNC_VIP_REQUIRED_ERROR,
+        )
 
 
 def validate_recording_timeline(
@@ -176,6 +201,7 @@ async def create_ai_job(
     db: Session = Depends(get_db),
     current_user: models_db.User = Depends(get_current_user)
 ) -> JobResponse:
+    enforce_lip_sync_vip(payload.apply_lip_sync, current_user)
     require_active_vip(current_user)
     ensure_media_tools()
     dubbing_job_service.storage_service.get_video_path(payload.video_id)
@@ -214,10 +240,12 @@ async def create_recording_job(
     recording_ids: str = Form(...),
     mute_original_audio: bool = Form(True),
     burn_subtitles: bool = Form(True),
+    apply_lip_sync: bool = Form(False),
     recordings: list[UploadFile] = File(...),
     db: Session = Depends(get_db),
     current_user: models_db.User | None = Depends(get_current_user_optional)
 ) -> JobResponse:
+    enforce_lip_sync_vip(apply_lip_sync, current_user)
     ensure_media_tools()
     storage = dubbing_job_service.storage_service
     storage.get_video_path(video_id)
@@ -275,6 +303,7 @@ async def create_recording_job(
         max_video_width,
         max_video_height,
         membership_tier,
+        apply_lip_sync,
     )
     return job
 

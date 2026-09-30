@@ -17,6 +17,8 @@ backend/data/*
 !backend/data/templates/
 !backend/data/templates/templates.json
 backend/weights/*.pth
+/Wav2Lip/
+/Ekran görüntüsü *.png
 
 # Frontend
 frontend/node_modules/

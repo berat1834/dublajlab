@@ -378,6 +378,72 @@ class FFmpegService:
         )
         return command
 
+    def build_recording_audio_command(
+        self,
+        recording_paths: list[Path],
+        timeline: list[tuple[float, float]],
+        output_path: Path,
+        duration_seconds: float,
+    ) -> list[str]:
+        command = [self.ffmpeg_binary, "-y"]
+        for recording_path in recording_paths:
+            command.extend(["-i", str(recording_path)])
+
+        filters = [
+            "anullsrc=r=44100:cl=stereo,"
+            f"atrim=duration={duration_seconds:.3f}[base]"
+        ]
+        voice_labels: list[str] = []
+        for index, (start, end) in enumerate(timeline):
+            slot_duration = end - start
+            label = f"voice{index + 1}"
+            voice_labels.append(f"[{label}]")
+            filters.append(
+                f"[{index}:a]aresample=44100,"
+                "aformat=sample_fmts=fltp:channel_layouts=stereo,"
+                f"atrim=0:{slot_duration:.3f},asetpts=PTS-STARTPTS,"
+                f"apad=pad_dur={slot_duration:.3f},atrim=0:{slot_duration:.3f},"
+                f"adelay={round(start * 1000)}:all=1[{label}]"
+            )
+
+        filters.append(
+            f"[base]{''.join(voice_labels)}amix=inputs={len(voice_labels) + 1}:"
+            "duration=longest:normalize=0,alimiter=limit=0.95,"
+            f"atrim=duration={duration_seconds:.3f}[aout]"
+        )
+        command.extend(
+            [
+                "-filter_complex",
+                ";".join(filters),
+                "-map",
+                "[aout]",
+                "-t",
+                f"{duration_seconds:.3f}",
+                "-c:a",
+                "pcm_s16le",
+                str(output_path),
+            ]
+        )
+        return command
+
+    def prepare_recording_audio(
+        self,
+        recording_paths: list[Path],
+        timeline: list[tuple[float, float]],
+        output_path: Path,
+        duration_seconds: float,
+    ) -> Path:
+        command = self.build_recording_audio_command(
+            recording_paths,
+            timeline,
+            output_path,
+            duration_seconds,
+        )
+        self._run(command, "Dudak senkronizasyonu için ses kayıtları hazırlanamadı.")
+        if not output_path.is_file() or output_path.stat().st_size == 0:
+            raise MediaProcessingError("Dudak senkronizasyonu ses dosyası oluşturulamadı.")
+        return output_path
+
     def process_recordings(
         self,
         video_path: Path,

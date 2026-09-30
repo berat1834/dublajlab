@@ -5,6 +5,12 @@ This directory is intended to store the pre-trained model weights for the Wav2Li
 **Important Note:**
 Model weight files (`.pth`) are extremely large and **MUST NOT** be committed to Git. The `.gitignore` file is configured to exclude them.
 
+> **Lisans sınırı:** Resmî Wav2Lip kodu ve açık model ağırlıkları yalnızca
+> kişisel, akademik ve araştırma amaçlı kullanıma açıktır. Ticari kullanım
+> yasaktır. Bu ağırlıkları DublajLab'ın ücretli/VIP production özelliğinde
+> kullanmayın. Ticari yayın öncesinde uygun lisanslı bir model veya sağlayıcı
+> seçilmelidir.
+
 ### Gerekli Modellerin Kurulumu (Adım Adım):
 Dudak senkronizasyonu işleminin çalışabilmesi için resmi Wav2Lip deposundan aşağıdaki modelleri indirip tam olarak bu klasöre (`backend/weights/`) koymalısınız:
 
@@ -24,3 +30,7 @@ backend/weights/
   ├── s3fd.pth
   └── wav2lip_gan.pth
 ```
+
+Resmî kaynak kodu yerel test için proje kökündeki `Wav2Lip/` klasörüne
+yerleştirilebilir. Bu klasör Git tarafından yok sayılır; üçüncü taraf kaynak
+kod ve model dosyaları DublajLab reposuna commit edilmez.

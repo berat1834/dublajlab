@@ -1,5 +1,11 @@
 # Sprint 30: Serverless GPU (Modal.com) Entegrasyon Taslağı
 
+> **Release review notu (Sprint 36):** Bu belge tarihsel bir taslağı anlatır.
+> Remote provider akışı gerçek ve doğrulanmış bir video çıktısı üretmediği için
+> release-ready kabul edilmemiştir. `modal` ve `api` provider değerleri gerçek
+> ticari adaptör tamamlanana kadar fail-closed davranır; production flag varsayılan
+> olarak kapalıdır.
+
 ## Amaç ve Kapsam
 Meme Dublaj Studio'nun dudak senkronizasyonu (Wav2Lip) gibi ağır yapay zeka çıkarım (inference) işlemlerini ana FastAPI sunucusundan (CPU üzerinden) ayırıp, Serverless GPU hizmetlerine (örneğin Modal.com gibi mikroservislere) dağıtma mimarisi kurgulanmıştır.
 

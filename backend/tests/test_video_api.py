@@ -249,6 +249,25 @@ def test_recording_ffmpeg_command_places_clips_on_timeline(tmp_path: Path) -> No
     assert r"scale=w=min(1280\,iw):h=min(720\,ih)" in free_filters
 
 
+def test_recording_audio_command_builds_timeline_mix(tmp_path: Path) -> None:
+    service = FFmpegService(ffmpeg_binary="ffmpeg-test")
+
+    command = service.build_recording_audio_command(
+        recording_paths=[tmp_path / "one.webm", tmp_path / "two.webm"],
+        timeline=[(0.5, 2.0), (3.25, 5.0)],
+        output_path=tmp_path / "lip-sync.wav",
+        duration_seconds=6.0,
+    )
+
+    filters = command[command.index("-filter_complex") + 1]
+    assert "[0:a]" in filters
+    assert "[1:a]" in filters
+    assert "adelay=500:all=1[voice1]" in filters
+    assert "adelay=3250:all=1[voice2]" in filters
+    assert "amix=inputs=3" in filters
+    assert command[command.index("-c:a") + 1] == "pcm_s16le"
+
+
 def test_ffmpeg_signal_failure_returns_resource_message() -> None:
     error = subprocess.CalledProcessError(
         returncode=-9,

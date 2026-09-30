@@ -22,7 +22,13 @@ METADATA_DIR = MEDIA_ROOT / "metadata"
 
 FFMPEG_BINARY = os.getenv("FFMPEG_BINARY", "ffmpeg")
 FFPROBE_BINARY = os.getenv("FFPROBE_BINARY", "ffprobe")
-LIPSYNC_MODE = os.getenv("LIPSYNC_MODE", "local")
+LIPSYNC_ENABLED = os.getenv("LIPSYNC_ENABLED", "false").lower() in ("true", "1", "yes", "on")
+LIPSYNC_PROVIDERS = frozenset({"disabled", "local", "modal", "api"})
+LIPSYNC_PROVIDER = os.getenv("LIPSYNC_PROVIDER", "disabled").strip().lower()
+if LIPSYNC_PROVIDER not in LIPSYNC_PROVIDERS:
+    raise ValueError(
+        "LIPSYNC_PROVIDER disabled, local, modal veya api değerlerinden biri olmalıdır."
+    )
 LIPSYNC_WEBHOOK_URL = os.getenv("LIPSYNC_WEBHOOK_URL", "")
 MAX_FILE_SIZE = 50 * 1024 * 1024
 MAX_VIDEO_DURATION = 60.0
@@ -156,6 +162,23 @@ def allowed_origins() -> list[str]:
 
 def app_environment() -> str:
     return os.getenv("APP_ENV", "development").strip().lower()
+
+
+def lip_sync_availability() -> tuple[bool, str | None]:
+    """Return whether lip-sync may be exposed by this runtime."""
+
+    if not LIPSYNC_ENABLED:
+        return False, "Dudak senkronizasyonu özelliği şu anda kullanıma kapalıdır."
+    if LIPSYNC_PROVIDER == "disabled":
+        return False, "Dudak senkronizasyonu sağlayıcısı yapılandırılmamış."
+    if app_environment() == "production" and LIPSYNC_PROVIDER == "local":
+        return (
+            False,
+            "Yerel açık Wav2Lip modeli production ortamında ticari kullanım için etkinleştirilemez.",
+        )
+    if LIPSYNC_PROVIDER in {"modal", "api"}:
+        return False, "Seçilen dudak senkronizasyonu sağlayıcısı henüz kullanıma hazır değil."
+    return True, None
 
 
 def maintenance_token() -> str | None:

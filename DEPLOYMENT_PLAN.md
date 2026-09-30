@@ -26,6 +26,7 @@ Kullanıcı
 - **Veritabanı:** Railway PostgreSQL eklentisi
 - **Medya:** Railway volume, `/app/media` mount noktası
 - **Ölçek sınırı:** Bu mimari MVP için yeterlidir ancak uzun vadede medya depolama (S3/R2) ve kalıcı job kuyruğu (Redis/Celery) gerekecektir.
+- **Lip-Sync Uyarısı:** Production Wav2Lip local open-source weights are not allowed for commercial VIP usage. Bu yüzden LIPSYNC_ENABLED env değişkeni canlı ortamda varsayılan olarak "false" bırakılmalıdır. İleride ayrı bir ticari API veya GPU worker yapılandırıldığında VIP için aktif edilebilir.
 
 ## 2. Ortam Değişkenleri ve Sırlar (Secrets)
 
@@ -63,9 +64,19 @@ DEMO_MAX_RECORDING_SIZE_MB=5
 DEMO_MAX_EXPORTS_PER_IP_PER_DAY=5
 DEMO_MEDIA_TTL_HOURS=6
 TRUST_PROXY_HEADERS=false
+
+# Lip-sync release güvenliği
+LIPSYNC_ENABLED=false
+LIPSYNC_PROVIDER=disabled
 ```
 
 **Güvenlik Uyarısı:** `APP_ENV=production` iken `JWT_SECRET` varsayılan kalırsa uygulama `ValueError` fırlatacak ve güvenlik sebebiyle başlatılamayacaktır.
+
+`APP_ENV=production` ile `LIPSYNC_PROVIDER=local` kombinasyonu, flag yanlışlıkla
+açılsa dahi backend tarafından reddedilir. Production Wav2Lip local open-source
+weights are not allowed for commercial VIP usage. `modal` ve `api` değerleri
+yalnız gelecek adaptörleri için ayrılmıştır; gerçek çıktı sözleşmesi uygulanıp
+onaylanana kadar fail-closed davranır.
 
 ## 3. Veritabanı Migration (Alembic)
 
@@ -113,12 +124,33 @@ Platform, giriş yapmış (authenticated) kullanıcılar için "Kataloğum" alt�
 - **Geçici Çözüm**: Cleanup politikasına kullanıcı export'ları için de bir yaşam süresi (ör. 30 gün) eklemek veya manuel kota kontrolü yapmak.
 - **Kalıcı Çözüm**: AWS S3 veya Cloudflare R2'ye geçiş.
 
-## 6. Deployment Adımları ve Checklist
+## 6. Dudak Senkronizasyonu Deployment Kararı
+
+Railway mevcut FastAPI, FFmpeg ve normal export işleri için kullanılmaya devam
+edebilir; ancak açık Wav2Lip modeli Railway backend içinde canlı VIP özelliği
+olarak etkinleştirilmemelidir:
+
+- Resmî açık kod ve ağırlıklar ticari kullanıma izin vermez.
+- Mevcut image CPU-only'dir; gerçek inference süre ve bellek sınırlarını aşabilir.
+- Model ağırlıkları Git/image içine alınmaz ve şu an Railway volume'a kurulmamıştır.
+- Serverless webhook taslağı gerçek ticari inference sonucu dönene kadar production
+  özelliği sayılmaz.
+
+Production için ticari kullanım hakkı veren bir model/API seçilmeli; ağır işlem
+ayrı GPU worker servisinde yürütülmeli ve FastAPI yalnız job orkestrasyonu ile
+son FFmpeg export'unu yönetmelidir. Sağlayıcı anahtarı yalnız provider dashboard
+secret'ı olarak tutulmalıdır.
+
+## 7. Deployment Adımları ve Checklist
 
 Canlıya çıkış (Go-live) süreçleri için şu dökümanlara başvurun:
 - `docs/LAUNCH_CHECKLIST.md` (Deployment öncesi ve sırası kontroller)
 - `docs/PRODUCTION_SMOKE_TEST.md` (Sistemin canlıda çalıştığının onayı)
 
-## 7. İlk Deneme Durumu — 26 Eylül 2026
+## 8. İlk Deneme Durumu — 26 Eylül 2026
 
-İlk production deployment denemesi **partial deployment** durumundadır. Yerel production image ve smoke testleri geçti; ancak gerçek Railway/Vercel URL'leri henüz oluşturulmadı. Ayrıntılı hata, doğrulama ve kalan adımlar için [`docs/reports/sprint-22-first-deployment.md`](docs/reports/sprint-22-first-deployment.md) belgesine bakın.
+Faz 22 ilk denemesi **partial deployment** olarak kaydedilmiştir. Sonraki
+çalışmalarda Vercel frontend `https://dublajlab-sigma.vercel.app` adresinde
+yayına alınmıştır. Tarihsel ilk deneme ayrıntıları için
+[`docs/reports/sprint-22-first-deployment.md`](docs/reports/sprint-22-first-deployment.md)
+belgesine bakın.

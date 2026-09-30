@@ -34,6 +34,7 @@ class DemoPolicyResponse(BaseModel):
     max_exports_per_ip_per_day: int
     media_ttl_hours: int
     files_are_temporary: bool = True
+    lipsync_enabled: bool = False
 
 
 class UploadResponse(BaseModel):
@@ -52,6 +53,7 @@ class ProcessRequest(BaseModel):
     voice_style: VoiceStyle
     mute_original_audio: bool = True
     burn_subtitles: bool = True
+    apply_lip_sync: bool = False
 
     @field_validator("text")
     @classmethod

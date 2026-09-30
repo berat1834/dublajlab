@@ -14,7 +14,7 @@ export function Toggle({
   disabled = false,
 }: ToggleProps) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-white/8 bg-white/[0.025] p-4 transition hover:border-white/15">
+    <label className={`flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-white/[0.025] p-4 transition ${disabled ? 'cursor-not-allowed opacity-65' : 'cursor-pointer hover:border-white/15'}`}>
       <span>
         <span className="block text-sm font-semibold text-zinc-100">{label}</span>
         <span className="mt-1 block text-xs leading-5 text-zinc-500">{description}</span>

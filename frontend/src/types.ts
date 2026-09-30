@@ -40,6 +40,7 @@ export interface DemoPolicy {
   max_exports_per_ip_per_day: number
   media_ttl_hours: number
   files_are_temporary: boolean
+  lipsync_enabled: boolean
 }
 
 export interface ApiErrorBody {

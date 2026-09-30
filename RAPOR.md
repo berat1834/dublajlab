@@ -70,15 +70,22 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 
 ## Latest Validation
 
-- Backend tests: 75/75 passed (gerçek FFmpeg entegrasyon testi dahil)
-- Frontend test/lint/build: Vitest 3/3, ESLint ve Vite production build geçti
+- Sprint 28 doğrulaması: backend 92/92 ve Wav2Lip bağımlılık/komut testleri geçti.
+- Sprint 28 doğrulaması: frontend Vitest, ESLint, Vite production build ve `npm audit` geçti.
+- Sprint 28 doğrulaması: CPU-only PyTorch bağımlılıklarıyla backend Docker image build ve container import smoke testi geçti.
+- Backend tests: 97/97 passed (gerçek FFmpeg entegrasyon testi dahil)
+- Frontend test/lint/build: Vitest 7/7, ESLint ve Vite production build geçti
 - Frontend dependency audit: 0 vulnerability
 - Üyelik migration'ı önceki revision üzerinden başarıyla doğrulandı
 - Docker smoke test: backend container `healthy`; Alembic, FFmpeg, auth, template ve CORS kontrolleri geçti
-- CI status: GitHub `main` üzerindeki son run başarısız; frontend yeşil, backend eksik dependency nedeniyle kırmızı. Düzeltme henüz commitlenmedi.
+- CI status: Yerel doğrulamalar yeşil; branch pushlandıktan sonra remote CI sonucu ayrıca kontrol edilmelidir.
 
 ## Known Risks
 
+- Wav2Lip CPU üzerinde çalışmaktadır; GPU hızlandırması (CUDA) yapılandırılmamıştır. Yüksek çözünürlüklü videolarda işlem süresi çok uzun olabilir.
+- Açık Wav2Lip kodu/ağırlıkları ticari kullanıma izin vermez; canlı VIP özelliği için ticari lisanslı model veya sağlayıcı seçilmelidir.
+- Lip-sync production'da varsayılan olarak kapalıdır; `local` provider production ortamında kod seviyesinde reddedilir ve remote provider adaptörleri henüz release-ready değildir.
+- Yerel gerçek inference, iki `.pth` model ağırlığı ve kullanıcıya ait test yüz videosu gerektirir; bu dosyalar repoya eklenmez.
 - Memory job registry: Backend process restart kayıplarına yol açabilir (Dağıtık ortamda Redis gerektirir).
 - Railway volume: Mevcut deployment planına göre data volume'u kullanıldığında scale-out (çoklu replica) sorunları çıkabilir.
 - Public demo limits: Memory tabanlı rate limiter process restart durumunda sıfırlanır.
@@ -106,9 +113,7 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   - Hata Yönetimi: Model reddi durumunda kullanıcıya gösterilecek Türkçe exception fırlatılması sağlandı.
 
 - **Sprint 30: Serverless GPU (Modal.com) Entegrasyon Taslağı**:
-  - Mimari: Ağır GPU işlemleri (Wav2Lip) için FastAPI sunucusu üzerinden HTTP isteğiyle tetiklenen Serverless webhook mimarisi kuruldu.
-  - Kapsam: serverless/modal_lipsync.py taslağı oluşturuldu ve LIPSYNC_MODE değişkenine göre HTTP POST atabilen esnek bir LipSyncService yapısı kodlandı.
-  - Test: httpx kütüphanesinin mocklandığı pytest senaryoları (başarılı ve başarısız ağ çağrıları) eklendi ve test edildi.
-
-- **Modal Deployment**: Modal.com Serverless GPU deployment yapıldı ve main branch'e merge edildi.
+  - Mimari taslak korunmuştur; gerçek remote çıktı sözleşmesi release-ready değildir.
+  - Güvenlik review sonrasında `modal` ve `api` provider seçenekleri gerçek adaptör tamamlanana kadar fail-closed hale getirilmiştir.
 - **Sprint 35: Watermark + External Sharing + VIP Upsell**: Free kullanıcı exportlarına DublajLab watermark eklendi. Çıktı panelinde sosyal medya paylaşım bağlantıları ve VIP Upsell alanı oluşturuldu.
+- **Sprint 36: Lip-sync PR Hardening**: Feature flag/provider kontrolü fail-closed hale getirildi; production local Wav2Lip engellendi ve UI capability tabanlı gizlendi. Ayrıntılar: [sprint-36-lipsync-pr-hardening.md](docs/reports/sprint-36-lipsync-pr-hardening.md).
