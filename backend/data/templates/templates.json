@@ -5,9 +5,10 @@
     "category": "Komedi",
     "description": "Kısa ve tempolu bir ofis sahnesi için üç repliklik örnek zaman çizelgesi.",
     "duration_seconds": 9.0,
-    "video_url": null,
-    "license": "Medya yok — eklenecek dosya CC0 veya açık lisanslı olmalıdır",
-    "source": "DublajLab örnek metadata — video dosyası henüz eklenmedi",
+    "video_url": "/templates/ofis-surprizi.mp4",
+    "is_demo": true,
+    "license": "CC0 / Generated synthetic demo",
+    "source": "DublajLab generated demo media",
     "lines": [
       {
         "id": "ofis-1",
@@ -35,9 +36,10 @@
     "category": "Bilim Kurgu",
     "description": "İki karakterlik kısa bir uzay macerası için örnek replikler.",
     "duration_seconds": 7.5,
-    "video_url": null,
-    "license": "Medya yok — eklenecek dosya CC0 veya açık lisanslı olmalıdır",
-    "source": "DublajLab örnek metadata — video dosyası henüz eklenmedi",
+    "video_url": "/templates/uzay-gorevi.mp4",
+    "is_demo": true,
+    "license": "CC0 / Generated synthetic demo",
+    "source": "DublajLab generated demo media",
     "lines": [
       {
         "id": "uzay-1",
@@ -59,9 +61,10 @@
     "category": "Komedi",
     "description": "Şaşırtıcı bir ana verilen hızlı tepkileri seslendirmek için kısa bir sahne taslağı.",
     "duration_seconds": 8.0,
-    "video_url": null,
-    "license": "Medya yok — eklenecek dosya CC0, Public Domain veya proje sahibine ait olmalıdır",
-    "source": "DublajLab portföy metadata örneği — video dosyası henüz eklenmedi",
+    "video_url": "/templates/comedy-reaction.mp4",
+    "is_demo": true,
+    "license": "CC0 / Generated synthetic demo",
+    "source": "DublajLab generated demo media",
     "lines": [
       {
         "id": "comedy-reaction-1",
@@ -89,9 +92,10 @@
     "category": "Dram",
     "description": "Duygulu tonlama ve kısa duraklamalarla çalışmak için iki repliklik sahne taslağı.",
     "duration_seconds": 10.0,
-    "video_url": null,
-    "license": "Medya yok — eklenecek dosya CC0, Public Domain veya proje sahibine ait olmalıdır",
-    "source": "DublajLab portföy metadata örneği — video dosyası henüz eklenmedi",
+    "video_url": "/templates/dramatic-line.mp4",
+    "is_demo": true,
+    "license": "CC0 / Generated synthetic demo",
+    "source": "DublajLab generated demo media",
     "lines": [
       {
         "id": "dramatic-line-1",
@@ -113,9 +117,10 @@
     "category": "Tanıtım",
     "description": "Kendi ürününüzü veya portföy projenizi anlatabileceğiniz nötr bir demo akışı.",
     "duration_seconds": 12.0,
-    "video_url": null,
-    "license": "Medya yok — proje sahibi tarafından üretilecek özgün ekran kaydı önerilir",
-    "source": "DublajLab portföy metadata örneği — video dosyası henüz eklenmedi",
+    "video_url": "/templates/product-demo.mp4",
+    "is_demo": true,
+    "license": "CC0 / Generated synthetic demo",
+    "source": "DublajLab generated demo media",
     "lines": [
       {
         "id": "product-demo-1",

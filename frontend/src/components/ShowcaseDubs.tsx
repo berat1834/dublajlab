@@ -78,8 +78,8 @@ export function ShowcaseDubs({ onToast }: { onToast: (msg: string) => void }) {
         <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">Dublajlar</h1>
         <p className="mt-3 text-zinc-400">Topluluğun kaydettiği efsane dublajları keşfet.</p>
         {dubs.length === 0 && !loading && (
-          <div className="mt-3 inline-block rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-xs text-amber-200/80">
-            ⚠️ Bu alan canlı demo için örnek (placeholder) içeriklerle gösterilmektedir.
+          <div className="mt-3 inline-block rounded-lg bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 text-xs text-violet-300">
+            Henüz gerçek dublaj yok. Aşağıdaki içerikler <span className="font-bold">Demo</span> amaçlı listelenmektedir.
           </div>
         )}
       </div>
@@ -145,9 +145,12 @@ export function ShowcaseDubs({ onToast }: { onToast: (msg: string) => void }) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="group overflow-hidden rounded-2xl border border-white/10 bg-surface/80 shadow-card transition hover:border-white/20 opacity-50 grayscale">
+            <div key={i} className="group overflow-hidden rounded-2xl border border-white/10 bg-surface/80 shadow-card transition">
               <div className="relative aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 grid place-items-center">
                 <Play className="h-10 w-10 text-white/40 group-hover:text-lime transition group-hover:scale-110" />
+                <span className="absolute top-2 right-2 rounded-full bg-violet-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-glow-sm">
+                  Demo
+                </span>
                 <span className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white uppercase">Komedi</span>
                 <span className="absolute bottom-2 right-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] tabular-nums text-white">0:15</span>
               </div>

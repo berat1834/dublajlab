@@ -18,6 +18,9 @@ export function DailyDub({ setActiveTab }: DailyDubProps) {
         <div className="relative aspect-video bg-black flex items-center justify-center">
           <Play className="h-16 w-16 text-lime/50" />
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+          <span className="absolute top-4 right-4 rounded-full bg-violet-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-glow-sm">
+            Demo İçerik
+          </span>
           <div className="absolute bottom-4 left-4 right-4">
             <span className="inline-block rounded-md bg-lime px-2 py-1 text-xs font-black uppercase text-ink mb-2">Günün Kazananı</span>
             <h2 className="text-2xl font-bold text-white">Toplantı faciası (Demo)</h2>

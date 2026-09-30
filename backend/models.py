@@ -109,6 +109,7 @@ class VideoTemplate(BaseModel):
     video_url: str | None = Field(default=None, max_length=500)
     license: str = Field(min_length=1, max_length=200)
     source: str = Field(min_length=1, max_length=500)
+    is_demo: bool = Field(default=False)
     lines: list[DubbingLine] = Field(min_length=1, max_length=20)
     play_count: int | None = Field(default=None, ge=0)
     character_count: int | None = Field(default=None, ge=0)

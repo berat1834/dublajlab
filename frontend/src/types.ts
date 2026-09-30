@@ -64,6 +64,7 @@ export interface VideoTemplate {
   video_url: string | null
   license: string
   source: string
+  is_demo?: boolean
   lines: TimelineLine[]
   play_count?: number
   character_count?: number
