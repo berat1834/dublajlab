@@ -24,17 +24,41 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
   const shopierUrl = (import.meta.env.VITE_SHOPIER_VIP_URL || '').trim()
   const vipPrice = (import.meta.env.VITE_VIP_PRICE_LABEL || '₺199').trim()
 
-  const startCheckout = () => {
+  const startCheckout = async () => {
     if (!currentUser) {
       onToast('VIP üyelik almak için önce giriş yapın.')
       setActiveTab('login')
       return
     }
-    if (!shopierUrl) {
-      onToast('VIP ödeme bağlantısı henüz yapılandırılmadı.')
-      return
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/checkout?plan=monthly`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 503) {
+          onToast('Ödeme altyapısı yakında açılacak veya şu an kapalı.');
+        } else {
+          onToast('Ödeme başlatılamadı. Lütfen tekrar deneyin.');
+        }
+        return;
+      }
+
+      const data = await response.json();
+
+      if (shopierUrl) {
+        window.open(shopierUrl, '_blank', 'noopener,noreferrer');
+      } else {
+        onToast('Sipariş kaydınız oluşturuldu: ' + data.payment_id + '. (Ödeme altyapısı henüz yapılandırılmadı)');
+      }
+    } catch {
+      onToast('Bağlantı hatası oluştu.');
     }
-    window.open(shopierUrl, '_blank', 'noopener,noreferrer')
   }
 
   const refreshMembership = async () => {

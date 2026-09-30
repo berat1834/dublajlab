@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { processRecordings, processVideo } from './api'
+import { absoluteApiUrl, processRecordings, processVideo } from './api'
 
 const queuedJob = {
   job_id: 'job-1',
@@ -63,5 +63,18 @@ describe('lip-sync API payloads', () => {
     const formData = init.body as FormData
     expect(init.headers).toMatchObject({ Authorization: 'Bearer vip-token' })
     expect(formData.get('apply_lip_sync')).toBe('true')
+  })
+})
+
+describe('storage download URLs', () => {
+  it('keeps an absolute R2 URL unchanged', () => {
+    const url = 'https://media.example.com/exports/video.mp4'
+    expect(absoluteApiUrl(url)).toBe(url)
+  })
+
+  it('adds the API origin to a local download path', () => {
+    expect(absoluteApiUrl('/api/video/download/output-1')).toMatch(
+      /\/api\/video\/download\/output-1$/,
+    )
   })
 })

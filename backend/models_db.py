@@ -94,3 +94,19 @@ class DubbingExport(Base):
     retention_expires_at = Column(DateTime(timezone=True), nullable=True) # None = permanent, or specific date
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), index=True, nullable=False)
+    provider = Column(String(50), default="shopier", nullable=False)
+    provider_order_id = Column(String(100), nullable=True)
+    amount = Column(Integer, nullable=False)
+    currency = Column(String(10), default="TRY", nullable=False)
+    plan = Column(String(50), nullable=False)
+    status = Column(String(50), default="pending", nullable=False) # pending, paid, failed, cancelled
+    raw_event = Column(String(2000), nullable=True) # Ensure this is safe text, no raw card data
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
