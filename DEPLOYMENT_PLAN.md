@@ -152,8 +152,8 @@ secret'ı olarak tutulmalıdır.
 ## 7. Redis Cache ve Rate Limiting
 
 Uygulamanın memory (RAM) üzerindeki bağımlılığını azaltmak ve IP bazlı günlük kotaları (Rate limit) ve Job durumlarını asenkron olarak saklamak için Redis kullanılır:
-- **Redis Yoksa (Development)**: Sistem memory-fallback modunda çalışır, sunucu yeniden başlatılınca sayaclar ve yarım kalan işler silinir.
-- **Production (Railway)**: Railway ortamında yeni bir Redis servisi oluşturun. Üretilen `REDIS_URL` (veya `REDIS_PRIVATE_URL`) env değişkenini backend'in variables kısmına ekleyin. Redis eklenmezse backend ayağa kalkar, ancak warning fırlatır.
+- **Redis Yoksa (Development)**: Sistem memory-fallback modunda çalışır, sunucu yeniden başlatılınca sayaclar ve yarım kalan işler silinir. Backend `redis_configured: false` döner ve sessizce çalışmaya devam eder.
+- **Production (Railway)**: Railway projenizde "New -> Database -> Redis" diyerek bir Redis servisi oluşturun. Üretilen `REDIS_URL` (veya `REDIS_PRIVATE_URL`) env değişkenini backend servisinizin Variables sayfasına ekleyin ve deploy edin. `GET /api/health` adresinde `redis_connected: true` gördüğünüzde işlem tamamdır.
 
 ## 8. Deployment Adımları ve Checklist
 

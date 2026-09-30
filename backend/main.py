@@ -109,7 +109,29 @@ async def validation_error_handler(
 
 @app.get("/api/health", response_model=HealthResponse, tags=["health"])
 async def health() -> HealthResponse:
-    return HealthResponse(status="ok", app="DublajLab", version="0.2.0")
+    from backend.config import get_redis_url
+    import redis.asyncio as redis
+    
+    redis_url = get_redis_url()
+    redis_configured = bool(redis_url)
+    redis_connected = False
+    
+    if redis_configured:
+        try:
+            client = redis.from_url(redis_url)
+            await client.ping()
+            redis_connected = True
+            await client.aclose()
+        except Exception:
+            pass
+            
+    return HealthResponse(
+        status="ok", 
+        app="DublajLab", 
+        version="0.2.0",
+        redis_configured=redis_configured,
+        redis_connected=redis_connected
+    )
 
 
 @app.get("/api/system/ffmpeg", tags=["system"])

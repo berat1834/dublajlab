@@ -24,6 +24,8 @@ class HealthResponse(BaseModel):
     status: str
     app: str
     version: str
+    redis_configured: bool = False
+    redis_connected: bool = False
 
 
 class DemoPolicyResponse(BaseModel):
