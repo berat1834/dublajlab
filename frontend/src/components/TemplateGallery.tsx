@@ -210,8 +210,8 @@ export function TemplateGallery({
                   {template.duration_seconds.toFixed(0)}s
                 </span>
                 {/* Category badge */}
-                <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
-                  <span className="max-w-[calc(100%_-_4.5rem)] truncate rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+                <div className="absolute left-2 top-2 z-10 flex flex-col gap-1 items-start">
+                  <span className="rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
                     {template.category}
                   </span>
                   {template.is_demo && (
