@@ -57,9 +57,14 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
             {currentUser ? (
               <div className="flex items-center gap-4 relative">
                 {currentUser.role === 'admin' && (
-                  <button onClick={() => setActiveTab('admin')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'admin' ? 'bg-violet-500 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}>
-                    Admin
-                  </button>
+                  <>
+                    <button onClick={() => setActiveTab('admin')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'admin' ? 'bg-violet-500 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}>
+                      Moderasyon
+                    </button>
+                    <button onClick={() => setActiveTab('admin_ops')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'admin_ops' ? 'bg-violet-500 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}>
+                      Sistem (Ops)
+                    </button>
+                  </>
                 )}
                 <button onClick={() => setActiveTab('library')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'library' ? 'bg-lime-400 text-black' : 'text-white hover:bg-white/10'}`}>
                   Kataloğum
@@ -157,7 +162,10 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
             {currentUser ? (
               <>
                 {currentUser.role === 'admin' && (
-                  <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">Admin Paneli</button>
+                  <>
+                    <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">Moderasyon Paneli</button>
+                    <button onClick={() => { setActiveTab('admin_ops'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">Sistem Durumu (Ops)</button>
+                  </>
                 )}
                 <button onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} className="text-left text-lime-400 font-bold">Kataloğum</button>
                 <div className="flex items-center gap-2 py-2 text-white">

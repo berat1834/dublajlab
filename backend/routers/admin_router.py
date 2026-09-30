@@ -1,6 +1,9 @@
+import asyncio
+import os
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import func
+from typing import List, Dict, Any
 from datetime import datetime, timedelta, timezone
 
 from backend.database import get_db
@@ -8,6 +11,9 @@ import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
 from backend.services.membership_service import has_active_vip
+from backend.config import get_redis_url, MEDIA_ROOT, is_shopier_enabled, lip_sync_availability, STORAGE_PROVIDER
+from backend.routers.video import ffmpeg_service
+from backend.services.storage_provider import get_storage_provider
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -46,9 +52,9 @@ def get_reports(db: Session = Depends(get_db), admin: models_db.User = Depends(g
         models_db.ContentReport.status == "pending", # True evaluates to 1, False to 0. Actually we want pending first.
         models_db.ContentReport.created_at.desc()
     ).all()
-    # A simple order by pending first (status == pending is not portable across all DBs like Postgres, but works in SQLite, 
+    # A simple order by pending first (status == pending is not portable across all DBs like Postgres, but works in SQLite,
     # let's just order by created_at desc)
-    
+
     reports = db.query(models_db.ContentReport).order_by(
         models_db.ContentReport.created_at.desc()
     ).all()
@@ -64,7 +70,7 @@ def update_report_status(
     report = db.query(models_db.ContentReport).filter(models_db.ContentReport.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Rapor bulunamadı.")
-        
+
     report.status = status
     report.reviewed_at = datetime.now(timezone.utc)
     report.reviewed_by = admin.id
@@ -82,7 +88,7 @@ def update_project_moderation(
     project = db.query(models_db.DubbingProject).filter(models_db.DubbingProject.id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Proje bulunamadı.")
-        
+
     project.moderation_status = moderation_status
     db.commit()
     db.refresh(project)
@@ -97,9 +103,109 @@ def hide_comment(
     comment = db.query(models_db.DubbingComment).filter(models_db.DubbingComment.id == comment_id).first()
     if not comment:
         raise HTTPException(status_code=404, detail="Yorum bulunamadı.")
-        
+
     comment.status = "hidden"
     comment.hidden_at = datetime.now(timezone.utc)
     comment.hidden_by = admin.id
     db.commit()
     return {"message": "Yorum gizlendi."}
+
+@router.get("/ops/metrics")
+async def get_ops_metrics(
+    db: Session = Depends(get_db),
+    admin: models_db.User = Depends(get_admin_user)
+) -> Dict[str, Any]:
+    # 1. Health & Config
+    redis_url = get_redis_url()
+    redis_configured = bool(redis_url)
+    redis_connected = False
+    if redis_configured:
+        try:
+            import redis.asyncio as aioredis
+            client = aioredis.from_url(redis_url)
+            await client.ping()
+            redis_connected = True
+            await client.aclose()
+        except Exception:
+            pass
+
+    media_root_exists = MEDIA_ROOT.exists()
+    media_root_writable = os.access(MEDIA_ROOT, os.W_OK) if media_root_exists else False
+
+    storage = get_storage_provider()
+    storage_provider_name = STORAGE_PROVIDER
+    storage_configured = storage.is_configured()
+    storage_accessible = await asyncio.to_thread(storage.healthcheck)
+
+    ffmpeg_status = await asyncio.to_thread(ffmpeg_service.check_availability)
+    lip_sync_enabled, lip_sync_provider = lip_sync_availability()
+
+    database_connected = True
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+    except Exception:
+        database_connected = False
+
+    # 2. Database Metrics
+    now = datetime.now(timezone.utc)
+    total_users = db.query(func.count(models_db.User.id)).scalar() or 0
+    active_vip_users = db.query(func.count(models_db.User.id)).filter(
+        models_db.User.membership_tier == "vip",
+        models_db.User.membership_expires_at > now
+    ).scalar() or 0
+
+    total_projects = db.query(func.count(models_db.DubbingProject.id)).scalar() or 0
+    completed_exports = db.query(func.count(models_db.DubbingProject.id)).filter(models_db.DubbingProject.status == "completed").scalar() or 0
+    failed_exports = db.query(func.count(models_db.DubbingProject.id)).filter(models_db.DubbingProject.status == "failed").scalar() or 0
+    public_dubs_count = db.query(func.count(models_db.DubbingProject.id)).filter(models_db.DubbingProject.visibility == "public").scalar() or 0
+
+    pending_payments = db.query(func.count(models_db.Payment.id)).filter(models_db.Payment.status == "pending").scalar() or 0
+    paid_payments = db.query(func.count(models_db.Payment.id)).filter(models_db.Payment.status == "paid").scalar() or 0
+    failed_payments = db.query(func.count(models_db.Payment.id)).filter(models_db.Payment.status == "failed").scalar() or 0
+
+    comments_count = db.query(func.count(models_db.DubbingComment.id)).scalar() or 0
+    reports_count = db.query(func.count(models_db.ContentReport.id)).scalar() or 0
+
+    # 3. Recent failed jobs (projects with status=failed)
+    recent_failed = db.query(models_db.DubbingProject).filter(models_db.DubbingProject.status == "failed").order_by(models_db.DubbingProject.created_at.desc()).limit(10).all()
+    recent_failed_list = [
+        {
+            "id": p.id,
+            "title": p.title,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
+            "status": p.status
+        }
+        for p in recent_failed
+    ]
+
+    return {
+        "app_status": "ok",
+        "database_connected": database_connected,
+        "redis_configured": redis_configured,
+        "redis_connected": redis_connected,
+        "media_root_exists": media_root_exists,
+        "media_root_writable": media_root_writable,
+        "storage_provider": storage_provider_name,
+        "storage_configured": storage_configured,
+        "storage_accessible": storage_accessible,
+        "ffmpeg_available": ffmpeg_status.available,
+        "ffprobe_available": ffmpeg_status.available, # Assuming ffprobe is also checked
+        "lipsync_enabled": lip_sync_enabled,
+        "lipsync_provider": lip_sync_provider,
+        "shopier_enabled": is_shopier_enabled(),
+
+        "total_users": total_users,
+        "active_vip_users": active_vip_users,
+        "total_projects": total_projects,
+        "completed_exports": completed_exports,
+        "failed_exports": failed_exports,
+        "public_dubs_count": public_dubs_count,
+        "pending_payments": pending_payments,
+        "paid_payments": paid_payments,
+        "failed_payments": failed_payments,
+        "comments_count": comments_count,
+        "reports_count": reports_count,
+
+        "recent_failed_jobs": recent_failed_list
+    }

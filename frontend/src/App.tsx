@@ -42,6 +42,7 @@ import { OdaKur } from './components/OdaKur'
 import { AuthPage } from './components/AuthPage'
 import { UserLibrary } from './components/UserLibrary'
 import { AdminModerationPanel } from './components/AdminModerationPanel'
+import { AdminOpsPanel } from './components/AdminOpsPanel'
 import { AccountSettings } from './components/AccountSettings'
 import { PublicProfile } from './components/PublicProfile'
 import { Membership } from './components/Membership'
@@ -1152,6 +1153,8 @@ function App() {
             currentUser ? <UserLibrary onToast={showToast} setActiveTab={setActiveTab} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
           ) : activeTab === 'admin' ? (
             currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
+          ) : activeTab === 'admin_ops' ? (
+            currentUser?.role === 'admin' ? <AdminOpsPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
           ) : activeTab === 'oda_kur' ? (
             <OdaKur setActiveTab={setActiveTab} />
           ) : activeTab === 'account' && currentUser ? (

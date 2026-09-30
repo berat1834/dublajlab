@@ -214,6 +214,7 @@ export async function waitForJobCompletion(
 }
 
 export function absoluteApiUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
   return `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
 }
 
@@ -259,7 +260,7 @@ export async function deleteAccount(password: string): Promise<void> {
     },
     body: JSON.stringify({ password })
   })
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => null)
     throw new Error(errorData?.detail || 'Hesap silinirken bir hata oluştu.')
@@ -437,4 +438,45 @@ export async function updateProjectModeration(projectId: string, moderation_stat
     headers: getAuthHeaders(),
   })
   return parseResponse<DubbingProject>(response)
+}
+
+export interface AdminOpsMetrics {
+  app_status: string;
+  database_connected: boolean;
+  redis_configured: boolean;
+  redis_connected: boolean;
+  media_root_exists: boolean;
+  media_root_writable: boolean;
+  ffmpeg_available: boolean;
+  ffprobe_available: boolean;
+  lipsync_enabled: boolean;
+  lipsync_provider: string;
+  shopier_enabled: boolean;
+
+  total_users: number;
+  active_vip_users: number;
+  total_projects: number;
+  completed_exports: number;
+  failed_exports: number;
+  public_dubs_count: number;
+  pending_payments: number;
+  paid_payments: number;
+  failed_payments: number;
+  comments_count: number;
+  reports_count: number;
+
+  recent_failed_jobs: Array<{
+    id: string;
+    title: string;
+    created_at: string | null;
+    status: string;
+  }>;
+}
+
+export async function getAdminOpsMetrics(): Promise<AdminOpsMetrics> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/ops/metrics`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<AdminOpsMetrics>(response)
 }
