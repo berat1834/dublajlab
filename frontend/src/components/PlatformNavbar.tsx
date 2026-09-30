@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, Diamond } from 'lucide-react'
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
@@ -15,6 +15,28 @@ interface PlatformNavbarProps {
 export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { language, setLanguage, t } = useLanguage()
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDropdownOpen(false)
+    }
+
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleEscape)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [dropdownOpen])
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -70,7 +92,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                   Kataloğum
                 </button>
                 
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                   <button 
                     onClick={() => setDropdownOpen(!dropdownOpen)} 
                     className="flex items-center gap-2 hover:bg-white/5 p-1.5 rounded-lg transition"

@@ -1,4 +1,5 @@
 import type { Tab } from '../types'
+import { useLanguage } from '../LanguageContext'
 
 interface PlatformFooterProps {
   setActiveTab: (tab: Tab) => void
@@ -7,16 +8,22 @@ interface PlatformFooterProps {
 }
 
 export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: PlatformFooterProps) {
+  const { t } = useLanguage()
+
+  const handleNav = (tab: Tab) => {
+    setActiveTab(tab)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
   return (
     <footer className="mt-auto border-t border-white/10 bg-black/40" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:py-16 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
           <div className="col-span-2 lg:col-span-2">
-            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="inline-block" aria-label="DublajLab ana sayfa">
+            <a href="#" onClick={(e) => { e.preventDefault(); handleNav('play'); }} className="inline-block" aria-label="DublajLab ana sayfa">
               <img src="/assets/dublajlab-logo.svg" alt="DublajLab" className="h-10 w-auto max-w-[190px]" />
             </a>
             <p className="mt-4 text-sm leading-6 text-zinc-400">
-              Bu proje bir kişisel portföy çalışması olup, video işleme (FFmpeg) ve asenkron web teknolojilerinin sunumunu hedefler. <br/>Tüm işlemler "demo" modundadır.
+              {t('footer.desc')}
             </p>
             <div className="mt-6 flex items-center gap-4 text-zinc-400">
               <a href="https://twitter.com/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">X</a>
@@ -26,19 +33,19 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: 
             </div>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Oyna</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.play')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={() => setActiveTab('oda_kur')} className="hover:text-white">Oda kur</button></li>
-              <li><button onClick={() => setActiveTab('scenes')} className="hover:text-white">Sahneler</button></li>
-              <li><button onClick={() => setShowHowTo(true)} className="hover:text-white">Nasıl oynanır</button></li>
+              <li><button onClick={() => handleNav('oda_kur')} className="hover:text-white">Oda kur</button></li>
+              <li><button onClick={() => handleNav('scenes')} className="hover:text-white">{t('footer.links.scenes')}</button></li>
+              <li><button onClick={() => setShowHowTo(true)} className="hover:text-white">{t('footer.links.howto')}</button></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Keşfet</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.dubs')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={() => setActiveTab('dubs')} className="hover:text-white">Dublajlar</button></li>
-              <li><button onClick={() => setActiveTab('daily')} className="hover:text-white">Günün Dublajı</button></li>
-              <li><button onClick={() => setActiveTab('scenes')} className="hover:text-white">Katalog</button></li>
+              <li><button onClick={() => handleNav('dubs')} className="hover:text-white">{t('nav.dubs')}</button></li>
+              <li><button onClick={() => handleNav('daily')} className="hover:text-white">{t('nav.daily')}</button></li>
+              <li><button onClick={() => handleNav('scenes')} className="hover:text-white">{t('nav.scenes')}</button></li>
             </ul>
           </div>
           <div>
@@ -49,11 +56,11 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: 
             </ul>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Yasal</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.legal')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={handleLegalLink} className="hover:text-white">Gizlilik</button></li>
-              <li><button onClick={handleLegalLink} className="hover:text-white">Kullanım koşulları</button></li>
-              <li><button onClick={handleLegalLink} className="hover:text-white">Telif bildirimi</button></li>
+              <li><button onClick={handleLegalLink} className="hover:text-white">{t('footer.links.privacy')}</button></li>
+              <li><button onClick={handleLegalLink} className="hover:text-white">{t('footer.links.terms')}</button></li>
+              <li><button onClick={handleLegalLink} className="hover:text-white">{t('footer.links.copyright')}</button></li>
             </ul>
           </div>
         </div>

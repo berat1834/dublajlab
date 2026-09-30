@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { ArrowRight, Github, Mail, Mic2, PlayCircle } from 'lucide-react'
 import type { Tab, User } from '../types'
 import { login, register, getMe } from '../lib/api'
+import { useLanguage } from '../LanguageContext'
+import { useEffect } from 'react'
 
 interface AuthPageProps {
   mode: 'login' | 'register'
@@ -15,6 +17,14 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const { t } = useLanguage()
+
+  // Kullanıcı zaten login ise yönlendir
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      setActiveTab('play')
+    }
+  }, [setActiveTab])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,13 +68,13 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
 
         <div className="relative z-10 my-12">
           <h1 className="text-3xl font-black text-white sm:text-4xl leading-tight">
-            Kendi sesinle <br />
+            {t('auth.hero.title1')} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime to-emerald-400">
-              sahnede yerini al.
+              {t('auth.hero.title2')}
             </span>
           </h1>
           <p className="mt-4 text-sm text-zinc-400 leading-relaxed max-w-sm">
-            Favori filmlerine, popüler dizilere ve viral videolara kendi sesinle dublaj yap. Arkadaşlarınla paylaş veya toplulukta öne çık.
+            {t('auth.hero.desc')}
           </p>
         </div>
 
@@ -73,7 +83,13 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
           <span className="flex items-center gap-1.5"><Mic2 className="w-4 h-4 text-violet" /> AI Destekli Mix</span>
         </div>
 
-        {/* Decorative elements */}
+        {/* Decorative elements & Floating Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
+          <div className="absolute top-[10%] left-[10%] -rotate-12 text-zinc-400 font-bold whitespace-nowrap blur-[1px] animate-pulse">"Senin sorunun ne biliyor musun?"</div>
+          <div className="absolute top-[30%] left-[50%] rotate-6 text-zinc-300 font-bold whitespace-nowrap blur-[2px] animate-pulse delay-700">"Hadi oradan!"</div>
+          <div className="absolute top-[60%] left-[20%] -rotate-6 text-zinc-500 font-bold whitespace-nowrap animate-pulse delay-300">"Ben de tam onu diyecektim."</div>
+          <div className="absolute top-[80%] left-[60%] rotate-12 text-zinc-400 font-bold whitespace-nowrap blur-[1px] animate-pulse delay-1000">"Sessizlik!"</div>
+        </div>
         <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-lime/10 blur-[100px]" />
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-violet/10 blur-[100px]" />
       </div>
@@ -82,12 +98,12 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
       <div className="flex flex-col justify-center p-8 sm:p-12 lg:w-7/12 bg-black/40">
         <div className="max-w-md w-full mx-auto">
           <h2 className="text-2xl font-black text-white mb-2">
-            {mode === 'login' ? 'Tekrar Hoş Geldin' : 'Maceraya Katıl'}
+            {mode === 'login' ? t('auth.login.title') : t('auth.register.title')}
           </h2>
           <p className="text-sm text-zinc-400 mb-8">
             {mode === 'login' 
-              ? 'Kaldığın yerden devam etmek için giriş yap.' 
-              : 'Ücretsiz hesabını oluştur ve ilk dublajını yap.'}
+              ? t('auth.login.desc') 
+              : t('auth.register.desc')}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

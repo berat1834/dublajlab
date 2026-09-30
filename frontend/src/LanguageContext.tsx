@@ -35,6 +35,29 @@ const translations: Record<string, Record<Language, string>> = {
   // Membership & Credits
   'vip.button': { TR: 'Şimdi VIP Ol', EN: 'Become VIP Now' },
   'credits.buy': { TR: 'Kredi Al', EN: 'Buy Credits' },
+
+  // Auth Page
+  'auth.hero.title1': { TR: 'Kendi sesinle', EN: 'Take the stage' },
+  'auth.hero.title2': { TR: 'sahnede yerini al.', EN: 'with your own voice.' },
+  'auth.hero.desc': { TR: 'Favori filmlerine, popüler dizilere ve viral videolara kendi sesinle dublaj yap. Arkadaşlarınla paylaş veya toplulukta öne çık.', EN: 'Dub your favorite movies, popular series, and viral videos with your own voice. Share with friends or stand out in the community.' },
+  'auth.login.title': { TR: 'Tekrar Hoş Geldin', EN: 'Welcome Back' },
+  'auth.login.desc': { TR: 'Kaldığın yerden devam etmek için giriş yap.', EN: 'Log in to continue where you left off.' },
+  'auth.register.title': { TR: 'Maceraya Katıl', EN: 'Join the Adventure' },
+  'auth.register.desc': { TR: 'Ücretsiz hesabını oluştur ve ilk dublajını yap.', EN: 'Create your free account and make your first dub.' },
+
+  // Footer
+  'footer.desc': { TR: 'Portföy ve teknoloji demosu.', EN: 'Portfolio and technology demo.' },
+  'footer.links.product': { TR: 'Ürün', EN: 'Product' },
+  'footer.links.play': { TR: 'Stüdyo', EN: 'Studio' },
+  'footer.links.scenes': { TR: 'Hazır Sahneler', EN: 'Templates' },
+  'footer.links.dubs': { TR: 'Topluluk', EN: 'Community' },
+  'footer.links.daily': { TR: 'Günün Dublajı', EN: 'Daily Dub' },
+  'footer.links.resources': { TR: 'Kaynaklar', EN: 'Resources' },
+  'footer.links.howto': { TR: 'Nasıl Kullanılır?', EN: 'How to Use?' },
+  'footer.links.legal': { TR: 'Yasal', EN: 'Legal' },
+  'footer.links.privacy': { TR: 'Gizlilik', EN: 'Privacy' },
+  'footer.links.terms': { TR: 'Kullanım Koşulları', EN: 'Terms of Use' },
+  'footer.links.copyright': { TR: 'Telif Hakkı', EN: 'Copyright' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
