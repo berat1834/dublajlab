@@ -227,6 +227,7 @@ Katalog yüklenirken 1–20 replik sınırı, benzersiz replik kimlikleri, zaman
 | Backend | Python 3.11+, FastAPI, Pydantic, Uvicorn |
 | Kayıt | MediaRecorder / getUserMedia |
 | Medya | FFmpeg, FFprobe, ASS, H.264, AAC |
+| Cache & Kuyruk | Redis (Rate limit ve Job State için) |
 | Opsiyonel TTS | Edge TTS, değiştirilebilir servis katmanı |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS |
 | Test | Pytest, FastAPI TestClient, ESLint, TypeScript |

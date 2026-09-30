@@ -17,14 +17,27 @@ from backend.services.tts_service import TTSService
 logger = logging.getLogger(__name__)
 
 
+from backend.config import get_redis_url
+import redis.asyncio as redis
+import json
+
 class JobRegistry:
     """Thread-safe in-memory registry replaceable by a persistent queue later."""
 
     def __init__(self) -> None:
         self._jobs: dict[str, JobResponse] = {}
         self._lock = RLock()
+        redis_url = get_redis_url()
+        self._redis = redis.from_url(redis_url, decode_responses=True) if redis_url else None
 
-    def create(self, message: str = "Export sırasına alındı.") -> JobResponse:
+    async def _save_to_redis(self, job: JobResponse) -> None:
+        if self._redis:
+            try:
+                await self._redis.setex(f"job:{job.job_id}", 86400, job.model_dump_json())
+            except Exception as e:
+                logger.error(f"Redis save error for job {job.job_id}: {e}")
+
+    async def create(self, message: str = "Export sırasına alındı.") -> JobResponse:
         job = JobResponse(
             job_id=str(uuid4()),
             status=JobStatus.QUEUED,
@@ -33,14 +46,29 @@ class JobRegistry:
         )
         with self._lock:
             self._jobs[job.job_id] = job
+        await self._save_to_redis(job)
         return job.model_copy(deep=True)
 
-    def get(self, job_id: str) -> JobResponse | None:
+    async def get(self, job_id: str) -> JobResponse | None:
         with self._lock:
             job = self._jobs.get(job_id)
-            return job.model_copy(deep=True) if job else None
+            if job:
+                return job.model_copy(deep=True)
+                
+        if self._redis:
+            try:
+                data = await self._redis.get(f"job:{job_id}")
+                if data:
+                    job = JobResponse.model_validate_json(data)
+                    with self._lock:
+                        self._jobs[job_id] = job
+                    return job.model_copy(deep=True)
+            except Exception as e:
+                logger.error(f"Redis read error for job {job_id}: {e}")
+                
+        return None
 
-    def update(
+    async def update(
         self,
         job_id: str,
         *,
@@ -58,9 +86,11 @@ class JobRegistry:
                 }
             )
             self._jobs[job_id] = updated
-            return updated.model_copy(deep=True)
+            
+        await self._save_to_redis(updated)
+        return updated.model_copy(deep=True)
 
-    def complete(self, job_id: str, output_video_id: str) -> JobResponse:
+    async def complete(self, job_id: str, output_video_id: str) -> JobResponse:
         with self._lock:
             current = self._jobs[job_id]
             updated = current.model_copy(
@@ -74,9 +104,11 @@ class JobRegistry:
                 }
             )
             self._jobs[job_id] = updated
-            return updated.model_copy(deep=True)
+            
+        await self._save_to_redis(updated)
+        return updated.model_copy(deep=True)
 
-    def fail(self, job_id: str, error: str) -> JobResponse:
+    async def fail(self, job_id: str, error: str) -> JobResponse:
         with self._lock:
             current = self._jobs[job_id]
             updated = current.model_copy(
@@ -87,7 +119,9 @@ class JobRegistry:
                 }
             )
             self._jobs[job_id] = updated
-            return updated.model_copy(deep=True)
+            
+        await self._save_to_redis(updated)
+        return updated.model_copy(deep=True)
 
 
 class DubbingJobService:
@@ -113,7 +147,7 @@ class DubbingJobService:
         subtitle_path = self.storage_service.subtitle_path(job_id)
         lip_sync_video_path = self.storage_service.lip_sync_video_path(job_id)
         try:
-            self.registry.update(
+            await self.registry.update(
                 job_id,
                 status=JobStatus.PROCESSING,
                 progress=10,
@@ -128,8 +162,8 @@ class DubbingJobService:
             )
             processing_video_path = video_path
             if payload.apply_lip_sync:
-                self.registry.update(job_id, progress=35, message="Yüz analiz ediliyor...")
-                self.registry.update(
+                await self.registry.update(job_id, progress=35, message="Yüz analiz ediliyor...")
+                await self.registry.update(
                     job_id,
                     progress=48,
                     message="Dudak senkronizasyonu uygulanıyor...",
@@ -139,7 +173,7 @@ class DubbingJobService:
                     audio_path,
                     lip_sync_video_path,
                 )
-            self.registry.update(job_id, progress=60, message="Altyazı hazırlanıyor.")
+            await self.registry.update(job_id, progress=60, message="Altyazı hazırlanıyor.")
             self.subtitle_service.create_ass(
                 text=payload.text,
                 duration_seconds=float(metadata["duration_seconds"]),
@@ -147,7 +181,7 @@ class DubbingJobService:
                 burn_subtitles=payload.burn_subtitles,
             )
             output_id, output_path = self.storage_service.new_output_path()
-            self.registry.update(
+            await self.registry.update(
                 job_id,
                 progress=72,
                 message="Video, ses ve altyazı birleştiriliyor.",
@@ -165,7 +199,7 @@ class DubbingJobService:
                 max_video_height=1080,
                 add_watermark=(membership_tier != "vip")
             )
-            self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
+            await self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
             self.storage_service.register_output(
                 output_id,
                 {
@@ -177,12 +211,12 @@ class DubbingJobService:
                     "lip_sync_applied": payload.apply_lip_sync,
                 },
             )
-            self.registry.complete(job_id, output_id)
+            await self.registry.complete(job_id, output_id)
         except Exception as exc:
             logger.exception("AI dubbing job %s failed: %s", job_id, exc)
             if output_path:
                 output_path.unlink(missing_ok=True)
-            self.registry.fail(job_id, str(exc) or "Video işlenirken bilinmeyen hata oluştu.")
+            await self.registry.fail(job_id, str(exc) or "Video işlenirken bilinmeyen hata oluştu.")
         finally:
             audio_path.unlink(missing_ok=True)
             subtitle_path.unlink(missing_ok=True)
@@ -206,7 +240,7 @@ class DubbingJobService:
         lip_sync_video_path = self.storage_service.lip_sync_video_path(job_id)
         lip_sync_audio_path = self.storage_service.lip_sync_audio_path(job_id)
         try:
-            self.registry.update(
+            await self.registry.update(
                 job_id,
                 status=JobStatus.PROCESSING,
                 progress=15,
@@ -217,7 +251,7 @@ class DubbingJobService:
             duration = float(metadata["duration_seconds"])
             processing_video_path = video_path
             if apply_lip_sync:
-                self.registry.update(job_id, progress=28, message="Yüz analiz ediliyor...")
+                await self.registry.update(job_id, progress=28, message="Yüz analiz ediliyor...")
                 await asyncio.to_thread(
                     self.ffmpeg_service.prepare_recording_audio,
                     recording_paths,
@@ -225,7 +259,7 @@ class DubbingJobService:
                     lip_sync_audio_path,
                     duration,
                 )
-                self.registry.update(
+                await self.registry.update(
                     job_id,
                     progress=45,
                     message="Dudak senkronizasyonu uygulanıyor...",
@@ -241,9 +275,9 @@ class DubbingJobService:
                 output_path=subtitle_path,
                 burn_subtitles=burn_subtitles,
             )
-            self.registry.update(job_id, progress=60, message="Altyazılar hazırlandı.")
+            await self.registry.update(job_id, progress=60, message="Altyazılar hazırlandı.")
             output_id, output_path = self.storage_service.new_output_path()
-            self.registry.update(
+            await self.registry.update(
                 job_id,
                 progress=72,
                 message="Kayıtlar zaman çizelgesine yerleştiriliyor.",
@@ -262,7 +296,7 @@ class DubbingJobService:
                 max_video_height,
                 add_watermark=(membership_tier != "vip")
             )
-            self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
+            await self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
             self.storage_service.register_output(
                 output_id,
                 {
@@ -277,12 +311,12 @@ class DubbingJobService:
                     "lip_sync_applied": apply_lip_sync,
                 },
             )
-            self.registry.complete(job_id, output_id)
+            await self.registry.complete(job_id, output_id)
         except Exception as exc:
             logger.exception("Recording dubbing job %s failed: %s", job_id, exc)
             if output_path:
                 output_path.unlink(missing_ok=True)
-            self.registry.fail(job_id, str(exc) or "Video işlenirken bilinmeyen hata oluştu.")
+            await self.registry.fail(job_id, str(exc) or "Video işlenirken bilinmeyen hata oluştu.")
         finally:
             subtitle_path.unlink(missing_ok=True)
             lip_sync_video_path.unlink(missing_ok=True)

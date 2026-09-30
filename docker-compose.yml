@@ -21,6 +21,7 @@ services:
       TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-false}
       LIPSYNC_ENABLED: ${LIPSYNC_ENABLED:-false}
       LIPSYNC_PROVIDER: ${LIPSYNC_PROVIDER:-disabled}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -56,3 +57,18 @@ services:
 volumes:
   dublajlab_media:
     name: dublajlab_media
+  redis_data:
+    name: redis_data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

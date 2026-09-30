@@ -93,7 +93,7 @@ async def process_video(
     ensure_media_tools()
     video_path = storage_service.get_video_path(payload.video_id)
     metadata = storage_service.get_video_metadata(payload.video_id)
-    enforce_public_demo_export_limit(request)
+    await enforce_public_demo_export_limit(request)
     job_id = str(uuid4())
     audio_path = storage_service.audio_path(job_id)
     subtitle_path = storage_service.subtitle_path(job_id)
@@ -202,7 +202,7 @@ async def process_recordings(
         line.model_copy(update={"end": min(line.end, duration)}) for line in lines
     ]
 
-    enforce_public_demo_export_limit(request)
+    await enforce_public_demo_export_limit(request)
     job_id = str(uuid4())
     subtitle_path = storage_service.subtitle_path(job_id)
     output_id, output_path = storage_service.new_output_path()

@@ -29,9 +29,10 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def reset_export_limits() -> Iterator[None]:
-    export_rate_limiter.reset()
+    import asyncio
+    asyncio.run(export_rate_limiter.reset())
     yield
-    export_rate_limiter.reset()
+    asyncio.run(export_rate_limiter.reset())
 
 
 def _enable_public_demo(monkeypatch: pytest.MonkeyPatch) -> None:

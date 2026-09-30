@@ -149,13 +149,19 @@ ayrı GPU worker servisinde yürütülmeli ve FastAPI yalnız job orkestrasyonu 
 son FFmpeg export'unu yönetmelidir. Sağlayıcı anahtarı yalnız provider dashboard
 secret'ı olarak tutulmalıdır.
 
-## 7. Deployment Adımları ve Checklist
+## 7. Redis Cache ve Rate Limiting
+
+Uygulamanın memory (RAM) üzerindeki bağımlılığını azaltmak ve IP bazlı günlük kotaları (Rate limit) ve Job durumlarını asenkron olarak saklamak için Redis kullanılır:
+- **Redis Yoksa (Development)**: Sistem memory-fallback modunda çalışır, sunucu yeniden başlatılınca sayaclar ve yarım kalan işler silinir.
+- **Production (Railway)**: Railway ortamında yeni bir Redis servisi oluşturun. Üretilen `REDIS_URL` (veya `REDIS_PRIVATE_URL`) env değişkenini backend'in variables kısmına ekleyin. Redis eklenmezse backend ayağa kalkar, ancak warning fırlatır.
+
+## 8. Deployment Adımları ve Checklist
 
 Canlıya çıkış (Go-live) süreçleri için şu dökümanlara başvurun:
 - `docs/LAUNCH_CHECKLIST.md` (Deployment öncesi ve sırası kontroller)
 - `docs/PRODUCTION_SMOKE_TEST.md` (Sistemin canlıda çalıştığının onayı)
 
-## 8. İlk Deneme Durumu — 26 Eylül 2026
+## 9. İlk Deneme Durumu — 26 Eylül 2026
 
 Faz 22 ilk denemesi **partial deployment** olarak kaydedilmiştir. Sonraki
 çalışmalarda Vercel frontend `https://dublajlab-sigma.vercel.app` adresinde

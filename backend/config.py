@@ -202,3 +202,10 @@ def get_shopier_api_key() -> str:
 
 def get_shopier_api_secret() -> str:
     return os.getenv("SHOPIER_API_SECRET", "")
+
+def get_redis_url() -> str | None:
+    url = os.getenv("REDIS_URL", "").strip()
+    if not url and app_environment() == "production":
+        import logging
+        logging.getLogger(__name__).warning("Production ortamında REDIS_URL ayarlanmamış! Memory fallback kullanılıyor (veriler restart'ta silinir).")
+    return url or None

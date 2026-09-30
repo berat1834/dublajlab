@@ -73,12 +73,12 @@ def test_ai_job_is_created_and_can_be_polled(
     assert created["status"] == "queued"
     assert created["progress"] == 0
 
-    jobs_router.job_registry.update(
+    asyncio.run(jobs_router.job_registry.update(
         created["job_id"],
         status=JobStatus.PROCESSING,
         progress=55,
         message="Video birleştiriliyor.",
-    )
+    ))
     polled = client.get(f"/api/jobs/{created['job_id']}")
 
     assert polled.status_code == 200
@@ -319,8 +319,8 @@ def test_recording_job_rejects_timeline_after_video_end() -> None:
 
 
 def test_completed_job_returns_download_url() -> None:
-    job = jobs_router.job_registry.create()
-    completed = jobs_router.job_registry.complete(job.job_id, str(uuid4()))
+    job = asyncio.run(jobs_router.job_registry.create())
+    completed = asyncio.run(jobs_router.job_registry.complete(job.job_id, str(uuid4())))
 
     response = client.get(f"/api/jobs/{job.job_id}")
 
@@ -332,8 +332,8 @@ def test_completed_job_returns_download_url() -> None:
 
 
 def test_failed_job_returns_error() -> None:
-    job = jobs_router.job_registry.create()
-    jobs_router.job_registry.fail(job.job_id, "FFmpeg işlemi başarısız.")
+    job = asyncio.run(jobs_router.job_registry.create())
+    asyncio.run(jobs_router.job_registry.fail(job.job_id, "FFmpeg işlemi başarısız."))
 
     response = client.get(f"/api/jobs/{job.job_id}")
 
@@ -354,7 +354,7 @@ def test_ai_worker_completes_job(
     tmp_path: Path,
 ) -> None:
     service = jobs_router.dubbing_job_service
-    job = jobs_router.job_registry.create()
+    job = asyncio.run(jobs_router.job_registry.create())
     audio_path = tmp_path / "voice.mp3"
     subtitle_path = tmp_path / "subtitle.ass"
     output_path = tmp_path / "output.mp4"
@@ -393,7 +393,7 @@ def test_ai_worker_completes_job(
         )
     )
 
-    completed = jobs_router.job_registry.get(job.job_id)
+    completed = asyncio.run(jobs_router.job_registry.get(job.job_id))
     assert completed is not None
     assert completed.status == JobStatus.COMPLETED
     assert completed.progress == 100
@@ -407,7 +407,7 @@ def test_ai_worker_applies_lip_sync_before_ffmpeg(
     tmp_path: Path,
 ) -> None:
     service = jobs_router.dubbing_job_service
-    job = jobs_router.job_registry.create()
+    job = asyncio.run(jobs_router.job_registry.create())
     audio_path = tmp_path / "voice.mp3"
     subtitle_path = tmp_path / "subtitle.ass"
     lip_sync_path = tmp_path / "lip-sync.mp4"
@@ -462,7 +462,7 @@ def test_ai_worker_applies_lip_sync_before_ffmpeg(
         )
     )
 
-    completed = jobs_router.job_registry.get(job.job_id)
+    completed = asyncio.run(jobs_router.job_registry.get(job.job_id))
     assert completed is not None
     assert completed.status == JobStatus.COMPLETED
     assert pipeline_order == ["lip-sync", "ffmpeg"]
@@ -475,7 +475,7 @@ def test_ai_worker_marks_job_failed(
     tmp_path: Path,
 ) -> None:
     service = jobs_router.dubbing_job_service
-    job = jobs_router.job_registry.create()
+    job = asyncio.run(jobs_router.job_registry.create())
     audio_path = tmp_path / "voice.mp3"
     subtitle_path = tmp_path / "subtitle.ass"
 
@@ -497,7 +497,7 @@ def test_ai_worker_marks_job_failed(
         )
     )
 
-    failed = jobs_router.job_registry.get(job.job_id)
+    failed = asyncio.run(jobs_router.job_registry.get(job.job_id))
     assert failed is not None
     assert failed.status == JobStatus.FAILED
     assert failed.error == "TTS servisi kullanılamıyor."

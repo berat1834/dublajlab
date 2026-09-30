@@ -49,7 +49,7 @@ async def run_ai_job_with_db(job_id: str, payload: ProcessRequest, project_id: s
     if project_id:
         db = SessionLocal()
         try:
-            job = job_registry.get(job_id)
+            job = await job_registry.get(job_id)
             project = db.query(models_db.DubbingProject).filter(models_db.DubbingProject.id == project_id).first()
             if project and job:
                 if job.status == "completed" and job.output_video_id:
@@ -95,7 +95,7 @@ async def run_recording_job_with_db(
     if project_id:
         db = SessionLocal()
         try:
-            job = job_registry.get(job_id)
+            job = await job_registry.get(job_id)
             project = db.query(models_db.DubbingProject).filter(models_db.DubbingProject.id == project_id).first()
             if project and job:
                 if job.status == "completed" and job.output_video_id:
@@ -206,8 +206,8 @@ async def create_ai_job(
     ensure_media_tools()
     dubbing_job_service.storage_service.get_video_path(payload.video_id)
     metadata = dubbing_job_service.storage_service.get_video_metadata(payload.video_id)
-    enforce_public_demo_export_limit(request)
-    job = job_registry.create("AI dublaj export sırasına alındı.")
+    await enforce_public_demo_export_limit(request)
+    job = await job_registry.create("AI dublaj export sırasına alındı.")
 
     project_id = None
     if current_user:
@@ -255,8 +255,8 @@ async def create_recording_job(
         recording_ids,
         float(metadata["duration_seconds"]),
     )
-    enforce_public_demo_export_limit(request)
-    job = job_registry.create("Mikrofon kayıtları export sırasına alındı.")
+    await enforce_public_demo_export_limit(request)
+    job = await job_registry.create("Mikrofon kayıtları export sırasına alındı.")
 
     project_id = None
     vip_enabled = has_active_vip(current_user)
@@ -284,7 +284,7 @@ async def create_recording_job(
             job.job_id,
         )
     except Exception as exc:
-        job_registry.fail(job.job_id, str(exc) or "Ses kayıtları kaydedilemedi.")
+        await job_registry.fail(job.job_id, str(exc) or "Ses kayıtları kaydedilemedi.")
         if project_id:
             db_project = db.query(models_db.DubbingProject).filter(models_db.DubbingProject.id == project_id).first()
             if db_project:
@@ -310,7 +310,7 @@ async def create_recording_job(
 
 @router.get("/{job_id}", response_model=JobResponse)
 async def get_job(job_id: str) -> JobResponse:
-    job = job_registry.get(job_id)
+    job = await job_registry.get(job_id)
     if job is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
