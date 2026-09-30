@@ -238,8 +238,8 @@ Platform artık kullanıcı hesapları, kalıcı kütüphane, public feed, beğe
 
 - **Veritabanı:** Production ortamında **PostgreSQL** kullanımı zorunludur. Geliştirmede kullanılan SQLite, eşzamanlı isteklerde `database is locked` hatasına sebep olur ve kalıcı disk olmayan servislerde veri kaybı yaşatır.
 - **JWT Güvenliği:** `APP_ENV=production` iken varsayılan `JWT_SECRET` ile uygulama başlatılamaz — güçlü, rastgele bir secret tanımlanmalıdır (`openssl rand -hex 32`).
-- **Medya Depolama:** Kısa vadede Railway Volume, uzun vadede S3/R2 kullanılmalıdır.
-- **Moderasyon:** Otomatik içerik taraması (AI toxicity filtering) yoktur; admin'in düzenli denetimi gereklidir.
+- **Medya Depolama:** Varsayılan `STORAGE_PROVIDER=local` ve Railway volume akışı korunur. Cloudflare R2/S3-compatible adapter; upload, varlık kontrolü, güncel public/presigned URL, proje silme ve retention cleanup akışlarına bağlıdır. Gerçek staging bucket smoke'u secret'lar sağlanınca opt-in çalıştırılır; [R2 kurulum ve rollback adımları](DEPLOYMENT_PLAN.md#cloudflare-r2-staging-ve-production-ayarları) belgelenmiştir.
+- **Moderasyon ve Ops (Observability):** Otomatik içerik taraması (AI toxicity filtering) yoktur; admin'in düzenli denetimi gereklidir. Opsiyonel sistem sağlığı ve ödeme metrikleri (VIP Shopier) için `/api/admin/ops/metrics` yetkili adminler tarafından takip edilebilir.
 
 Deployment stratejisi ve risk analizi için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md), canlıya çıkış kontrol listesi için [docs/LAUNCH_CHECKLIST.md](docs/LAUNCH_CHECKLIST.md), smoke test akışı için [docs/PRODUCTION_SMOKE_TEST.md](docs/PRODUCTION_SMOKE_TEST.md) belgelerine bakın.
 

@@ -6,7 +6,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import TypeAdapter, ValidationError
 
 from backend.config import active_max_video_duration_seconds
@@ -123,6 +123,7 @@ async def process_video(
             1920,
             1080,
         )
+        download_url = _publish_output(output_path, output_id)
         storage_service.register_output(
             output_id,
             {
@@ -143,7 +144,7 @@ async def process_video(
         job_id=job_id,
         status="completed",
         output_video_id=output_id,
-        download_url=f"/api/video/download/{output_id}",
+        download_url=download_url,
     )
 
 
@@ -232,6 +233,7 @@ async def process_recordings(
             1280,
             720,
         )
+        download_url = _publish_output(output_path, output_id)
         storage_service.register_output(
             output_id,
             {
@@ -246,7 +248,7 @@ async def process_recordings(
     except HTTPException:
         output_path.unlink(missing_ok=True)
         raise
-    except MediaProcessingError as exc:
+    except (MediaProcessingError, RuntimeError) as exc:
         output_path.unlink(missing_ok=True)
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     finally:
@@ -258,7 +260,7 @@ async def process_recordings(
         job_id=job_id,
         status="completed",
         output_video_id=output_id,
-        download_url=f"/api/video/download/{output_id}",
+        download_url=download_url,
     )
 
 
@@ -268,12 +270,24 @@ async def preview_video(video_id: str) -> FileResponse:
     return FileResponse(path, media_type=_media_type(path), content_disposition_type="inline")
 
 
-@router.get("/download/{output_video_id}")
-async def download_video(output_video_id: str) -> FileResponse:
-    path = storage_service.get_output_path(output_video_id)
-    metadata = storage_service.get_output_metadata(output_video_id)
-    filename = storage_service.safe_download_name(metadata.get("original_filename", "meme"))
-    return FileResponse(path, media_type="video/mp4", filename=filename)
+@router.get("/download/{output_video_id}", response_model=None)
+async def download_video(output_video_id: str) -> FileResponse | RedirectResponse:
+    safe_id = storage_service._validate_uuid(output_video_id, "Çıktı videosu")
+    try:
+        path = storage_service.get_output_path(safe_id)
+        metadata = storage_service.get_output_metadata(safe_id)
+        filename = storage_service.safe_download_name(metadata.get("original_filename", "meme"))
+        return FileResponse(path, media_type="video/mp4", filename=filename)
+    except HTTPException as local_error:
+        from backend.services.storage_provider import get_storage_provider
+
+        object_key = f"{safe_id}.mp4"
+        provider = get_storage_provider()
+        if provider.provider_name == "s3" and provider.file_exists(object_key):
+            remote_url = provider.get_public_url(object_key)
+            if remote_url:
+                return RedirectResponse(remote_url, status_code=307)
+        raise local_error
 
 
 def _media_type(path: Path) -> str:
@@ -282,3 +296,12 @@ def _media_type(path: Path) -> str:
         ".mov": "video/quicktime",
         ".webm": "video/webm",
     }.get(path.suffix.lower(), "application/octet-stream")
+
+
+def _publish_output(output_path: Path, output_id: str) -> str:
+    from backend.services.storage_provider import STORAGE_UPLOAD_ERROR, get_storage_provider
+
+    provider = get_storage_provider()
+    if not provider.upload_file(output_path, output_path.name):
+        raise RuntimeError(STORAGE_UPLOAD_ERROR)
+    return provider.get_public_url(output_path.name) or f"/api/video/download/{output_id}"

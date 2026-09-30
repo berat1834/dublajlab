@@ -20,6 +20,13 @@ RECORDING_DIR = MEDIA_ROOT / "recordings"
 TEMP_DIR = MEDIA_ROOT / "tmp"
 METADATA_DIR = MEDIA_ROOT / "metadata"
 
+STORAGE_PROVIDER = os.getenv("STORAGE_PROVIDER", "local").lower()
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
+S3_ACCESS_KEY_ID = os.getenv("S3_ACCESS_KEY_ID", "")
+S3_SECRET_ACCESS_KEY = os.getenv("S3_SECRET_ACCESS_KEY", "")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME", "")
+S3_PUBLIC_BASE_URL = os.getenv("S3_PUBLIC_BASE_URL", "")
+
 FFMPEG_BINARY = os.getenv("FFMPEG_BINARY", "ffmpeg")
 FFPROBE_BINARY = os.getenv("FFPROBE_BINARY", "ffprobe")
 LIPSYNC_ENABLED = os.getenv("LIPSYNC_ENABLED", "false").lower() in ("true", "1", "yes", "on")
@@ -197,11 +204,23 @@ def get_jwt_algorithm() -> str:
 def get_jwt_expire_minutes() -> int:
     return _positive_int_setting("ACCESS_TOKEN_EXPIRE_MINUTES", 4320)
 
+def is_shopier_enabled() -> bool:
+    return _boolean_setting("SHOPIER_ENABLED", False)
+
 def get_shopier_api_key() -> str:
     return os.getenv("SHOPIER_API_KEY", "")
 
 def get_shopier_api_secret() -> str:
     return os.getenv("SHOPIER_API_SECRET", "")
+
+def get_shopier_callback_secret() -> str:
+    return os.getenv("SHOPIER_CALLBACK_SECRET", "")
+
+def get_shopier_return_url() -> str:
+    return os.getenv("SHOPIER_RETURN_URL", "http://localhost:5173/membership/success")
+
+def get_shopier_cancel_url() -> str:
+    return os.getenv("SHOPIER_CANCEL_URL", "http://localhost:5173/membership")
 
 def get_redis_url() -> str | None:
     url = os.getenv("REDIS_URL", "").strip()

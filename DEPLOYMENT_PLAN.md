@@ -68,6 +68,14 @@ TRUST_PROXY_HEADERS=false
 # Lip-sync release güvenliği
 LIPSYNC_ENABLED=false
 LIPSYNC_PROVIDER=disabled
+
+# Shopier Webhook
+SHOPIER_ENABLED=true
+SHOPIER_API_KEY=<provider-dashboard-only-shopier-key>
+SHOPIER_API_SECRET=<provider-dashboard-only-shopier-secret>
+SHOPIER_CALLBACK_SECRET=<provider-dashboard-only-callback-secret>
+SHOPIER_RETURN_URL=https://dublajlab-sigma.vercel.app/membership/success
+SHOPIER_CANCEL_URL=https://dublajlab-sigma.vercel.app/membership
 ```
 
 **Güvenlik Uyarısı:** `APP_ENV=production` iken `JWT_SECRET` varsayılan kalırsa uygulama `ValueError` fırlatacak ve güvenlik sebebiyle başlatılamayacaktır.
@@ -113,8 +121,7 @@ Komut build tamamlandıktan sonra, yeni container trafiğe alınmadan önce çal
 `VITE_API_BASE_URL` secret değildir ve Vite build sırasında tarayıcı bundle'ına yazılır. Railway backend domain'i değişirse environment değeri güncellenip frontend yeniden deploy edilmelidir.
 
 `VITE_SHOPIER_VIP_URL` ve `VITE_VIP_PRICE_LABEL` da build-time değerleridir.
-Gerçek ödeme sonucu frontend dönüş parametresinden doğrulanmaz; webhook entegrasyonu
-hazır olana kadar doğrulanmış sipariş yönetici endpoint'iyle manuel etkinleştirilir.
+Gerçek ödeme doğrulama işlemi `/api/payments/webhook` rotasına düşen Shopier bildirimindeki HMAC-SHA256 imza onayı ile backend'de otomatik yapılır ve kullanıcı anında VIP erişimine kavuşur. Frontend doğrudan yönlendirmeyi veya manuel onayı kullanmaz.
 
 ## 5. Upload Güvenliği ve Medya Doğrulaması (Production Upload Validation)
 
@@ -131,6 +138,44 @@ Platform, giriş yapmış (authenticated) kullanıcılar için "Kataloğum" alt�
 - **Risk**: Kullanıcı arşivleri silinmezse, disk (Railway Volume) çok hızlı dolabilir. Production'da disk dolması (Disk Full) API'nin tamamen durmasına neden olur.
 - **Geçici Çözüm**: Cleanup politikasına kullanıcı export'ları için de bir yaşam süresi (ör. 30 gün) eklemek veya manuel kota kontrolü yapmak.
 - **Kalıcı Çözüm**: AWS S3 veya Cloudflare R2'ye geçiş.
+
+## Cloudflare R2 staging ve production ayarları
+
+R2 geçişi önce ayrı ve silinebilir bir **staging bucket** üzerinde doğrulanmalıdır.
+`STORAGE_PROVIDER` varsayılanı `local` kalır; production değişkeni ancak staging
+smoke başarılı olduktan sonra `s3` yapılmalıdır.
+
+| Railway değişkeni | Zorunlu | Açıklama |
+| --- | --- | --- |
+| `STORAGE_PROVIDER=s3` | Evet | S3-compatible adapter'ı etkinleştirir. Geri dönüş için `local` yapılır. |
+| `S3_ENDPOINT_URL` | Evet | R2 S3 endpoint'i: `https://<account-id>.r2.cloudflarestorage.com` |
+| `S3_ACCESS_KEY_ID` | Evet | Yalnız staging bucket Object Read/Write yetkili token kimliği |
+| `S3_SECRET_ACCESS_KEY` | Evet | Yalnız Railway secret alanında tutulacak token secret'ı |
+| `S3_BUCKET_NAME` | Evet | Önce staging bucket adı, ör. `dublajlab-media-staging` |
+| `S3_PUBLIC_BASE_URL` | Hayır | Public custom domain. Boşsa bir saatlik presigned URL üretilir. |
+
+Önerilen ilk strateji private bucket + presigned URL'dir. Public custom domain
+kullanılırsa bucket CORS ayarında yalnız production frontend origin'ine `GET` ve
+`HEAD` izni verilmeli; bucket listeleme açılmamalıdır. Secret değerleri GitHub,
+log, `/api/health` veya admin ops cevabına yazılmaz. Admin ops yalnız
+`storage_provider`, `storage_configured` ve `storage_accessible` boolean alanlarını
+döndürür.
+
+Staging token'ı ve değişkenler provider dashboard'a girildikten sonra opt-in smoke:
+
+```powershell
+$env:RUN_R2_SMOKE = "1"
+.\.venv\Scripts\python.exe -m pytest backend/tests/test_r2_staging_smoke.py -q
+```
+
+Test `smoke-tests/` altında küçük ve benzersiz bir nesne yükler; erişim URL'sini,
+`head_object` sonucunu ve silmeyi doğrular. Büyük toplu migration yapmaz. Ardından
+uygulama üzerinden küçük, telifsiz bir video export edilerek kütüphane, public feed,
+proje silme ve retention cleanup akışları manuel olarak kontrol edilir.
+
+Rollback için Railway'de `STORAGE_PROVIDER=local` yapılıp servis yeniden deploy
+edilir. Bu durumda mevcut `/app/media` volume akışı devam eder; R2 objeleri ayrıca
+silinmez veya topluca taşınmaz.
 
 ## 6. Dudak Senkronizasyonu Deployment Kararı
 
@@ -161,7 +206,14 @@ Canlıya çıkış (Go-live) süreçleri için şu dökümanlara başvurun:
 - `docs/LAUNCH_CHECKLIST.md` (Deployment öncesi ve sırası kontroller)
 - `docs/PRODUCTION_SMOKE_TEST.md` (Sistemin canlıda çalıştığının onayı)
 
-## 9. İlk Deneme Durumu — 26 Eylül 2026
+## 9. Observability ve Admin Operasyon Metrikleri
+
+Production ortamında sistem sağlığını, aktif VIP kullanıcı sayısını, veritabanı, Redis ve FFmpeg durumlarını izlemek kritik bir operasyondur.
+- Sistemin sağlıklı çalıştığından emin olmak için düzenli olarak **Admin** yetkisine sahip bir hesap ile Frontend üzerinden **Sistem Durumu (Ops)** sekmesine girin.
+- Bu sekmede Shopier durumu, Medya izinleri, Aktif kayıtlı kullanıcılar, failed/başarısız projelerin logları (en son 10 proje) listelenmektedir.
+- Sistem sağlığı doğrudan `GET /api/admin/ops/metrics` (Sadece adminlere açık) üzerinden okunur, `getAdminOpsMetrics` isteğinde herhangi bir hassas API Secret ifşa edilmez.
+
+## 10. İlk Deneme Durumu — 26 Eylül 2026
 
 Faz 22 ilk denemesi **partial deployment** olarak kaydedilmiştir. Sonraki
 çalışmalarda Vercel frontend `https://dublajlab-sigma.vercel.app` adresinde

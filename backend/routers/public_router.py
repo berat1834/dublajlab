@@ -7,6 +7,7 @@ import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.services.file_storage import FileStorageService
 from backend.routers.auth_router import get_current_user
+from backend.services.storage_provider import get_storage_provider
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 storage = FileStorageService()
@@ -37,8 +38,19 @@ def get_public_dubs(db: Session = Depends(get_db), current_user: models_db.User 
         ).first()
         
         if export and export.output_video_id:
+            provider = get_storage_provider()
+            filename = f"{export.output_video_id}.mp4"
             try:
-                storage.get_output_path(export.output_video_id)
+                meta = storage.get_output_metadata(export.output_video_id)
+                filename = str(meta.get("stored_filename") or filename)
+            except HTTPException:
+                if provider.provider_name != "s3":
+                    continue
+
+            if provider.file_exists(filename):
+                download_url = provider.get_public_url(filename)
+                if not download_url:
+                    continue
                 
                 # Check like count and my like
                 like_count = db.query(models_db.DubbingLike).filter(models_db.DubbingLike.project_id == project.id).count()
@@ -55,13 +67,13 @@ def get_public_dubs(db: Session = Depends(get_db), current_user: models_db.User 
                     display_name=user.display_name,
                     created_at=project.created_at,
                     duration_seconds=project.duration_seconds,
-                    download_url=export.download_url,
+                    download_url=download_url,
                     view_count=project.view_count,
                     like_count=like_count,
                     liked_by_me=liked_by_me
                 ))
-            except HTTPException:
-                pass
+            else:
+                continue
                 
     return result
 
@@ -88,9 +100,18 @@ def get_public_dub(project_id: str, db: Session = Depends(get_db), current_user:
     if not export or not export.output_video_id:
         raise HTTPException(status_code=404, detail="Dublaj dosyası bulunamadı.")
         
+    provider = get_storage_provider()
+    filename = f"{export.output_video_id}.mp4"
     try:
-        storage.get_output_path(export.output_video_id)
+        meta = storage.get_output_metadata(export.output_video_id)
+        filename = str(meta.get("stored_filename") or filename)
     except HTTPException:
+        if provider.provider_name != "s3":
+            raise HTTPException(status_code=404, detail="Dublaj dosyası silinmiş.")
+    if not provider.file_exists(filename):
+        raise HTTPException(status_code=404, detail="Dublaj dosyası silinmiş.")
+    download_url = provider.get_public_url(filename)
+    if not download_url:
         raise HTTPException(status_code=404, detail="Dublaj dosyası silinmiş.")
         
     like_count = db.query(models_db.DubbingLike).filter(models_db.DubbingLike.project_id == project.id).count()
@@ -107,7 +128,7 @@ def get_public_dub(project_id: str, db: Session = Depends(get_db), current_user:
         display_name=user.display_name,
         created_at=project.created_at,
         duration_seconds=project.duration_seconds,
-        download_url=export.download_url,
+        download_url=download_url,
         view_count=project.view_count,
         like_count=like_count,
         liked_by_me=liked_by_me

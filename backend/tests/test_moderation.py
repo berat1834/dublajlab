@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from uuid import uuid4
+from unittest.mock import MagicMock
 
 from backend.main import app
 from backend.models_db import User, DubbingProject, DubbingExport, ContentReport
@@ -58,7 +59,7 @@ def test_report_public_dub(db_session):
     assert any(r.reporter_user_id == normal_user.id for r in reports)
     app.dependency_overrides.pop(get_optional_user, None)
 
-def test_admin_hide_project_removes_from_feed(db_session):
+def test_admin_hide_project_removes_from_feed(db_session, monkeypatch):
     admin_user = User(
         email=f"admin_{uuid4().hex[:6]}@example.com",
         password_hash="hashed_pw",
@@ -93,7 +94,13 @@ def test_admin_hide_project_removes_from_feed(db_session):
     class MockStorage:
         def get_output_path(self, *args):
             return True
+        def get_output_metadata(self, *args):
+            return {"stored_filename": "mock.mp4"}
     pr.storage = MockStorage()
+    provider = MagicMock()
+    provider.file_exists.return_value = True
+    provider.get_public_url.return_value = "https://media.example.com/mock.mp4"
+    monkeypatch.setattr(pr, "get_storage_provider", lambda: provider)
 
     # Check it's visible
     res = client.get("/api/public/dubs")

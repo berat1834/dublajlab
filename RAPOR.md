@@ -70,6 +70,11 @@
 | 39 | Upload Security Hardening + Media Validation | [sprint-39-upload-security-hardening.md](docs/reports/sprint-39-upload-security-hardening.md) |
 | 40 | Redis tabanlı Rate Limit ve Job State Persistence | [sprint-40-redis-rate-limit-job-persistence.md](docs/reports/sprint-40-redis-rate-limit-job-persistence.md) |
 | 40.5 | Production Redis Deploy + Smoke Test | [sprint-405-production-redis-smoke.md](docs/reports/sprint-405-production-redis-smoke.md) |
+| 41 | Shopier Webhook + Otomatik VIP Aktivasyonu | [sprint-41-shopier-webhook.md](docs/reports/sprint-41-shopier-webhook.md) |
+| 41.5 | Shopier Payment Production Smoke Test | [sprint-415-shopier-production-smoke.md](docs/reports/sprint-415-shopier-production-smoke.md) |
+| 42 | Observability + Admin Ops Metrics | [sprint-42-observability-admin-ops.md](docs/reports/sprint-42-observability-admin-ops.md) |
+| 43 | Cloudflare R2 / S3 Media Storage Migration Plan + Abstraction | [sprint-43-object-storage-abstraction.md](docs/reports/sprint-43-object-storage-abstraction.md) |
+| 44 | R2 production enable hazırlığı ve migration smoke | [sprint-44-r2-production-smoke.md](docs/reports/sprint-44-r2-production-smoke.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
@@ -83,8 +88,10 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Frontend dependency audit: 0 vulnerability
 - Üyelik migration'ı önceki revision üzerinden başarıyla doğrulandı
 - Docker smoke test: backend container `healthy`; Alembic, FFmpeg, auth, template ve CORS kontrolleri geçti
-- CI status: PR #12 merge edildi; PR CI ve merge commit `3ae6836` üzerindeki `main` CI backend/frontend job'ları başarılı oldu.
 - Sprint 38: Marka asset'leri, manifest ve metadata production build içinde doğrulandı; frontend lint/test/build ve dependency audit sonuçları sprint raporunda kayıtlıdır.
+- Sprint 42: Admin Ops Metrics (Sistem Sağlığı) ekranı React tarafında `AdminOpsPanel` olarak eklendi, ops metricleri için backend'e admin endpoint eklendi, testler 100% başarılı, UI uyumlu hale getirildi.
+- Sprint 43: Cloudflare R2 / S3 Storage Abstraction eklendi. Testler (storage mock, health endpoints vb.) başarılı bir şekilde geçti.
+- Sprint 44: R2 upload/delete/exists/URL, library/feed, retention ve local fallback regresyonları doğrulandı. Gerçek staging bucket smoke'u credential olmadığı için bekliyor.
 
 ## Known Risks
 
@@ -97,7 +104,7 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Public demo limits: Memory tabanlı rate limiter process restart durumunda sıfırlanır.
 - Edge TTS dependency: Dış servis bağımlılığı, ileride TTS çalışmazsa fallback mekanizması gerektirebilir.
 - Production export kaynak kullanımı: Railway'in 1 GB bellek sınırında yüksek çözünürlüklü girdiler 1080p ile sınırlandırılır; daha uzun videolar ayrıca izlenmelidir.
-- VIP ödeme doğrulaması: Shopier callback entegrasyonu henüz yoktur; doğrulanmış siparişler admin endpoint'iyle manuel etkinleştirilir.
+- VIP ödeme doğrulaması: Shopier callback entegrasyonu tamamlandı; test veritabanında başarıyla doğrulanmasına rağmen production'da gerçek Shopier credentials beklenmektedir.
 
 ## Next Steps
 
@@ -127,3 +134,7 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - **Sprint 39: Upload Security Hardening**: Video yükleme uç noktası (endpoint) katı bir `magic-byte`, `content-type` ve `FFprobe` doğrulamasından geçirilerek sahte veya bozuk dosyaların sunucuya yazılması engellendi. Ayrıntılar: [sprint-39-upload-security-hardening.md](docs/reports/sprint-39-upload-security-hardening.md).
 - **Sprint 40: Redis-Based Persistence**: RAM üzerindeki yükü ve data kaybını (restart sonrası) önlemek amacıyla Rate Limiter (IP tabanlı) ve Job Registry (Durum takip) mekanizmaları asenkron Redis mimarisine taşındı. Fallback mekanizmasıyla Redis olmadan da çalışması sağlandı. Ayrıntılar: [sprint-40-redis-rate-limit-job-persistence.md](docs/reports/sprint-40-redis-rate-limit-job-persistence.md).
 - **Sprint 40.5: Production Redis Smoke Test**: Canlı ortamlarda (Örn. Railway) Redis bağlantısının sağlıklı kurulup kurulmadığını anonim olarak loglayan `/api/health` geliştirildi. Sistem, Redis hatalarına karşı `memory fallback` senaryosunda stabilite testinden geçirildi. Ayrıntılar: [sprint-405-production-redis-smoke.md](docs/reports/sprint-405-production-redis-smoke.md).
+- **Sprint 41-41.5: Shopier Webhook + VIP Aktivasyonu & Smoke Test**: Backend `payments` router eklendi, Shopier API imza algoritmasına tam uyumlu doğrulama mekanizması entegre edildi. Başarılı callback dönüşlerinde kullanıcının `membership_tier='vip'` olması garanti altına alındı. Idempotency testleri ve gizli verilerin güvenliği Pytest üzerinden (7/7 pass) doğrulandı. Ayrıntılar: [sprint-415-shopier-production-smoke.md](docs/reports/sprint-415-shopier-production-smoke.md).
+- **Sprint 42: Observability & Admin Ops**: Production aşaması için sadece yetkili adminlerin erişebildiği `/api/admin/ops/metrics` endpoint'i ve frontend `AdminOpsPanel` Dashboard'ı geliştirildi. Shopier, Redis, Postgres, Media Volume ve FFmpeg bağlantılarının anlık monitör edilmesi (sağlık testleri) sağlandı. Ayrıca başarısız/export alınan işlerin istatistikleri arayüzde modellendi. Ayrıntılar: [sprint-42-observability-admin-ops.md](docs/reports/sprint-42-observability-admin-ops.md).
+- **Sprint 43: Cloudflare R2 / S3 Object Storage Abstraction**: Railway /app/media hacmindeki dosya kısıtlamalarını aşmak ve yatayda ölçeklenebilmek için S3 tabanlı adapter (abstraction) yazıldı. `LocalStorageProvider` ile mevcut akış bozulmadan `S3StorageProvider` yeteneği eklendi. Yeni Cloudflare R2 taşıma planı hazırlandı. Ayrıntılar: [sprint-43-object-storage-abstraction.md](docs/reports/sprint-43-object-storage-abstraction.md).
+- **Sprint 44: R2 Production Enable + Migration Smoke**: Storage adapter fail-closed hale getirildi; export URL, eksik obje, silme ve cleanup davranışları mock testlerle doğrulandı. Dış staging smoke sonucu ve kalan blocker'lar: [sprint-44-r2-production-smoke.md](docs/reports/sprint-44-r2-production-smoke.md).

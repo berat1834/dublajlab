@@ -29,11 +29,10 @@ def test_health_endpoint() -> None:
     response = client.get("/api/health")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "ok",
-        "app": "DublajLab",
-        "version": "0.2.0",
-    }
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["app"] == "DublajLab"
+    assert data["version"] == "0.2.0"
 
 
 def test_supported_video_is_accepted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

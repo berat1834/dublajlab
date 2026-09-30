@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from uuid import uuid4
+from unittest.mock import MagicMock
 
 from backend.main import app
 from backend.models_db import User, DubbingProject, DubbingExport, DubbingLike
@@ -12,7 +13,7 @@ def override_user(user):
         return user
     return _override
 
-def test_likes_and_views(db_session):
+def test_likes_and_views(db_session, monkeypatch):
     user = User(
         email=f"normal_{uuid4().hex[:6]}@example.com",
         password_hash="hashed_pw",
@@ -49,7 +50,13 @@ def test_likes_and_views(db_session):
     class MockStorage:
         def get_output_path(self, *args):
             return True
+        def get_output_metadata(self, *args):
+            return {"stored_filename": "mock.mp4"}
     pr.storage = MockStorage()
+    provider = MagicMock()
+    provider.file_exists.return_value = True
+    provider.get_public_url.return_value = "https://media.example.com/mock.mp4"
+    monkeypatch.setattr(pr, "get_storage_provider", lambda: provider)
 
     # 1. View count increment
     res = client.post(f"/api/public/dubs/{project.id}/view")

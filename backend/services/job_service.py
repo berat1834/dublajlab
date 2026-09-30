@@ -90,7 +90,12 @@ class JobRegistry:
         await self._save_to_redis(updated)
         return updated.model_copy(deep=True)
 
-    async def complete(self, job_id: str, output_video_id: str) -> JobResponse:
+    async def complete(
+        self,
+        job_id: str,
+        output_video_id: str,
+        download_url: str | None = None,
+    ) -> JobResponse:
         with self._lock:
             current = self._jobs[job_id]
             updated = current.model_copy(
@@ -99,7 +104,7 @@ class JobRegistry:
                     "progress": 100,
                     "message": "Dublaj videosu hazır.",
                     "output_video_id": output_video_id,
-                    "download_url": f"/api/video/download/{output_video_id}",
+                    "download_url": download_url or f"/api/video/download/{output_video_id}",
                     "error": None,
                 }
             )
@@ -200,6 +205,10 @@ class DubbingJobService:
                 add_watermark=(membership_tier != "vip")
             )
             await self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
+            from backend.services.storage_provider import STORAGE_UPLOAD_ERROR, get_storage_provider
+            object_storage = get_storage_provider()
+            if not object_storage.upload_file(output_path, output_path.name):
+                raise RuntimeError(STORAGE_UPLOAD_ERROR)
             self.storage_service.register_output(
                 output_id,
                 {
@@ -211,7 +220,11 @@ class DubbingJobService:
                     "lip_sync_applied": payload.apply_lip_sync,
                 },
             )
-            await self.registry.complete(job_id, output_id)
+            await self.registry.complete(
+                job_id,
+                output_id,
+                object_storage.get_public_url(output_path.name),
+            )
         except Exception as exc:
             logger.exception("AI dubbing job %s failed: %s", job_id, exc)
             if output_path:
@@ -297,6 +310,10 @@ class DubbingJobService:
                 add_watermark=(membership_tier != "vip")
             )
             await self.registry.update(job_id, progress=90, message="MP4 çıktısı kaydediliyor.")
+            from backend.services.storage_provider import STORAGE_UPLOAD_ERROR, get_storage_provider
+            object_storage = get_storage_provider()
+            if not object_storage.upload_file(output_path, output_path.name):
+                raise RuntimeError(STORAGE_UPLOAD_ERROR)
             self.storage_service.register_output(
                 output_id,
                 {
@@ -311,7 +328,11 @@ class DubbingJobService:
                     "lip_sync_applied": apply_lip_sync,
                 },
             )
-            await self.registry.complete(job_id, output_id)
+            await self.registry.complete(
+                job_id,
+                output_id,
+                object_storage.get_public_url(output_path.name),
+            )
         except Exception as exc:
             logger.exception("Recording dubbing job %s failed: %s", job_id, exc)
             if output_path:

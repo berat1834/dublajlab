@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from uuid import uuid4
+from unittest.mock import MagicMock
 
 from backend.main import app
 from backend.models_db import User, DubbingProject, DubbingExport
@@ -41,7 +42,7 @@ def test_change_visibility(db_session):
 
     app.dependency_overrides.pop(get_current_user, None)
 
-def test_public_dubs_feed(db_session):
+def test_public_dubs_feed(db_session, monkeypatch):
     test_user = User(
         email=f"test_{uuid4().hex[:6]}@example.com",
         password_hash="hashed_pw",
@@ -81,7 +82,13 @@ def test_public_dubs_feed(db_session):
     class MockStorage:
         def get_output_path(self, *args):
             return True
+        def get_output_metadata(self, *args):
+            return {"stored_filename": "mock.mp4"}
     pr.storage = MockStorage()
+    provider = MagicMock()
+    provider.file_exists.return_value = True
+    provider.get_public_url.return_value = "https://media.example.com/mock.mp4"
+    monkeypatch.setattr(pr, "get_storage_provider", lambda: provider)
 
     export = DubbingExport(
         project_id=public_proj.id,

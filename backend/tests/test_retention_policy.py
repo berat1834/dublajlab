@@ -2,6 +2,7 @@ import pytest
 from datetime import datetime, timedelta, timezone
 import uuid
 import os
+from unittest.mock import MagicMock
 from sqlalchemy.orm import Session
 from fastapi.testclient import TestClient
 
@@ -170,6 +171,90 @@ def test_deleted_export_returns_null_download_url(client: TestClient, db_session
     data = resp.json()
     assert len(data) == 1
     assert data[0]["download_url"] is None
+
+
+def test_user_library_returns_remote_storage_url(
+    client: TestClient,
+    db_session: Session,
+    sample_user_free,
+    monkeypatch,
+):
+    output_id = str(uuid.uuid4())
+    project = DubbingProject(
+        user_id=sample_user_free.id,
+        source_type="upload",
+        title="Remote File Project",
+    )
+    db_session.add(project)
+    db_session.commit()
+    db_session.add(DubbingExport(
+        project_id=project.id,
+        output_video_id=output_id,
+        download_url=f"/api/video/download/{output_id}",
+    ))
+    db_session.commit()
+    video_path, metadata_path = create_mock_export_file(output_id)
+    video_path.unlink()
+    metadata_path.unlink()
+
+    provider = MagicMock()
+    provider.provider_name = "s3"
+    provider.file_exists.return_value = True
+    provider.get_public_url.return_value = f"https://media.example.com/{output_id}.mp4"
+    monkeypatch.setattr(
+        "backend.services.storage_provider.get_storage_provider",
+        lambda: provider,
+    )
+
+    from backend.auth import create_access_token
+    token = create_access_token({"sub": str(sample_user_free.id)})
+    response = client.get(
+        "/api/me/exports",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["download_url"] == (
+        f"https://media.example.com/{output_id}.mp4"
+    )
+
+
+def test_project_delete_removes_remote_object_without_local_metadata(
+    client: TestClient,
+    db_session: Session,
+    sample_user_free,
+    monkeypatch,
+):
+    output_id = str(uuid.uuid4())
+    project = DubbingProject(
+        user_id=sample_user_free.id,
+        source_type="upload",
+        title="Remote Delete Project",
+    )
+    db_session.add(project)
+    db_session.commit()
+    db_session.add(DubbingExport(
+        project_id=project.id,
+        output_video_id=output_id,
+        download_url=f"https://media.example.com/{output_id}.mp4",
+    ))
+    db_session.commit()
+
+    provider = MagicMock()
+    monkeypatch.setattr(
+        "backend.services.storage_provider.get_storage_provider",
+        lambda: provider,
+    )
+    from backend.auth import create_access_token
+    token = create_access_token({"sub": str(sample_user_free.id)})
+
+    response = client.delete(
+        f"/api/me/projects/{project.id}",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 204
+    provider.delete_file.assert_called_once_with(f"{output_id}.mp4")
 
 def test_public_feed_omits_missing_files(client: TestClient, db_session: Session, sample_user_free):
     output_id = str(uuid.uuid4())

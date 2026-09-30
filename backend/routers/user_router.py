@@ -16,10 +16,10 @@ def delete_account(body: dict, db: Session = Depends(get_db), current_user: mode
     password = body.get("password")
     if not password:
         raise HTTPException(status_code=400, detail="Şifre gerekli.")
-        
+
     if not current_user.hashed_password or not verify_password(password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Geçersiz şifre.")
-        
+
     db.delete(current_user)
     db.commit()
     return None
@@ -49,12 +49,12 @@ def update_user_project(project_id: str, project_update: schemas.ProjectUpdate, 
     ).first()
     if not project:
         raise HTTPException(status_code=404, detail="Proje bulunamadı.")
-    
+
     if project_update.title is not None:
         project.title = project_update.title
     if project_update.visibility is not None:
         project.visibility = project_update.visibility
-        
+
     db.commit()
     db.refresh(project)
     return project
@@ -67,20 +67,29 @@ def delete_user_project(project_id: str, db: Session = Depends(get_db), current_
     ).first()
     if not project:
         raise HTTPException(status_code=404, detail="Proje bulunamadı.")
-        
+
     from backend.services.file_storage import FileStorageService
     storage = FileStorageService()
-    
+
     exports = db.query(models_db.DubbingExport).filter(models_db.DubbingExport.project_id == project_id).all()
     for exp in exports:
         if exp.output_video_id:
+            filename = f"{exp.output_video_id}.mp4"
             try:
-                # Delete video
+                meta = storage.get_output_metadata(exp.output_video_id)
+                filename = str(meta.get("stored_filename") or filename)
+            except HTTPException:
+                pass
+
+            from backend.services.storage_provider import get_storage_provider
+            get_storage_provider().delete_file(filename)
+
+            try:
                 video_path = storage.get_output_path(exp.output_video_id)
                 video_path.unlink(missing_ok=True)
             except HTTPException:
                 pass
-            
+
             try:
                 # Delete metadata
                 from backend.config import METADATA_DIR
@@ -89,9 +98,9 @@ def delete_user_project(project_id: str, db: Session = Depends(get_db), current_
                 meta_path.unlink(missing_ok=True)
             except Exception:
                 pass
-        
+
         db.delete(exp)
-        
+
     db.delete(project)
     db.commit()
     return None
@@ -102,24 +111,34 @@ def get_user_exports(db: Session = Depends(get_db), current_user: models_db.User
         models_db.DubbingProject.user_id == current_user.id
     ).all()
     project_ids = [p.id for p in projects]
-    
+
     if not project_ids:
         return []
-        
+
     exports = db.query(models_db.DubbingExport).filter(
         models_db.DubbingExport.project_id.in_(project_ids)
     ).order_by(models_db.DubbingExport.created_at.desc()).all()
-    
+
     from backend.services.file_storage import FileStorageService
     storage = FileStorageService()
-    
+
+    from backend.services.storage_provider import get_storage_provider
+    provider = get_storage_provider()
+
     # Check if files still exist, if not set download_url to None
     for exp in exports:
         if exp.output_video_id and exp.download_url:
+            filename = f"{exp.output_video_id}.mp4"
             try:
-                storage.get_output_path(exp.output_video_id)
+                meta = storage.get_output_metadata(exp.output_video_id)
+                filename = str(meta.get("stored_filename") or filename)
             except HTTPException:
-                # File deleted by cleanup service
+                if provider.provider_name != "s3":
+                    exp.download_url = None
+                    continue
+            if not provider.file_exists(filename):
                 exp.download_url = None
+            else:
+                exp.download_url = provider.get_public_url(filename)
 
     return exports

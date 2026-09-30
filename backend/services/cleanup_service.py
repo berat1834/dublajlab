@@ -71,10 +71,24 @@ class CleanupService:
                     (models_db.DubbingExport.retention_expires_at.is_(None))
                 ).all()
                 active_output_ids = {e[0] for e in active_exports if e[0]}
+                expired_exports = db.query(models_db.DubbingExport.output_video_id).filter(
+                    models_db.DubbingExport.retention_expires_at <= now_dt
+                ).all()
+                expired_output_ids = {e[0] for e in expired_exports if e[0]}
             finally:
                 db.close()
         except Exception:
             active_output_ids = set()
+            expired_output_ids = set()
+
+        # Object storage may outlive the local Railway volume. Delete expired
+        # remote objects even when their local mirror is already gone.
+        from backend.services.storage_provider import get_storage_provider
+
+        provider = get_storage_provider()
+        if provider.provider_name == "s3":
+            for output_id in expired_output_ids:
+                provider.delete_file(f"{output_id}.mp4")
 
         for directory in self.directories:
             if not directory.is_dir():
@@ -97,6 +111,8 @@ class CleanupService:
                     if stat.st_mtime >= cutoff:
                         continue
                     path.unlink()
+                    if directory == OUTPUT_DIR:
+                        provider.delete_file(path.name)
                     deleted_files += 1
                     freed_bytes += stat.st_size
                 except FileNotFoundError:
