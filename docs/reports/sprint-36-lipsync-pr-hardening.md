@@ -33,3 +33,12 @@
 - Bu branch, CI denetimleri tamamlandıktan sonra `main` branch'e merge edilebilir.
 - Canlı sunucularda (production) `LIPSYNC_ENABLED` değişkeni açıkça belirtilmedikçe özellik default `False` olarak kilitli kalacaktır. 
 - Gerçek ticari sağlayıcı adaptörü ve çıktı sözleşmesi uygulanıp test edilmeden bu flag production'da açılmamalıdır.
+
+## 6. PR ve CI Sonucu
+
+- PR [#12](https://github.com/berat1834/dublajlab/pull/12) açıldı.
+- PR CI çalışmasında `Backend tests` ve `Frontend quality` job'ları başarılı oldu.
+- PR, CI yeşil olduktan sonra `main` branch'ine merge edildi.
+- Merge commit: `3ae6836446cbb9084d869ec348692fd3186fe01b`.
+- Merge sonrası `main` CI çalışmasında backend ve frontend job'ları tekrar başarılı oldu.
+- Production ayarı `LIPSYNC_ENABLED=false` ve `LIPSYNC_PROVIDER=disabled` olarak kalmalıdır.
