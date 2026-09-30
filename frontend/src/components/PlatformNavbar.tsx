@@ -33,8 +33,8 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
       <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between px-3 sm:h-16 sm:px-6 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
           <div className="flex items-center gap-6 lg:gap-10">
-            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="text-xl font-black tracking-tight">
-              Dublaj<span className="text-lime">Lab</span>
+            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="block shrink-0" aria-label="DublajLab ana sayfa">
+              <img src="/assets/dublajlab-logo.svg" alt="DublajLab" className="h-8 w-auto max-w-[150px] sm:h-9 sm:max-w-[170px]" />
             </a>
             <div className="hidden items-center gap-2 md:flex text-sm font-semibold text-zinc-400">
               <button onClick={() => setActiveTab('play')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'play' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>{t('nav.play')}</button>

@@ -53,12 +53,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
       {/* Left Side: Brand Hero */}
       <div className="flex flex-col justify-between bg-gradient-to-br from-lime/20 via-black to-violet/20 p-8 lg:w-5/12 relative overflow-hidden">
         <div className="relative z-10 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-lime shadow-glow">
-            <Mic2 className="h-6 w-6 text-ink" />
-          </div>
-          <span className="text-xl font-black tracking-tight text-white">
-            Dublaj<span className="text-lime">Lab</span>
-          </span>
+          <img src="/assets/dublajlab-logo.svg" alt="DublajLab" className="h-11 w-auto max-w-[205px]" />
         </div>
 
         <div className="relative z-10 my-12">

@@ -7,7 +7,7 @@
 :root {
   color-scheme: dark;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  background: #09090b;
+  background: #08090d;
   color: #f4f4f5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,12 +23,12 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background:
-    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(199, 244, 100, 0.07), transparent),
+    radial-gradient(ellipse 80% 50% at 15% -5%, rgba(184, 255, 77, 0.07), transparent),
     radial-gradient(ellipse 70% 45% at 85% 8%, rgba(167, 139, 250, 0.065), transparent),
     radial-gradient(ellipse 50% 35% at 50% 60%, rgba(139, 92, 246, 0.03), transparent),
     linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
-    #09090b;
+    #08090d;
   background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px, 100% 100%;
 }
 
@@ -44,7 +44,7 @@ textarea:focus-visible,
 input:focus-visible,
 video:focus-visible,
 audio:focus-visible {
-  outline: 2px solid #c7f464;
+  outline: 2px solid #b8ff4d;
   outline-offset: 3px;
 }
 
@@ -53,8 +53,8 @@ video {
 }
 
 ::selection {
-  color: #09090b;
-  background: #c7f464;
+  color: #08090d;
+  background: #b8ff4d;
 }
 
 ::-webkit-scrollbar {

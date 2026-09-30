@@ -66,6 +66,7 @@
 | 25 | Final Production QA ve export blocker düzeltmesi | [sprint-25-final-production-qa.md](docs/reports/sprint-25-final-production-qa.md) |
 | 26 | Ücretsiz/VIP üyelik ve backend entitlement kontrolü | [sprint-26-free-vip-membership.md](docs/reports/sprint-26-free-vip-membership.md) |
 | 36 | Lip-sync PR hardening, feature flag ve production güvenliği | [sprint-36-lipsync-pr-hardening.md](docs/reports/sprint-36-lipsync-pr-hardening.md) |
+| 38 | Marka kimliği, favicon, manifest ve sosyal metadata | [sprint-38-brand-identity-assets.md](docs/reports/sprint-38-brand-identity-assets.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
@@ -80,6 +81,7 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Üyelik migration'ı önceki revision üzerinden başarıyla doğrulandı
 - Docker smoke test: backend container `healthy`; Alembic, FFmpeg, auth, template ve CORS kontrolleri geçti
 - CI status: PR #12 merge edildi; PR CI ve merge commit `3ae6836` üzerindeki `main` CI backend/frontend job'ları başarılı oldu.
+- Sprint 38: Marka asset'leri, manifest ve metadata production build içinde doğrulandı; frontend lint/test/build ve dependency audit sonuçları sprint raporunda kayıtlıdır.
 
 ## Known Risks
 
@@ -118,3 +120,4 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   - Güvenlik review sonrasında `modal` ve `api` provider seçenekleri gerçek adaptör tamamlanana kadar fail-closed hale getirilmiştir.
 - **Sprint 35: Watermark + External Sharing + VIP Upsell**: Free kullanıcı exportlarına DublajLab watermark eklendi. Çıktı panelinde sosyal medya paylaşım bağlantıları ve VIP Upsell alanı oluşturuldu.
 - **Sprint 36: Lip-sync PR Hardening**: Feature flag/provider kontrolü fail-closed hale getirildi; production local Wav2Lip engellendi ve UI capability tabanlı gizlendi. Ayrıntılar: [sprint-36-lipsync-pr-hardening.md](docs/reports/sprint-36-lipsync-pr-hardening.md).
+- **Sprint 38: Brand Identity Assets**: Özgün DublajLab logo/mark sistemi, favicon, PWA ikonları, sosyal paylaşım kartı ve metadata seti eklendi. Ayrıntılar: [sprint-38-brand-identity-assets.md](docs/reports/sprint-38-brand-identity-assets.md).

@@ -12,8 +12,8 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: 
       <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:py-16 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-6">
           <div className="col-span-2 lg:col-span-2">
-            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="text-2xl font-black tracking-tight">
-              Dublaj<span className="text-lime">Lab</span>
+            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="inline-block" aria-label="DublajLab ana sayfa">
+              <img src="/assets/dublajlab-logo.svg" alt="DublajLab" className="h-10 w-auto max-w-[190px]" />
             </a>
             <p className="mt-4 text-sm leading-6 text-zinc-400">
               Bu proje bir kişisel portföy çalışması olup, video işleme (FFmpeg) ve asenkron web teknolojilerinin sunumunu hedefler. <br/>Tüm işlemler "demo" modundadır.

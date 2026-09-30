@@ -1,9 +1,11 @@
-# DublajLab — Kendi Sesinle Dublaj Studio
+# DublajLab — Kendi Sesinle Dublaj Yap
 
 [![CI](https://github.com/berat1834/dublajlab/actions/workflows/ci.yml/badge.svg)](https://github.com/berat1834/dublajlab/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-c7f464.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-B8FF4D.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg)](https://www.python.org/)
 [![React 18](https://img.shields.io/badge/React-18-61DAFB.svg)](https://react.dev/)
+
+**Kendi sesinle yeniden dublajla.**
 
 Kısa videonu izle, zamanlanmış replikleri kendi mikrofonunla kaydet, altyazılı ve dublajlı MP4’ünü indir.
 
@@ -25,6 +27,25 @@ DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı
 - [Teknik not](docs/TEKNIK_NOT.md)
 - [Proje Raporu ve Durumu](RAPOR.md)
 - [Roadmap](#roadmap)
+
+## Marka kimliği
+
+DublajLab; laboratuvar şişesi, ses dalgası ve oynatma hissini birleştiren özgün bir
+işaret kullanır. Ana marka renkleri `#B8FF4D` (lime), `#22E6C3` (turkuaz) ve
+`#08090D` (arka plan) olarak sabitlenmiştir.
+
+| Varlık | Kullanım |
+| --- | --- |
+| `frontend/public/assets/dublajlab-logo.svg` | Navbar, footer ve auth ekranlarında yatay logo |
+| `frontend/public/assets/dublajlab-mark.svg` | Kare/dar alanlarda bağımsız marka işareti |
+| `frontend/public/assets/favicon.svg` | Tarayıcı sekmesi favicon'u |
+| `frontend/public/assets/apple-touch-icon.png` | iOS ana ekran ikonu |
+| `frontend/public/assets/pwa-192.png` / `pwa-512.png` | Web manifest ikonları |
+| `frontend/public/assets/dublajlab-social-card.png` | Open Graph ve Twitter paylaşım görseli |
+
+Canlı uygulama adresi [https://dublajlab-sigma.vercel.app](https://dublajlab-sigma.vercel.app)
+olarak metadata, README ve deployment dokümantasyonunda aynı tutulur. Logo dosyaları
+başka markaların görsel dili kopyalanmadan, dark UI üzerinde okunacak biçimde hazırlanmıştır.
 
 ## Demo amacı
 

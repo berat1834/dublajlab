@@ -9,9 +9,10 @@ export default {
         '4xl': '2560px',
       },
       colors: {
-        ink: '#09090b',
+        ink: '#08090D',
         panel: '#111115',
-        lime: '#c7f464',
+        lime: '#B8FF4D',
+        mint: '#22E6C3',
         'lime-dim': '#3a4a1a',
         violet: '#a78bfa',
         'violet-dim': '#2e2250',
@@ -21,8 +22,8 @@ export default {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        glow: '0 0 28px rgba(199, 244, 100, 0.12)',
-        'glow-lg': '0 0 48px rgba(199, 244, 100, 0.15), 0 0 12px rgba(199, 244, 100, 0.08)',
+        glow: '0 0 28px rgba(184, 255, 77, 0.12)',
+        'glow-lg': '0 0 48px rgba(184, 255, 77, 0.15), 0 0 12px rgba(184, 255, 77, 0.08)',
         card: '0 4px 24px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.04)',
       },
       keyframes: {
