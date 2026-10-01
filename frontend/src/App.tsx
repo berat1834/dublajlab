@@ -41,6 +41,7 @@ import { EthicsNotice } from './components/EthicsNotice'
 import { SceneDetail } from './components/SceneDetail'
 import { OdaKur } from './components/OdaKur'
 import { AuthPage } from './components/AuthPage'
+import { LegalCorporateModal } from './components/LegalCorporateModal'
 import { UserLibrary } from './components/UserLibrary'
 import { AdminModerationPanel } from './components/AdminModerationPanel'
 import { AdminOpsPanel } from './components/AdminOpsPanel'
@@ -179,6 +180,9 @@ function App() {
     sessionStorage.setItem('secured', 'true')
     return true
   })
+  const [activeLegalPage, setActiveLegalPage] = useState<
+    'about' | 'contact' | 'privacy' | 'terms' | 'copyright' | 'refund' | 'distance_selling' | null
+  >(null)
   const [stage, setStage] = useState<Stage>('idle')
   const [mode, setMode] = useState<DubbingMode>('my-voice')
   const [sourceMode, setSourceMode] = useState<SourceMode>('upload')
@@ -223,10 +227,6 @@ function App() {
     }
   }, [])
 
-  const handleLegalLink = () => {
-    setToastMessage('Bu sayfa (Gizlilik/Şartlar) canlı yayın öncesi profesyonel metinlerle güncellenecektir.')
-    setTimeout(() => setToastMessage(''), 4000)
-  }
 
   const handleTabTemplateSelect = (templateId: string) => {
     setDetailTemplateId(templateId);
@@ -1189,7 +1189,11 @@ function App() {
         <HowToModal setShowHowTo={setShowHowTo} setActiveTab={setActiveTab} />
       )}
 
-      <PlatformFooter setActiveTab={setActiveTab} handleLegalLink={handleLegalLink} setShowHowTo={setShowHowTo} currentUser={currentUser} onToast={showToast} />
+      {activeLegalPage && (
+        <LegalCorporateModal pageId={activeLegalPage} onClose={() => setActiveLegalPage(null)} />
+      )}
+
+      <PlatformFooter setActiveTab={setActiveTab} handleLegalLink={setActiveLegalPage} setShowHowTo={setShowHowTo} currentUser={currentUser} onToast={showToast} />
     </div>
   )
 }

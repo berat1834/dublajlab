@@ -1,9 +1,11 @@
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
 
+type LegalPageId = 'about' | 'contact' | 'privacy' | 'terms' | 'copyright' | 'refund' | 'distance_selling'
+
 interface PlatformFooterProps {
   setActiveTab: (tab: Tab) => void
-  handleLegalLink: () => void
+  handleLegalLink: (pageId: LegalPageId) => void
   setShowHowTo: (show: boolean) => void
   currentUser?: User | null
   onToast: (msg: string) => void
@@ -83,17 +85,19 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo, cu
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.corporate')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={() => onToast(t('toast.contact_soon'))} className="hover:text-white">{t('footer.links.about')}</button></li>
-              <li><button onClick={() => onToast(t('toast.contact_soon'))} className="hover:text-white">{t('footer.links.contact')}</button></li>
+              <li><button onClick={() => handleLegalLink('about')} className="hover:text-white">{t('footer.links.about')}</button></li>
+              <li><button onClick={() => handleLegalLink('contact')} className="hover:text-white">{t('footer.links.contact')}</button></li>
               <li><button onClick={() => handleNav('membership')} className="hover:text-white">{t('drop.membership')}</button></li>
             </ul>
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.legal')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={handleLegalLink} className="hover:text-white">{t('footer.links.privacy')}</button></li>
-              <li><button onClick={handleLegalLink} className="hover:text-white">{t('footer.links.terms')}</button></li>
-              <li><button onClick={handleLegalLink} className="hover:text-white">{t('footer.links.copyright')}</button></li>
+              <li><button onClick={() => handleLegalLink('privacy')} className="hover:text-white">{t('footer.links.privacy')}</button></li>
+              <li><button onClick={() => handleLegalLink('terms')} className="hover:text-white">{t('footer.links.terms')}</button></li>
+              <li><button onClick={() => handleLegalLink('copyright')} className="hover:text-white">{t('footer.links.copyright')}</button></li>
+              <li><button onClick={() => handleLegalLink('refund')} className="hover:text-white">İade ve İptal</button></li>
+              <li><button onClick={() => handleLegalLink('distance_selling')} className="hover:text-white">Mesafeli Satış</button></li>
             </ul>
           </div>
         </div>
