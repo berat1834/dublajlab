@@ -25,6 +25,7 @@ import {
   Info,
   Link
 } from 'lucide-react'
+import { DemoTeaser } from './components/DemoTeaser'
 import { TimelineRecorder } from './components/TimelineRecorder'
 import { JobFailurePanel } from './components/JobFailurePanel'
 import { TemplateGallery } from './components/TemplateGallery'
@@ -571,25 +572,23 @@ function App() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => changeSourceMode('templates')}
+                  onClick={() => { changeSourceMode('upload'); window.scrollBy({ top: 400, behavior: 'smooth' }); }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] sm:w-auto"
                 >
-                  <Play className="h-4 w-4" /> Hazır sahne ile başla
+                  <Play className="h-4 w-4" /> Hemen Dublaj Yap
                 </button>
                 <button
                   type="button"
-                  onClick={() => changeSourceMode('upload')}
+                  onClick={() => setActiveTab('scenes')}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:bg-white/10 sm:w-auto"
                 >
-                  Kendi videonu yükle <ArrowRight className="h-4 w-4" />
+                  Hazır Sahneleri Keşfet <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <p className="mb-3 text-xs font-bold uppercase tracking-widest text-zinc-500">Çok Oyunculu Dublaj</p>
-                <div className="flex flex-wrap gap-3">
-                  <button onClick={() => setActiveTab('oda_kur')} className="inline-flex items-center gap-2 rounded-xl bg-violet/15 px-4 py-2.5 text-sm font-bold text-violet transition hover:bg-violet/25">Oda kur</button>
-                  <button onClick={() => setActiveTab('oda_kur')} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-zinc-300 transition hover:bg-white/10">Oda koduyla katıl</button>
-                </div>
+              <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-zinc-500">
+                <div className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-lime/70" /> Kendi videonu kullan</div>
+                <div className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-lime/70" /> Telifli içerik yükleme</div>
+                <div className="flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5 text-lime/70" /> Kimseyi taklit etme</div>
               </div>
             </div>
 
@@ -643,6 +642,14 @@ function App() {
             </div>
           </div>
         </header>
+
+        {/* ═══════════════════════════ DEMO TEASER ═══════════════════════════ */}
+        {!projectReady && stage === 'idle' && sourceMode === 'upload' && (
+          <DemoTeaser 
+            selectingId={selectingTemplateId} 
+            onSelect={(id) => handleTemplateSelect(id)} 
+          />
+        )}
 
         {/* ═══════════════════════════ FEATURE STRIP ═══════════════════════════ */}
         <div className="mb-6 flex flex-wrap justify-center gap-2 sm:gap-3">

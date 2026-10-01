@@ -220,3 +220,20 @@ Faz 22 ilk denemesi **partial deployment** olarak kaydedilmiştir. Sonraki
 yayına alınmıştır. Tarihsel ilk deneme ayrıntıları için
 [`docs/reports/sprint-22-first-deployment.md`](docs/reports/sprint-22-first-deployment.md)
 belgesine bakın.
+
+## 11. Custom Domain Readiness
+
+DublajLab projesi (örn: `dublaj.io`, `memedublaj.com` vb.) custom bir domain'e geçmeye hazırdır. Geçiş işlemleri aşağıdaki adımlarla yapılacaktır:
+
+1. **Vercel Üzerinde Domain Ekleme:**
+   - Vercel dashboard'unda `Settings > Domains` kısmından yeni domain eklenir.
+   - DNS ayarları (A record / CNAME) domain sağlayıcı üzerinden Vercel'e yönlendirilir.
+
+2. **Frontend Config ve SEO Güncellemesi:**
+   - Yeni domain aktif olduğunda `frontend/.env.production` (veya Vercel Environment Variables) içindeki `VITE_CANONICAL_URL` yeni domain ile güncellenir.
+   - `frontend/public/robots.txt` ve `sitemap.xml` içerisindeki `dublajlab-sigma.vercel.app` bağlantıları yeni domaine göre güncellenir.
+   - `index.html` içerisindeki `canonical`, `og:url` ve `JSON-LD` alanları güncellenmelidir.
+
+3. **Backend CORS / ALLOWED_ORIGINS Güncellemesi:**
+   - Railway tarafında backend'in `ALLOWED_ORIGINS` değişkenine yeni domain virgülle eklenir. Örn: `https://dublaj.io,https://dublajlab-sigma.vercel.app`
+   - Shopier webhook geri dönüş URL'leri (`SHOPIER_RETURN_URL` ve `SHOPIER_CANCEL_URL`) yeni domain ile güncellenir.

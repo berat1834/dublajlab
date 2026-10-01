@@ -11,7 +11,7 @@ Kısa videonu izle, zamanlanmış replikleri kendi mikrofonunla kaydet, altyazı
 
 DublajLab, Türkçe kullanıcılar için hazırlanmış portföy ve demo odaklı bir yaratıcı medya aracıdır. Ana deneyim **kullanıcının kendi sesiyle dublaj** yapmasıdır. İlk sürümdeki metinden sese üretim kaldırılmamış, arayüzde ikincil **AI ses** modu olarak korunmuştur.
 
-> 🌐 **Canlı Demo:** [dublajlab-sigma.vercel.app](https://dublajlab-sigma.vercel.app/)
+> 🌐 **Canlı Demo:** [dublajlab-sigma.vercel.app](https://dublajlab-sigma.vercel.app/) *(Custom domain hazırlıkları tamamlanmıştır, geçici olarak Vercel üzerindedir)*
 
 ![DublajLab Studio Arayüzü](docs/assets/hero.jpg)
 
