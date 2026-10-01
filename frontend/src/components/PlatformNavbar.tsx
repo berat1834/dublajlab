@@ -10,9 +10,10 @@ interface PlatformNavbarProps {
   setMobileMenuOpen: (open: boolean) => void
   currentUser?: User | null
   setCurrentUser?: (user: User | null) => void
+  onToast?: (msg: string) => void
 }
 
-export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser }: PlatformNavbarProps) {
+export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser, onToast }: PlatformNavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const { language, setLanguage, t } = useLanguage()
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -70,9 +71,13 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
               <Globe className="h-4 w-4" /> {language}
             </button>
             <button onClick={() => {
-              const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-              window.location.href = `${baseUrl}/api/auth/discord/login`
-            }} className="flex items-center gap-1.5 text-zinc-400 hover:text-white">
+              const discordUrl = import.meta.env.VITE_SOCIAL_DISCORD_URL;
+              if (discordUrl) {
+                window.open(discordUrl, '_blank', 'noopener,noreferrer')
+              } else if (onToast) {
+                onToast(t('toast.social_soon'))
+              }
+            }} className={`flex items-center gap-1.5 transition ${import.meta.env.VITE_SOCIAL_DISCORD_URL ? 'text-zinc-400 hover:text-white' : 'text-zinc-600 cursor-not-allowed'}`} title={!import.meta.env.VITE_SOCIAL_DISCORD_URL ? t('social.soon') : undefined}>
               <MessageSquare className="h-4 w-4" /> Discord
             </button>
             <div className="h-4 w-[1px] bg-white/10"></div>
@@ -178,9 +183,14 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
             <hr className="border-white/10" />
             <button onClick={() => setLanguage(language === 'TR' ? 'EN' : 'TR')} className="text-left flex items-center gap-2 py-3"><Globe className="h-4 w-4" /> {language}</button>
             <button onClick={() => {
-              const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-              window.location.href = `${baseUrl}/api/auth/discord/login`
-            }} className="text-left flex items-center gap-2 py-3 text-sm font-bold text-zinc-300 hover:text-white transition"><MessageSquare className="h-4 w-4" /> Discord</button>
+              const discordUrl = import.meta.env.VITE_SOCIAL_DISCORD_URL;
+              if (discordUrl) {
+                window.open(discordUrl, '_blank', 'noopener,noreferrer')
+              } else {
+                if (onToast) onToast(t('toast.social_soon'))
+                setMobileMenuOpen(false);
+              }
+            }} className={`text-left flex items-center gap-2 py-3 text-sm font-bold transition ${import.meta.env.VITE_SOCIAL_DISCORD_URL ? 'text-zinc-300 hover:text-white' : 'text-zinc-600 cursor-not-allowed'}`} title={!import.meta.env.VITE_SOCIAL_DISCORD_URL ? t('social.soon') : undefined}><MessageSquare className="h-4 w-4" /> Discord</button>
             {currentUser ? (
               <>
                 {currentUser.role === 'admin' && (

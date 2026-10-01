@@ -1,19 +1,37 @@
-import type { Tab } from '../types'
+import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
 
 interface PlatformFooterProps {
   setActiveTab: (tab: Tab) => void
   handleLegalLink: () => void
   setShowHowTo: (show: boolean) => void
+  currentUser?: User | null
+  onToast: (msg: string) => void
 }
 
-export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: PlatformFooterProps) {
+export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo, currentUser, onToast }: PlatformFooterProps) {
   const { t } = useLanguage()
 
   const handleNav = (tab: Tab) => {
     setActiveTab(tab)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  const handleKatalogNav = () => {
+    if (currentUser) {
+      handleNav('library')
+    } else {
+      handleNav('login')
+    }
+  }
+
+  const socialLinks = [
+    { url: import.meta.env.VITE_SOCIAL_X_URL, label: 'X', ariaLabel: 'X Hesabı' },
+    { url: import.meta.env.VITE_SOCIAL_INSTAGRAM_URL, label: 'IG', ariaLabel: 'Instagram Hesabı' },
+    { url: import.meta.env.VITE_SOCIAL_DISCORD_URL, label: 'DC', ariaLabel: 'Discord Hesabı' },
+    { url: import.meta.env.VITE_SOCIAL_LINKEDIN_URL, label: 'IN', ariaLabel: 'LinkedIn Hesabı' },
+  ]
+
   return (
     <footer className="mt-auto border-t border-white/10 bg-black/40" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <div className="mx-auto max-w-[1440px] px-4 py-12 sm:px-6 lg:py-16 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
@@ -26,10 +44,23 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: 
               {t('footer.desc')}
             </p>
             <div className="mt-6 flex items-center gap-4 text-zinc-400">
-              <a href="https://twitter.com/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">X</a>
-              <a href="https://instagram.com/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">IG</a>
-              <a href="https://discord.gg/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">DC</a>
-              <a href="https://linkedin.com/company/dublajlab" target="_blank" rel="noopener noreferrer" className="hover:text-white transition">IN</a>
+              {socialLinks.map((social, index) => (
+                social.url ? (
+                  <a key={index} href={social.url} target="_blank" rel="noopener noreferrer" className="hover:text-white transition" aria-label={social.ariaLabel}>
+                    {social.label}
+                  </a>
+                ) : (
+                  <button 
+                    key={index} 
+                    onClick={() => onToast(t('toast.social_soon'))} 
+                    className="opacity-50 cursor-not-allowed hover:opacity-100 transition"
+                    title={t('social.soon')}
+                    aria-label={`${social.ariaLabel} (${t('social.soon')})`}
+                  >
+                    {social.label}
+                  </button>
+                )
+              ))}
             </div>
           </div>
           <div>
@@ -38,6 +69,7 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: 
               <li><button onClick={() => handleNav('oda_kur')} className="hover:text-white">Oda kur</button></li>
               <li><button onClick={() => handleNav('scenes')} className="hover:text-white">{t('footer.links.scenes')}</button></li>
               <li><button onClick={() => setShowHowTo(true)} className="hover:text-white">{t('footer.links.howto')}</button></li>
+              <li><button onClick={() => onToast(t('toast.suggest_soon'))} className="hover:text-white">{t('footer.links.suggest')}</button></li>
             </ul>
           </div>
           <div>
@@ -45,14 +77,15 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo }: 
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
               <li><button onClick={() => handleNav('dubs')} className="hover:text-white">{t('nav.dubs')}</button></li>
               <li><button onClick={() => handleNav('daily')} className="hover:text-white">{t('nav.daily')}</button></li>
-              <li><button onClick={() => handleNav('scenes')} className="hover:text-white">{t('nav.scenes')}</button></li>
+              <li><button onClick={handleKatalogNav} className="hover:text-white">{t('drop.library')}</button></li>
             </ul>
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Kurumsal</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.corporate')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><a href="mailto:info@dublajlab.com" className="hover:text-white">Hakkımızda</a></li>
-              <li><a href="mailto:iletisim@dublajlab.com" className="hover:text-white">İletişim</a></li>
+              <li><button onClick={() => onToast(t('toast.contact_soon'))} className="hover:text-white">{t('footer.links.about')}</button></li>
+              <li><button onClick={() => onToast(t('toast.contact_soon'))} className="hover:text-white">{t('footer.links.contact')}</button></li>
+              <li><button onClick={() => handleNav('membership')} className="hover:text-white">{t('drop.membership')}</button></li>
             </ul>
           </div>
           <div>

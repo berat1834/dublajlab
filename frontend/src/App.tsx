@@ -534,6 +534,7 @@ function App() {
         setMobileMenuOpen={setMobileMenuOpen} 
         currentUser={currentUser}
         setCurrentUser={setCurrentUser}
+        onToast={showToast}
       />
 
       {/* TOAST */}
@@ -1181,7 +1182,7 @@ function App() {
         <HowToModal setShowHowTo={setShowHowTo} setActiveTab={setActiveTab} />
       )}
 
-      <PlatformFooter setActiveTab={setActiveTab} handleLegalLink={handleLegalLink} setShowHowTo={setShowHowTo} />
+      <PlatformFooter setActiveTab={setActiveTab} handleLegalLink={handleLegalLink} setShowHowTo={setShowHowTo} currentUser={currentUser} onToast={showToast} />
     </div>
   )
 }

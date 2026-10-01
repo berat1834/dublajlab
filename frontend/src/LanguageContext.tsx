@@ -58,6 +58,14 @@ const translations: Record<string, Record<Language, string>> = {
   'footer.links.privacy': { TR: 'Gizlilik', EN: 'Privacy' },
   'footer.links.terms': { TR: 'Kullanım Koşulları', EN: 'Terms of Use' },
   'footer.links.copyright': { TR: 'Telif Hakkı', EN: 'Copyright' },
+  'footer.links.suggest': { TR: 'Sahne Öner', EN: 'Suggest Scene' },
+  'footer.links.contact': { TR: 'İletişim', EN: 'Contact' },
+  'footer.links.about': { TR: 'Hakkımızda', EN: 'About Us' },
+  'footer.links.corporate': { TR: 'Kurumsal', EN: 'Corporate' },
+  'toast.social_soon': { TR: 'DublajLab resmi sosyal medya hesabı yakında açılacak.', EN: 'DublajLab official social media account will be opened soon.' },
+  'toast.suggest_soon': { TR: 'Sahne önerme özelliği yakında.', EN: 'Scene suggestion feature coming soon.' },
+  'toast.contact_soon': { TR: 'İletişim paneli yakında.', EN: 'Contact panel coming soon.' },
+  'social.soon': { TR: 'Resmi hesap yakında', EN: 'Official account soon' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
