@@ -6,14 +6,14 @@ Bu klasör GitHub README'si, LinkedIn paylaşımı ve CV portföy bağlantısı 
 
 | Öncelik | Dosya | Gösterilecek ekran | Önerilen çıktı | Durum |
 | --- | --- | --- | --- | --- |
-| 1 | `dublajlab-landing-hero.webp` | Başlık, alt metin, feature list ve "Oyna" (Hero) | 1600×900 WebP | Çekim bekliyor |
-| 2 | `dublajlab-template-gallery.webp` | Sahneler sekmesi, filtreler ve placeholder template kartları | 1600×900 WebP | Çekim bekliyor |
-| 3 | `dublajlab-showcase-dubs.webp` | Dublajlar sekmesi ve topluluk içerik mockları | 1600×900 WebP | Çekim bekliyor |
-| 4 | `dublajlab-daily-dub.webp` | Günün Dublajı hero kartı ve açıklama alanı | 1600×900 WebP | Çekim bekliyor |
-| 5 | `dublajlab-recording-timeline.webp` | Kayıt alanı, mikrofon kontrolü ve timeline | 1600×900 WebP | Çekim bekliyor |
-| 6 | `dublajlab-export-result.webp` | Sonuç video önizlemesi ve MP4 indirme seçenekleri | 1600×900 WebP | Çekim bekliyor |
-| 7 | `dublajlab-mobile-navbar.webp` | Mobil cihazda hamburger menü ve sekme görünümü | 430×932 WebP | Çekim bekliyor |
-| 8 | `dublajlab-demo.gif` | Kaynak seçimi → iki replik kaydı → export sonucu | 960 px genişlik, 15s | Kayıt bekliyor |
+| 1 | `dublajlab-landing-hero.webp` | Başlık, alt metin, feature list ve CTA | 1600×900 WebP | Çekim bekliyor |
+| 2 | `dublajlab-studio-upload.webp` | Yükleme alanı ve güvenlik limiti paneli | 1600×900 WebP | Çekim bekliyor |
+| 3 | `dublajlab-recording-timeline.webp` | Kayıt alanı, mikrofon kontrolü ve timeline | 1600×900 WebP | Çekim bekliyor |
+| 4 | `dublajlab-export-result.webp` | Sonuç video önizlemesi ve MP4 indirme | 1600×900 WebP | Çekim bekliyor |
+| 5 | `dublajlab-public-feed.webp` | Dublajlar sekmesi ve topluluk yayınları | 1600×900 WebP | Çekim bekliyor |
+| 6 | `dublajlab-membership-vip.webp` | VIP ödeme planları ve yetki kısıtlamaları | 1600×900 WebP | Çekim bekliyor |
+| 7 | `dublajlab-admin-ops.webp` | Admin moderasyon paneli ve metrikler | 1600×900 WebP | Çekim bekliyor |
+| 8 | `dublajlab-mobile-landing.webp` | Mobil cihazda landing sayfası görünümü | 430×932 WebP | Çekim bekliyor |
 
 ## Çekim planı
 
@@ -21,29 +21,27 @@ Bu klasör GitHub README'si, LinkedIn paylaşımı ve CV portföy bağlantısı 
 - Navbar sekmeleri, giriş/kayıt butonları, hero başlığı ve CTA'lar görünür olmalı.
 - Masaüstü çekim 16:9 oranında ve metinler kesilmeden alınsın.
 
-### 2. Sahneler galerisi
-- Kategoriler (Komedi, Dram vb.) tıklanmış şekilde galerinin filtreleme yeteneği vurgulansın.
-- Gerçek medya yoksa mevcut CSS gradient placeholder'ları kullanılsın.
+### 2. Studio upload
+- Dosya yükleme formu ve public demo güvenlik limitleri paneli.
 
-### 3. Dublajlar showcase
-- Sayfadaki "Demo içerik" bilgilendirme notu net bir şekilde kadraja girsin.
-- 6 adet placeholder dublaj kartı listelensin.
+### 3. Recording timeline
+- Video yüklenmiş, timeline dolu.
+- Bir replik tamamlanmış ve ikincisi "Kayıt ediliyor" durumunda (kırmızı pulse).
 
-### 4. Günün dublajı
-- Hero play butonu, "Günün Kazananı" etiketi ve replik mockları görünür olsun.
+### 4. Export result
+- İşlem tamamlanmış, job polling yeşil onaylanmış ve MP4 indirme butonu gösterilsin.
 
-### 5. Recording timeline
-- Video yüklenmiş veya sahne seçilmiş olmalı.
-- En az bir replik tamamlanmış ve ikincisi "Kayıt ediliyor" (kırmızı pulse) durumunda gösterilsin.
+### 5. Public feed
+- Sayfadaki dublaj kartları, beğeniler, izlenmeler ve yorum ikonları net bir şekilde kadraja girsin.
 
-### 6. Export result
-- İşlem tamamlanmış, yeşil onaylı sonuç ve MP4 indirme butonu gösterilsin.
+### 6. Membership / VIP
+- Ücretsiz vs VIP yetki tablosu ve ödeme yönlendirmesi.
 
-### 7. Mobile navbar
-- Tarayıcı Developer Tools'tan mobil görünüm aktifken (ör. iPhone 14 Pro) menü açık (hamburger) hali çekilsin.
+### 7. Admin Ops
+- Admin metrikleri (VIP kullanıcı sayısı, Shopier durumu, son hata logları).
 
-### 8. Demo GIF
-- 8-15 saniyelik uçtan uca hızlı akış.
+### 8. Mobile landing
+- Tarayıcı Developer Tools'tan mobil görünüm aktifken (ör. iPhone 14 Pro) hero alanı.
 
 ## Telif ve gizlilik kontrolü
 

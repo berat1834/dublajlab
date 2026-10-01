@@ -1,6 +1,6 @@
 # DublajLab Project Report
 
-## Current Status (Release Candidate Stabilization - Sprint 23, Vercel Audit - Sprint 24 & Final QA - Sprint 25)
+## Current Status (Public Beta + Portfolio Ready - Sprint 50)
 
 - **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
   - ✅ **Canlı URL (Canonical)**: Şu anki doğru ve çalışan canlı site adresimiz **`https://dublajlab-sigma.vercel.app`**'tir. (`dublajlab.vercel.app` adresi Vercel üzerinde kullanıcının eski projesinde takılı kaldığı için şimdilik alias/domain hatası vermektedir).
@@ -143,3 +143,4 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - **Sprint 47: Safe Demo Video Pack + Showcase Seed Content**: Telif riski olmayan "Synthetic" FFmpeg videolar (testsrc vb.) üretildi ve `frontend/public/templates` dizinine eklendi. `templates.json` metadataları güncellendi, veri tabanı ve arayüz seviyesinde (Showcase, DailyDub, TemplateGallery) "Demo" etiketi ile gerçek kullanıcılardan ayrıştırıldı. Ayrıntılar: [sprint-47-safe-demo-video-pack.md](docs/reports/sprint-47-safe-demo-video-pack.md).
 - **Sprint 48: Footer Link Integrity + Social Link Safety**: Platform genelindeki footer ve header linkleri (Discord vb.) environment değişkenlerine bağlandı. Official hesap yoksa kullanıcıları korumak adına linkler tıklanamaz yapıldı ve "Yakında" toast bildirimleri eklendi. İç linkler (`Kataloğum`, vb.) auth state'e bağlandı. Ayrıntılar: [sprint-48-footer-link-integrity-social-safety.md](docs/reports/sprint-48-footer-link-integrity-social-safety.md).
 - **Sprint 49: Public Landing, SEO + Custom Domain Readiness**: DublajLab ana sayfası public landing'e dönüştürüldü. SEO metadata'sı (JSON-LD, OG, Keywords), robots.txt ve sitemap eklendi. Custom domain geçiş planı hazırlandı. Ayrıntılar: [sprint-49-public-landing-seo-domain-readiness.md](docs/reports/sprint-49-public-landing-seo-domain-readiness.md).
+- **Sprint 50: Portfolio Launch Package**: Proje vitrini tamamen yenilendi. README.md ürün odaklı yazıldı, LinkedIn gönderi taslakları, CV şablonları, Github Release notları hazırlandı ve portfolio asset limitleri belirlendi. Ayrıntılar: [sprint-50-portfolio-launch-package.md](docs/reports/sprint-50-portfolio-launch-package.md).
