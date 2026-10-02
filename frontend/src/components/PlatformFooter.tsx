@@ -68,7 +68,7 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo, cu
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.play')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={() => handleNav('oda_kur')} className="hover:text-white">Oda kur</button></li>
+              <li><button onClick={() => handleNav('oda_kur')} className="hover:text-white">{t('footer.links.oda_kur')}</button></li>
               <li><button onClick={() => handleNav('scenes')} className="hover:text-white">{t('footer.links.scenes')}</button></li>
               <li><button onClick={() => setShowHowTo(true)} className="hover:text-white">{t('footer.links.howto')}</button></li>
               <li><button onClick={() => onToast(t('toast.suggest_soon'))} className="hover:text-white">{t('footer.links.suggest')}</button></li>
@@ -96,8 +96,8 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo, cu
               <li><button onClick={() => handleLegalLink('privacy')} className="hover:text-white">{t('footer.links.privacy')}</button></li>
               <li><button onClick={() => handleLegalLink('terms')} className="hover:text-white">{t('footer.links.terms')}</button></li>
               <li><button onClick={() => handleLegalLink('copyright')} className="hover:text-white">{t('footer.links.copyright')}</button></li>
-              <li><button onClick={() => handleLegalLink('refund')} className="hover:text-white">İade ve İptal</button></li>
-              <li><button onClick={() => handleLegalLink('distance_selling')} className="hover:text-white">Mesafeli Satış</button></li>
+              <li><button onClick={() => handleLegalLink('refund')} className="hover:text-white">{t('footer.links.refund')}</button></li>
+              <li><button onClick={() => handleLegalLink('distance_selling')} className="hover:text-white">{t('footer.links.distance')}</button></li>
             </ul>
           </div>
         </div>
@@ -106,7 +106,7 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo, cu
             © 2026 DublajLab
           </p>
           <p className="text-[10px] text-zinc-500 text-center sm:text-right max-w-xl">
-            DublajLab kullanıcıların gönderdiği içeriklerde gerekli kullanım haklarına sahip olduklarını beyan etmelerini zorunlu tutar. Hak sahibinden geçerli bir ihlal bildirimi alınırsa içerik incelenir ve gerekirse erişimden kaldırılır.
+            {t('footer.disclaimer')}
           </p>
         </div>
       </div>

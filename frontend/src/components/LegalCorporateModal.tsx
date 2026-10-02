@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import { useEffect, useRef } from 'react'
+import { useLanguage } from '../LanguageContext'
 
 type PageId = 'about' | 'contact' | 'privacy' | 'terms' | 'copyright' | 'refund' | 'distance_selling'
 
@@ -9,6 +10,7 @@ interface LegalCorporateModalProps {
 }
 
 export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProps) {
+  const { t } = useLanguage()
   const overlayRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -30,36 +32,36 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
       case 'about':
         return (
           <>
-            <h2 className="text-xl font-bold text-white mb-4">Hakkımızda (Taslak)</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{t('legal.about.title')}</h2>
             <div className="space-y-4 text-sm text-zinc-300">
-              <p>DublajLab, kısa videolarınızı tarayıcı üzerinden kendi sesinizle dublajlamanızı sağlayan yaratıcı bir medya aracıdır.</p>
-              <p>Bu platform şu an "Public Beta" aşamasındadır. Kullanıcıların yaratıcılıklarını sergilemeleri ve portföy içerikleri üretmeleri için tasarlanmıştır.</p>
-              <p>Ekibimiz, video düzenleme süreçlerini olabildiğince basitleştirerek herkesin kendi sesinden hikayeler anlatabilmesini hedefliyor.</p>
+              <p>{t('legal.about.p1')}</p>
+              <p>{t('legal.about.p2')}</p>
+              <p>{t('legal.about.p3')}</p>
             </div>
           </>
         )
       case 'contact':
         return (
           <>
-            <h2 className="text-xl font-bold text-white mb-4">İletişim (Taslak)</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{t('legal.contact.title')}</h2>
             <div className="space-y-4 text-sm text-zinc-300">
-              <p>DublajLab Public Beta süresince resmi destek kanallarımız sınırlıdır. Geri bildirimleriniz ve hata bildirimleriniz bizim için çok değerlidir.</p>
-              <p>Bize aşağıdaki e-posta adresinden ulaşabilirsiniz:</p>
-              <p className="font-mono text-[#B8FF4D]">hello@dublajlab.com (Örnek)</p>
-              <p className="text-xs text-zinc-500 mt-4">* Sosyal medya hesaplarımız yakında aktif edilecektir.</p>
+              <p>{t('legal.contact.p1')}</p>
+              <p>{t('legal.contact.p2')}</p>
+              <p className="font-mono text-[#B8FF4D]">hello@dublajlab.com</p>
+              <p className="text-xs text-zinc-500 mt-4">{t('legal.contact.p3')}</p>
             </div>
           </>
         )
       case 'privacy':
         return (
           <>
-            <h2 className="text-xl font-bold text-white mb-4">Gizlilik Politikası (Taslak)</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{t('legal.privacy.title')}</h2>
             <div className="space-y-4 text-sm text-zinc-300">
-              <p>DublajLab, kişisel verilerinizin güvenliğine önem verir. Bu metin Public Beta süreci için bir bilgilendirmedir.</p>
+              <p>{t('legal.privacy.p1')}</p>
               <ul className="list-disc pl-5 space-y-2">
-                <li><strong>Medya Verileri:</strong> Tarayıcı üzerinden kaydettiğiniz sesler sadece export işlemi için sunucuya iletilir ve işlem bittikten sonra geçici sunuculardan silinir.</li>
-                <li><strong>Kalıcı Saklama:</strong> Üye olan kullanıcıların projeleri ve indirmeye hazır MP4 çıktıları sunucularımızda saklanır. Depolama temizlik politikalarımız (cleanup) eski dosyaları silebilir.</li>
-                <li><strong>Üçüncü Taraflar:</strong> Verileriniz izniniz olmadan üçüncü taraf reklam şirketlerine satılmaz. Sadece hizmeti sunmak için gereken bulut sağlayıcıları (örn. Cloudflare, Railway) kullanılır.</li>
+                <li>{t('legal.privacy.li1')}</li>
+                <li>{t('legal.privacy.li2')}</li>
+                <li>{t('legal.privacy.li3')}</li>
               </ul>
             </div>
           </>
@@ -67,13 +69,13 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
       case 'terms':
         return (
           <>
-            <h2 className="text-xl font-bold text-white mb-4">Kullanım Koşulları (Taslak)</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{t('legal.terms.title')}</h2>
             <div className="space-y-4 text-sm text-zinc-300">
-              <p>DublajLab hizmetlerini kullanarak aşağıdaki koşulları kabul etmiş sayılırsınız:</p>
+              <p>{t('legal.terms.p1')}</p>
               <ul className="list-disc pl-5 space-y-2">
-                <li>Kullanıcılar sisteme yükledikleri tüm video ve ses içeriklerinden bizzat sorumludur.</li>
-                <li>Hizmet şu an "Public Beta" aşamasında olup, kesintiler veya veri kayıpları yaşanabilir.</li>
-                <li>Kötüye kullanım (DDoS, API limitlerini aşma çabası) durumunda hesabınız veya IP adresiniz engellenebilir.</li>
+                <li>{t('legal.terms.li1')}</li>
+                <li>{t('legal.terms.li2')}</li>
+                <li>{t('legal.terms.li3')}</li>
               </ul>
             </div>
           </>
@@ -81,13 +83,13 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
       case 'copyright':
         return (
           <>
-            <h2 className="text-xl font-bold text-white mb-4">Telif Bildirimi (Taslak)</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{t('legal.copyright.title')}</h2>
             <div className="space-y-4 text-sm text-zinc-300">
-              <p>DublajLab platformunda paylaşılan veya yüklenen içeriklerin fikri mülkiyet haklarına saygı duyuyoruz.</p>
+              <p>{t('legal.copyright.p1')}</p>
               <ul className="list-disc pl-5 space-y-2">
-                <li>Sadece kullanım hakkına sahip olduğunuz veya kamuya açık (CC0 vb.) videoları yükleyin.</li>
-                <li>Gerçek kişilerin seslerini taklit etmek (deepfake) veya onları yanıltıcı durumlara sokmak yasaktır.</li>
-                <li>Eğer telif hakkına sahip olduğunuz bir materyalin izinsiz kullanıldığını düşünüyorsanız, iletişim kanallarımızdan bize bildirebilirsiniz. İçerik incelenip yayından kaldırılacaktır.</li>
+                <li>{t('legal.copyright.li1')}</li>
+                <li>{t('legal.copyright.li2')}</li>
+                <li>{t('legal.copyright.li3')}</li>
               </ul>
             </div>
           </>
@@ -95,12 +97,12 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
       case 'refund':
         return (
           <>
-            <h2 className="text-xl font-bold text-white mb-4">İade ve İptal Koşulları (Taslak)</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{t('legal.refund.title')}</h2>
             <div className="space-y-4 text-sm text-zinc-300">
-              <p><strong>Not:</strong> Şu an sistemimizde Shopier ödeme entegrasyonu (VIP) aktif değildir. Aşağıdaki kurallar ödeme alındığında geçerli olacaktır.</p>
+              <p><strong>{t('legal.refund.p1')}</strong></p>
               <ul className="list-disc pl-5 space-y-2">
-                <li>Satın alınan VIP üyelikler dijital hizmet niteliğinde olduğundan, hizmet kullanılmaya başlandıktan sonra cayma hakkı kural olarak geçerli değildir.</li>
-                <li>Teknik bir nedenden ötürü (sistemin sürekli çökmesi vb.) vaat edilen hizmet hiç verilememişse, destek talebi üzerinden iade incelenebilir.</li>
+                <li>{t('legal.refund.li1')}</li>
+                <li>{t('legal.refund.li2')}</li>
               </ul>
             </div>
           </>
@@ -108,12 +110,12 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
       case 'distance_selling':
         return (
           <>
-            <h2 className="text-xl font-bold text-white mb-4">Mesafeli Satış Sözleşmesi (Taslak)</h2>
+            <h2 className="text-xl font-bold text-white mb-4">{t('legal.distance.title')}</h2>
             <div className="space-y-4 text-sm text-zinc-300">
-              <p><strong>Madde 1 - Taraflar:</strong> Bu sözleşme DublajLab (Satıcı) ile VIP/Premium hizmet alan kullanıcı (Alıcı) arasındadır. (Şu an test aşamasındadır, yasal satıcı ünvanı atanmamıştır).</p>
-              <p><strong>Madde 2 - Konu:</strong> Sözleşmenin konusu, alıcının dijital VIP hizmeti satın alması ve bu hizmetin elektronik ortamda anında teslimidir.</p>
-              <p><strong>Madde 3 - Teslimat:</strong> Satın alım tamamlandıktan hemen sonra üyelik statüsü güncellenir ve yüksek çözünürlük gibi özellikler aktifleşir.</p>
-              <p><strong>Not:</strong> Gerçek ticari faaliyet başladığında bu sayfa hukuk metni ile güncellenecektir.</p>
+              <p>{t('legal.distance.p1')}</p>
+              <p>{t('legal.distance.p2')}</p>
+              <p>{t('legal.distance.p3')}</p>
+              <p><strong>{t('legal.distance.p4')}</strong></p>
             </div>
           </>
         )
@@ -135,8 +137,8 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
               <img src="/assets/dublajlab-mark.svg" alt="Mark" className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-medium text-white">Yasal ve Kurumsal</h3>
-              <p className="text-xs text-zinc-400">Public Beta Bilgilendirmesi</p>
+              <h3 className="font-medium text-white">{t('legal.title')}</h3>
+              <p className="text-xs text-zinc-400">{t('legal.subtitle')}</p>
             </div>
           </div>
           <button
@@ -156,7 +158,7 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
             onClick={onClose}
             className="w-full rounded-xl bg-white/5 py-3 text-sm font-medium text-white transition hover:bg-white/10 active:scale-95"
           >
-            Kapat
+            {t('legal.close')}
           </button>
         </div>
       </div>
