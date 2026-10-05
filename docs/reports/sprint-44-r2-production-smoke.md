@@ -60,6 +60,37 @@ bir `smoke-tests/<uuid>.mp4` nesnesiyle upload → exists → URL → delete ak�
 **Bekliyor — credential/bucket yok.** Bu nedenle R2 bucket içinde gerçek export
 objesi oluştuğu veya gerçek indirme URL'sinin çalıştığı iddia edilmemektedir.
 
+### Canlı erişim kontrolü
+
+5 Ekim 2026 tarihinde kullanıcı, canonical frontend'in
+`https://www.dublajlab.com.tr` üzerinden açıldığını görsel olarak doğruladı. Aynı
+oturumda aşağıdaki salt-okunur istekler HTTP 200 döndürdü:
+
+- `https://www.dublajlab.com.tr`
+- Railway backend `/api/health`
+- Railway backend `/api/system/ffmpeg`
+- Railway backend `/api/system/demo-policy`
+- Railway backend `/api/templates`
+
+Bu sonuç frontend, Railway backend ve temel FFmpeg servisinin erişilebilir olduğunu
+gösterir. `STORAGE_PROVIDER=s3` doğrulaması, bucket'a gerçek obje yazılması veya R2
+indirme/silme akışının geçtiği anlamına gelmez.
+
+### Son doğrulama sonuçları
+
+- Backend: 117 test toplandı; 116 geçti, yalnız credential gerektiren opt-in R2
+  staging testi beklendiği gibi skip edildi.
+- Frontend: ESLint geçti; Vitest 4 dosyada 9/9 geçti; TypeScript/Vite production
+  build geçti.
+- Docker Compose config geçti. Redis servisi `services` altında doğrulandı ve R2
+  environment değişkenleri backend container'a aktarılıyor.
+- `git diff --check` geçti.
+- `npm audit --omit=dev`: 0 vulnerability.
+- Tam `npm audit`, Tailwind 3 build zincirindeki `braces` duyurusu nedeniyle 5 high
+  dev-only bulgu raporluyor. npm'in önerdiği tek otomatik çözüm Tailwind 4'e kırıcı
+  major yükseltme olduğundan bu storage sprintinde uygulanmadı; deploy edilen statik
+  frontend runtime paketlerinde bulgu yok.
+
 Staging değerleri Railway/yerel process environment'a girildiğinde sıralama:
 
 1. Opt-in R2 provider smoke testini çalıştır.

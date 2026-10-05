@@ -9,7 +9,7 @@
 
 DublajLab, kısa sahneleri veya kendi videolarınızı kendi mikrofonunuzla seslendirmenizi sağlayan yaratıcı bir web platformudur. Tarayıcıda ses kaydedin, zaman çizelgesinde (timeline) düzenleyin ve saniyeler içinde altyazılı, mixlenmiş MP4 dosyanızı indirin.
 
-> 🌐 **Live Demo (Public Beta):** [dublajlab-sigma.vercel.app](https://dublajlab-sigma.vercel.app/)
+> 🌐 **Live Demo (Public Beta):** [www.dublajlab.com.tr](https://www.dublajlab.com.tr/)
 
 ![DublajLab Studio Arayüzü](docs/assets/hero.jpg)
 

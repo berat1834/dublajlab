@@ -3,7 +3,7 @@
 ## Current Status (Public Beta + Portfolio Ready - Sprint 50)
 
 - **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
-  - ✅ **Canlı URL (Canonical)**: Şu anki doğru ve çalışan canlı site adresimiz **`https://dublajlab-sigma.vercel.app`**'tir. (`dublajlab.vercel.app` adresi Vercel üzerinde kullanıcının eski projesinde takılı kaldığı için şimdilik alias/domain hatası vermektedir).
+  - ✅ **Canlı URL (Canonical)**: Özel alan adı **`https://www.dublajlab.com.tr`** açılıyor ve canonical/SEO metadata bu adresi kullanıyor. Vercel deployment altyapısı özel alan adının arkasında çalışmaya devam ediyor.
   - ✅ **Yanlış Kök Dizin Ayarı Çözüldü**: Yeni Vercel projesinin `Root Directory` ayarı `frontend` olarak, `Framework` ayarı `Vite` olarak Vercel CLI üzerinden güncellendi ve başarılı bir build alınarak 404 hatası giderildi.
   - ✅ **Railway Backend & CORS**: API sorunsuz çalışmaktadır ve tüm Vercel canlı domainleri CORS iznine sahiptir (`api/health` 200 OK).
   - ✅ **Uçtan Uca API Smoke Test**: Canlı sunucular üzerinde Register, Login, Token alımı (`/me`), Templates listeleme, Kataloğum (`api/me/projects`) ve Dublajlar public feed (`api/public/dubs`) rotalarının tamamı başarıyla test edildi ve 200 HTTP dönüşleri alındı.
@@ -92,6 +92,7 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Sprint 42: Admin Ops Metrics (Sistem Sağlığı) ekranı React tarafında `AdminOpsPanel` olarak eklendi, ops metricleri için backend'e admin endpoint eklendi, testler 100% başarılı, UI uyumlu hale getirildi.
 - Sprint 43: Cloudflare R2 / S3 Storage Abstraction eklendi. Testler (storage mock, health endpoints vb.) başarılı bir şekilde geçti.
 - Sprint 44: R2 upload/delete/exists/URL, library/feed, retention ve local fallback regresyonları doğrulandı. Gerçek staging bucket smoke'u credential olmadığı için bekliyor.
+- Sprint 44 canlı erişim kontrolü: `https://www.dublajlab.com.tr` ile Railway `health`, `ffmpeg`, `demo-policy` ve `templates` endpointleri HTTP 200 döndürdü. Bu kontrol R2 obje yazma smoke'u yerine geçmez.
 
 ## Known Risks
 

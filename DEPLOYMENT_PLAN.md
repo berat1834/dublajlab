@@ -74,8 +74,8 @@ SHOPIER_ENABLED=true
 SHOPIER_API_KEY=<provider-dashboard-only-shopier-key>
 SHOPIER_API_SECRET=<provider-dashboard-only-shopier-secret>
 SHOPIER_CALLBACK_SECRET=<provider-dashboard-only-callback-secret>
-SHOPIER_RETURN_URL=https://dublajlab-sigma.vercel.app/membership/success
-SHOPIER_CANCEL_URL=https://dublajlab-sigma.vercel.app/membership
+SHOPIER_RETURN_URL=https://www.dublajlab.com.tr/membership/success
+SHOPIER_CANCEL_URL=https://www.dublajlab.com.tr/membership
 ```
 
 **Güvenlik Uyarısı:** `APP_ENV=production` iken `JWT_SECRET` varsayılan kalırsa uygulama `ValueError` fırlatacak ve güvenlik sebebiyle başlatılamayacaktır.
@@ -160,6 +160,11 @@ kullanılırsa bucket CORS ayarında yalnız production frontend origin'ine `GET
 log, `/api/health` veya admin ops cevabına yazılmaz. Admin ops yalnız
 `storage_provider`, `storage_configured` ve `storage_accessible` boolean alanlarını
 döndürür.
+
+Canonical production frontend origin'i `https://www.dublajlab.com.tr` adresidir.
+R2 bucket CORS veya public custom-domain politikası tanımlanırken bu origin esas
+alınmalı; Vercel preview originleri yalnız kontrollü staging testleri için ayrıca
+eklenmelidir.
 
 Staging token'ı ve değişkenler provider dashboard'a girildikten sonra opt-in smoke:
 
