@@ -115,10 +115,15 @@ Komut build tamamlandıktan sonra, yeni container trafiğe alınmadan önce çal
 | Build Command | `npm run build` |
 | Output Directory | `dist` |
 | Environment | `VITE_API_BASE_URL=https://<railway-api-domain>` |
+| Environment | `VITE_CANONICAL_URL=https://www.dublajlab.com.tr` |
 | Environment | `VITE_SHOPIER_VIP_URL=https://www.shopier.com/<vip-product>` |
 | Environment | `VITE_VIP_PRICE_LABEL=₺199` |
 
-`VITE_API_BASE_URL` secret değildir ve Vite build sırasında tarayıcı bundle'ına yazılır. Railway backend domain'i değişirse environment değeri güncellenip frontend yeniden deploy edilmelidir.
+`VITE_API_BASE_URL` ve `VITE_CANONICAL_URL` secret değildir ve Vite build sırasında
+kullanılan public yapılandırma değerleridir. Railway backend veya canonical frontend
+domain'i değişirse ilgili değer güncellenip frontend yeniden deploy edilmelidir.
+`frontend/index.html`, `robots.txt` ve `sitemap.xml` içindeki canonical adresler de
+aynı origin ile eşleşmelidir.
 
 `VITE_SHOPIER_VIP_URL` ve `VITE_VIP_PRICE_LABEL` da build-time değerleridir.
 Gerçek ödeme doğrulama işlemi `/api/payments/webhook` rotasına düşen Shopier bildirimindeki HMAC-SHA256 imza onayı ile backend'de otomatik yapılır ve kullanıcı anında VIP erişimine kavuşur. Frontend doğrudan yönlendirmeyi veya manuel onayı kullanmaz.

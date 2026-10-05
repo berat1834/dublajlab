@@ -16,6 +16,8 @@ const translations: Record<string, Record<Language, string>> = {
   'nav.dubs': { TR: 'Dublajlar', EN: 'Dubs' },
   'nav.daily': { TR: 'Günün Dublajı', EN: 'Daily Dub' },
   'nav.language': { TR: 'Dil', EN: 'Language' },
+  'nav.login': { TR: 'Giriş Yap', EN: 'Login' },
+  'nav.register': { TR: 'Kayıt Ol', EN: 'Sign Up' },
   'drop.profile': { TR: 'Profilim', EN: 'My Profile' },
   'drop.membership': { TR: 'Üyeliğim', EN: 'Membership' },
   'drop.library': { TR: 'Kataloğum', EN: 'My Library' },

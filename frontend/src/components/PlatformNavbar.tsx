@@ -176,10 +176,10 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
       {mobileMenuOpen && (
         <div className="border-b border-white/10 bg-black/95 px-4 py-4 md:hidden text-sm font-medium" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="flex flex-col gap-4 text-zinc-300">
-            <button onClick={() => { setActiveTab('play'); setMobileMenuOpen(false); }} className="text-left">Oyna</button>
-            <button onClick={() => { setActiveTab('scenes'); setMobileMenuOpen(false); }} className="text-left">Sahneler</button>
-            <button onClick={() => { setActiveTab('dubs'); setMobileMenuOpen(false); }} className="text-left">Dublajlar</button>
-            <button onClick={() => { setActiveTab('daily'); setMobileMenuOpen(false); }} className="text-left">Günün Dublajı</button>
+            <button onClick={() => { setActiveTab('play'); setMobileMenuOpen(false); }} className="text-left">{t('nav.play')}</button>
+            <button onClick={() => { setActiveTab('scenes'); setMobileMenuOpen(false); }} className="text-left">{t('nav.scenes')}</button>
+            <button onClick={() => { setActiveTab('dubs'); setMobileMenuOpen(false); }} className="text-left">{t('nav.dubs')}</button>
+            <button onClick={() => { setActiveTab('daily'); setMobileMenuOpen(false); }} className="text-left">{t('nav.daily')}</button>
             <hr className="border-white/10" />
             <button onClick={() => setLanguage(language === 'TR' ? 'EN' : 'TR')} className="text-left flex items-center gap-2 py-3"><Globe className="h-4 w-4" /> {language}</button>
             <button onClick={() => {
@@ -203,12 +203,12 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                 <div className="flex items-center gap-2 py-2 text-white">
                   <UserIcon className="h-4 w-4 text-lime-400" /> {currentUser.display_name}
                 </div>
-                <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-left text-zinc-400">Çıkış yap</button>
+                <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-left text-zinc-400">{t('drop.logout')}</button>
               </>
             ) : (
               <>
-                <button onClick={() => { setActiveTab('login'); setMobileMenuOpen(false); }} className="text-left">Giriş yap</button>
-                <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">Kayıt ol</button>
+                <button onClick={() => { setActiveTab('login'); setMobileMenuOpen(false); }} className="text-left">{t('nav.login')}</button>
+                <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">{t('nav.register')}</button>
               </>
             )}
             <button onClick={() => { setActiveTab('membership'); setMobileMenuOpen(false); }} className="text-left text-lime flex items-center gap-2 py-3 text-sm font-bold transition"><Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? 'VIP Aktif' : t('vip.button')}</button>
