@@ -14,10 +14,9 @@ import {
 } from 'lucide-react'
 import type { RefObject } from 'react'
 import type { TimelineLine } from '../types'
+import { useLanguage } from '../LanguageContext'
 
 const TIMELINE_DURATION_EPSILON_SECONDS = 0.001
-const TIMELINE_DURATION_ERROR =
-  'Replik bitiş zamanı video süresini aşıyor. Lütfen son repliği video bitişinden önce tamamlayın.'
 
 interface RecordedClip {
   blob: Blob
@@ -40,14 +39,14 @@ interface TimelineRecorderProps {
   ) => Promise<void>
 }
 
-function createInitialLines(duration: number): TimelineLine[] {
+function createInitialLines(duration: number, defaultLine: (number: number) => string): TimelineLine[] {
   const count = duration >= 6 ? 3 : duration >= 2 ? 2 : 1
   const slot = duration / count
   return Array.from({ length: count }, (_, index) => ({
     id: `line-${index + 1}`,
     start: Number((index * slot).toFixed(2)),
     end: Number(((index + 1) * slot).toFixed(2)),
-    text: `${index + 1}. repliğini buraya yaz.`,
+    text: defaultLine(index + 1),
   }))
 }
 
@@ -66,10 +65,11 @@ export function TimelineRecorder({
   onError,
   onProcess,
 }: TimelineRecorderProps) {
+  const { t } = useLanguage()
   const [lines, setLines] = useState(() =>
     providedLines?.length
       ? providedLines.map((line) => ({ ...line }))
-      : createInitialLines(duration),
+      : createInitialLines(duration, (number) => t('timeline.default_line').replace('{number}', String(number))),
   )
   const [clips, setClips] = useState<Map<string, RecordedClip>>(new Map())
   const [activeLineId, setActiveLineId] = useState<string | null>(null)
@@ -118,18 +118,19 @@ export function TimelineRecorder({
     (line) => line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS,
   )
   const completionPercent = Math.round((completedCount / lines.length) * 100)
+  const timelineDurationError = t('timeline.duration_error')
   const exportBlockReason = exportUnavailableReason
     ? exportUnavailableReason
     : disabled
-      ? 'Video işlenirken düzenleme geçici olarak kilitlenir.'
+      ? t('timeline.locked')
     : activeLineId
-      ? 'Devam etmek için aktif kaydı durdurun.'
+      ? t('timeline.stop_active')
       : invalidLineIds.size
         ? hasDurationOverflow
-          ? TIMELINE_DURATION_ERROR
-          : `${invalidLineIds.size} repliğin metnini veya zaman aralığını düzeltin.`
+          ? timelineDurationError
+          : t('timeline.fix_lines').replace('{count}', String(invalidLineIds.size))
         : missingCount
-          ? `Export için ${missingCount} repliği daha kaydedin.`
+          ? t('timeline.record_more').replace('{count}', String(missingCount))
           : ''
 
   const updateLine = (id: string, patch: Partial<TimelineLine>) => {
@@ -162,15 +163,15 @@ export function TimelineRecorder({
   const startRecording = async (line: TimelineLine) => {
     onError('')
     if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-      onError('Tarayıcınız mikrofon kaydını desteklemiyor. Güncel Chrome, Edge veya Safari kullanın.')
+      onError(t('timeline.unsupported'))
       return
     }
     if (line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS) {
-      onError(TIMELINE_DURATION_ERROR)
+      onError(timelineDurationError)
       return
     }
     if (!line.text.trim() || line.end <= line.start) {
-      onError('Replik metnini ve zaman aralığını kontrol edin.')
+      onError(t('timeline.check_line'))
       return
     }
 
@@ -222,20 +223,20 @@ export function TimelineRecorder({
       )
     } catch (error) {
       if (error instanceof DOMException && ['NotAllowedError', 'SecurityError'].includes(error.name)) {
-        onError('Mikrofon izni reddedildi. Adres çubuğundaki kilit simgesinden mikrofon iznini açıp tekrar deneyin.')
+        onError(t('timeline.permission_denied'))
       } else if (error instanceof DOMException && error.name === 'NotFoundError') {
-        onError('Kullanılabilir mikrofon bulunamadı. Mikrofon bağlantısını ve Windows ses ayarlarını kontrol edin.')
+        onError(t('timeline.no_microphone'))
       } else if (error instanceof DOMException && error.name === 'NotReadableError') {
-        onError('Mikrofon başka bir uygulama tarafından kullanılıyor. Diğer uygulamayı kapatıp tekrar deneyin.')
+        onError(t('timeline.microphone_busy'))
       } else {
-        onError('Mikrofon açılamadı. Tarayıcı iznini ve ses aygıtını kontrol edip tekrar deneyin.')
+        onError(t('timeline.microphone_error'))
       }
     }
   }
 
   const addLine = () => {
     if (lines.length >= 20) {
-      onError('En fazla 20 replik ekleyebilirsiniz.')
+      onError(t('timeline.max_lines'))
       return
     }
     const lastEnd = lines[lines.length - 1]?.end ?? 0
@@ -247,7 +248,7 @@ export function TimelineRecorder({
         id: `line-${crypto.randomUUID()}`,
         start: Number(start.toFixed(2)),
         end: Number(end.toFixed(2)),
-        text: 'Yeni replik',
+        text: t('timeline.new_line'),
       },
     ])
   }
@@ -266,15 +267,15 @@ export function TimelineRecorder({
 
   const submit = async () => {
     if (hasDurationOverflow) {
-      onError(TIMELINE_DURATION_ERROR)
+      onError(timelineDurationError)
       return
     }
     if (invalidLineIds.size) {
-      onError('Tüm replik metinlerini ve zaman aralıklarını kontrol edin.')
+      onError(t('timeline.check_all'))
       return
     }
     if (completedCount !== lines.length) {
-      onError('Videoyu oluşturmadan önce her repliği kaydedin.')
+      onError(t('timeline.record_all'))
       return
     }
     const recordings = new Map<string, Blob>()
@@ -286,9 +287,9 @@ export function TimelineRecorder({
     <div>
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-semibold text-zinc-100">Replik zaman çizelgesi</p>
+          <p className="text-sm font-semibold text-zinc-100">{t('timeline.title')}</p>
           <p className="mt-1 text-xs text-zinc-500">
-            Her repliği kendi zaman aralığında seslendir.
+            {t('timeline.subtitle')}
           </p>
         </div>
         <button
@@ -297,14 +298,14 @@ export function TimelineRecorder({
           disabled={disabled || Boolean(activeLineId)}
           className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 transition hover:border-white/20 hover:bg-white/5 disabled:opacity-40"
         >
-          <Plus className="h-3.5 w-3.5" /> Replik ekle
+          <Plus className="h-3.5 w-3.5" /> {t('timeline.add')}
         </button>
       </div>
 
       <div className="mb-4 rounded-xl border border-white/8 bg-black/15 p-3">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-zinc-300">Kayıt ilerlemesi</span>
-          <span className="shrink-0 tabular-nums text-zinc-400">{completedCount}/{lines.length} tamamlandı</span>
+          <span className="font-semibold text-zinc-300">{t('timeline.progress')}</span>
+          <span className="shrink-0 tabular-nums text-zinc-400">{t('timeline.completed').replace('{done}', String(completedCount)).replace('{total}', String(lines.length))}</span>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
           <div
@@ -316,8 +317,8 @@ export function TimelineRecorder({
 
       {!videoAvailable && (
         <div className="mb-4 rounded-xl border border-violet/20 bg-violet/[0.06] p-3 text-xs leading-5 text-zinc-300">
-          <span className="font-bold text-violet">Demo medya yakında.</span>{' '}
-          Hazır replikleri düzenleyip kayıt akışını deneyebilirsin. Video önizleme ve MP4 export için kendi videonu yükle.
+          <span className="font-bold text-violet">{t('timeline.demo_title')}</span>{' '}
+          {t('timeline.demo_hint')}
         </div>
       )}
 
@@ -346,18 +347,18 @@ export function TimelineRecorder({
                   </span>
                   <span className={`inline-flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] font-bold leading-4 ${isRecording ? 'text-red-300' : clip ? 'text-lime' : 'text-zinc-400'}`}>
                     {isRecording ? (
-                      <><Radio className="h-3.5 w-3.5 animate-pulse" /> Kayıt devam ediyor</>
+                      <><Radio className="h-3.5 w-3.5 animate-pulse" /> {t('timeline.recording')}</>
                     ) : clip ? (
-                      <><CheckCircle2 className="h-3.5 w-3.5" /> Kayıt tamamlandı</>
+                      <><CheckCircle2 className="h-3.5 w-3.5" /> {t('timeline.recorded')}</>
                     ) : (
-                      <><span className="h-1.5 w-1.5 rounded-full bg-zinc-600" /> Kayıt bekliyor</>
+                      <><span className="h-1.5 w-1.5 rounded-full bg-zinc-600" /> {t('timeline.waiting')}</>
                     )}
                   </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
-                    title="Sahneyi oynat"
+                    title={t('timeline.preview')}
                     onClick={() => previewLine(line)}
                     disabled={disabled || Boolean(activeLineId) || !videoAvailable}
                     className="rounded-md p-1.5 text-zinc-500 transition hover:bg-white/5 hover:text-white disabled:opacity-40"
@@ -366,7 +367,7 @@ export function TimelineRecorder({
                   </button>
                   <button
                     type="button"
-                    title="Repliği sil"
+                    title={t('timeline.delete')}
                     onClick={() => removeLine(line.id)}
                     disabled={disabled || Boolean(activeLineId) || lines.length === 1}
                     className="rounded-md p-1.5 text-zinc-600 transition hover:bg-red-400/10 hover:text-red-300 disabled:opacity-30"
@@ -376,7 +377,7 @@ export function TimelineRecorder({
                 </div>
               </div>
               <textarea
-                aria-label={`Replik ${index + 1} metni`}
+                aria-label={t('timeline.text_aria').replace('{number}', String(index + 1))}
                 value={line.text}
                 maxLength={300}
                 rows={2}
@@ -386,9 +387,9 @@ export function TimelineRecorder({
               />
               <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
                 <label className="text-[11px] font-medium text-zinc-500">
-                  <span className="mb-1 flex items-center gap-1"><Clock3 className="h-3 w-3" /> Başlangıç</span>
+                  <span className="mb-1 flex items-center gap-1"><Clock3 className="h-3 w-3" /> {t('timeline.start')}</span>
                   <input
-                    aria-label={`Replik ${index + 1} başlangıç zamanı`}
+                    aria-label={`${t('timeline.text_aria').replace('{number}', String(index + 1))} ${t('timeline.start')}`}
                     type="number"
                     min="0"
                     max={duration}
@@ -402,9 +403,9 @@ export function TimelineRecorder({
                   />
                 </label>
                 <label className="text-[11px] font-medium text-zinc-500">
-                  <span className="mb-1 block">Bitiş</span>
+                  <span className="mb-1 block">{t('timeline.end')}</span>
                   <input
-                    aria-label={`Replik ${index + 1} bitiş zamanı`}
+                    aria-label={`${t('timeline.text_aria').replace('{number}', String(index + 1))} ${t('timeline.end')}`}
                     type="number"
                     min="0"
                     max={duration}
@@ -418,13 +419,13 @@ export function TimelineRecorder({
                   />
                 </label>
                 <span className="col-span-2 rounded-lg bg-white/[0.03] px-3 py-2 text-center text-[11px] tabular-nums text-zinc-500 sm:col-span-1">
-                  {Math.max(0, line.end - line.start).toFixed(1)} sn
+                  {Math.max(0, line.end - line.start).toFixed(1)} {t('upload.seconds')}
                 </span>
               </div>
 
               {isInvalid && (
                 <p className="mt-2 text-xs text-amber-300">
-                  Metin boş olmamalı; bitiş, başlangıçtan sonra ve video süresi içinde olmalı.
+                  {t('timeline.invalid')}
                 </p>
               )}
 
@@ -442,11 +443,11 @@ export function TimelineRecorder({
                   }`}
                 >
                   {isRecording ? (
-                    <><CircleStop className="h-4 w-4" /> Kaydı durdur</>
+                    <><CircleStop className="h-4 w-4" /> {t('timeline.stop')}</>
                   ) : clip ? (
-                    <><RotateCcw className="h-3.5 w-3.5" /> Yeniden kaydet</>
+                    <><RotateCcw className="h-3.5 w-3.5" /> {t('timeline.rerecord')}</>
                   ) : (
-                    <><Mic className="h-4 w-4" /> Kaydı başlat</>
+                    <><Mic className="h-4 w-4" /> {t('timeline.start_recording')}</>
                   )}
                 </button>
                 {clip && (
@@ -457,7 +458,7 @@ export function TimelineRecorder({
                 )}
                 {isRecording && (
                   <span className="flex items-center gap-2 text-xs font-semibold text-red-300">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" /> Süre bitince otomatik durur
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" /> {t('timeline.auto_stop')}
                   </span>
                 )}
               </div>
@@ -475,7 +476,7 @@ export function TimelineRecorder({
             disabled={disabled}
             className="accent-lime"
           />
-          Orijinal sesi tamamen kapat
+          {t('timeline.mute')}
         </label>
         <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/8 bg-white/[0.025] p-3 text-xs text-zinc-300">
           <input
@@ -485,7 +486,7 @@ export function TimelineRecorder({
             disabled={disabled}
             className="accent-lime"
           />
-          Altyazıları videoya göm
+          {t('timeline.subtitles')}
         </label>
       </div>
 
@@ -495,13 +496,13 @@ export function TimelineRecorder({
         disabled={disabled || Boolean(activeLineId) || Boolean(invalidLineIds.size) || Boolean(missingCount) || Boolean(exportUnavailableReason)}
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3.5 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none"
       >
-        <WandSparkles className="h-5 w-5" /> Kendi Sesimle Videoyu Oluştur
+        <WandSparkles className="h-5 w-5" /> {t('timeline.create')}
       </button>
       {exportBlockReason ? (
         <p className="mt-2 break-words text-center text-xs leading-5 text-zinc-400">{exportBlockReason}</p>
       ) : (
         <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-xs text-lime">
-          <CheckCircle2 className="h-3.5 w-3.5" /> Tüm replikler hazır; videonu oluşturabilirsin.
+          <CheckCircle2 className="h-3.5 w-3.5" /> {t('timeline.ready')}
         </p>
       )}
     </div>

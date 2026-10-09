@@ -158,11 +158,15 @@ def allowed_origins() -> list[str]:
     raw_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173")
     origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
     
-    # Canlı ortam CORS blokajlarını çözmek için fallback originler
-    if "https://dublajlab.vercel.app" not in origins:
-        origins.append("https://dublajlab.vercel.app")
-    if "https://dublajlab-sigma.vercel.app" not in origins:
-        origins.append("https://dublajlab-sigma.vercel.app")
+    # Canlı ortam CORS blokajlarını çözmek için bilinen frontend originleri.
+    for frontend_origin in (
+        "https://www.dublajlab.com.tr",
+        "https://dublajlab.com.tr",
+        "https://dublajlab.vercel.app",
+        "https://dublajlab-sigma.vercel.app",
+    ):
+        if frontend_origin not in origins:
+            origins.append(frontend_origin)
         
     return origins
 

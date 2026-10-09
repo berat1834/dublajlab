@@ -86,15 +86,15 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                 {currentUser.role === 'admin' && (
                   <>
                     <button onClick={() => setActiveTab('admin')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'admin' ? 'bg-violet-500 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}>
-                      Moderasyon
+                      {t('nav.moderation')}
                     </button>
                     <button onClick={() => setActiveTab('admin_ops')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'admin_ops' ? 'bg-violet-500 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/10'}`}>
-                      Sistem (Ops)
+                      {t('nav.system')}
                     </button>
                   </>
                 )}
                 <button onClick={() => setActiveTab('library')} className={`rounded-lg px-3 py-1.5 transition text-sm font-bold ${activeTab === 'library' ? 'bg-lime-400 text-black' : 'text-white hover:bg-white/10'}`}>
-                  Kataloğum
+                  {t('drop.library')}
                 </button>
                 
                 <div className="relative" ref={dropdownRef}>
@@ -116,13 +116,13 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                         </div>
                         <div>
                           <div className="text-sm font-black text-white">{currentUser.display_name}</div>
-                          <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Kayıtlı Hesap</div>
+                          <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{t('nav.account_registered')}</div>
                         </div>
                       </div>
                       
                       <div className="px-4 py-3 border-b border-white/10">
                         <div className="flex justify-between text-xs font-bold text-zinc-400 mb-2">
-                          <span>Seviye 1</span>
+                          <span>{t('nav.level')}</span>
                           <span>0 / 100 XP</span>
                         </div>
                         <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
@@ -133,13 +133,13 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                       <div className="px-4 py-3 border-b border-white/10">
                         <div className="flex items-center gap-2 mb-1">
                           <Diamond className="h-3 w-3 text-amber-500" />
-                          <span className="text-xs font-black text-white">{currentUser.has_active_vip ? 'VIP aktif' : 'VIP ol'}</span>
+                          <span className="text-xs font-black text-white">{currentUser.has_active_vip ? t('nav.vip_active') : t('nav.vip_join')}</span>
                         </div>
-                        <p className="text-[10px] text-zinc-500">{currentUser.has_active_vip ? '1080p ve AI ses özelliklerin açık.' : '1080p çıktı ve AI ses modunu aç.'}</p>
+                        <p className="text-[10px] text-zinc-500">{currentUser.has_active_vip ? t('nav.vip_active_desc') : t('nav.vip_join_desc')}</p>
                       </div>
 
                       <div className="py-2">
-                        <div className="px-4 py-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Hesabın</div>
+                        <div className="px-4 py-1.5 text-[10px] font-black text-zinc-600 uppercase tracking-widest">{t('nav.account_section')}</div>
                         <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.profile')}</button>
                         <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.membership')}</button>
                         <button onClick={() => handleDropdownNav('library')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.library')}</button>
@@ -165,7 +165,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
               </>
             )}
             <button onClick={() => setActiveTab('membership')} className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-bold transition ${currentUser?.has_active_vip ? 'border-amber-300/30 bg-amber-300/10 text-amber-200 hover:bg-amber-300/15' : 'border-lime/30 bg-lime/10 text-lime hover:bg-lime/20'}`}>
-              <Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? 'VIP Aktif' : t('vip.button')}
+              <Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? t('nav.vip_active') : t('vip.button')}
             </button>
           </div>
           <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -195,11 +195,11 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
               <>
                 {currentUser.role === 'admin' && (
                   <>
-                    <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">Moderasyon Paneli</button>
-                    <button onClick={() => { setActiveTab('admin_ops'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">Sistem Durumu (Ops)</button>
+                    <button onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">{t('nav.moderation_panel')}</button>
+                    <button onClick={() => { setActiveTab('admin_ops'); setMobileMenuOpen(false); }} className="text-left text-violet-400 font-bold">{t('nav.system_status')}</button>
                   </>
                 )}
-                <button onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} className="text-left text-lime-400 font-bold">Kataloğum</button>
+                <button onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} className="text-left text-lime-400 font-bold">{t('drop.library')}</button>
                 <div className="flex items-center gap-2 py-2 text-white">
                   <UserIcon className="h-4 w-4 text-lime-400" /> {currentUser.display_name}
                 </div>
@@ -211,7 +211,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                 <button onClick={() => { setActiveTab('register'); setMobileMenuOpen(false); }} className="text-left">{t('nav.register')}</button>
               </>
             )}
-            <button onClick={() => { setActiveTab('membership'); setMobileMenuOpen(false); }} className="text-left text-lime flex items-center gap-2 py-3 text-sm font-bold transition"><Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? 'VIP Aktif' : t('vip.button')}</button>
+            <button onClick={() => { setActiveTab('membership'); setMobileMenuOpen(false); }} className="text-left text-lime flex items-center gap-2 py-3 text-sm font-bold transition"><Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? t('nav.vip_active') : t('vip.button')}</button>
           </div>
         </div>
       )}

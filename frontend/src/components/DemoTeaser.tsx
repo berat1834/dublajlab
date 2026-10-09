@@ -3,6 +3,7 @@ import { Clock3, Flame, LoaderCircle, Mic2, Scale } from 'lucide-react'
 import { fetchTemplates } from '../lib/api'
 import type { VideoTemplate } from '../types'
 import { thumbClass, ThumbIcon, difficulty } from '../lib/templateUtils'
+import { useLanguage } from '../LanguageContext'
 
 interface DemoTeaserProps {
   onSelect: (templateId: string) => void
@@ -10,6 +11,7 @@ interface DemoTeaserProps {
 }
 
 export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
+  const { t } = useLanguage()
   const [templates, setTemplates] = useState<VideoTemplate[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -34,7 +36,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
   return (
     <div className="mb-8">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold text-white">Örnek Sahneler (Demo)</h3>
+        <h3 className="text-lg font-bold text-white">{t('demo_scenes.title')}</h3>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {templates.map((template) => {
@@ -59,7 +61,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
                   </span>
                   {template.is_demo && (
                     <span className="max-w-fit rounded-full bg-violet-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-glow-sm">
-                      Demo
+                      {t('templates.demo')}
                     </span>
                   )}
                 </div>
@@ -71,13 +73,13 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
 
                 <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
                   <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.05] px-2 py-1 font-medium text-zinc-400">
-                    <Mic2 className="h-3 w-3" /> {template.lines.length} replik
+                    <Mic2 className="h-3 w-3" /> {template.lines.length} {t('studio.template.lines')}
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.05] px-2 py-1 font-medium text-zinc-400">
-                    <Clock3 className="h-3 w-3" /> {template.duration_seconds.toFixed(1)} sn
+                    <Clock3 className="h-3 w-3" /> {template.duration_seconds.toFixed(1)} {t('studio.template.seconds')}
                   </span>
                   <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 font-bold ${diff.color}`}>
-                    <Flame className="h-3 w-3" /> {diff.label}
+                    <Flame className="h-3 w-3" /> {diff.label === 'Kolay' ? t('templates.easy') : t('templates.medium')}
                   </span>
                 </div>
 
@@ -93,7 +95,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
                   className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-extrabold text-ink transition hover:bg-zinc-200 disabled:cursor-wait disabled:opacity-50"
                 >
                   {isSelecting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Mic2 className="h-4 w-4" />}
-                  Hemen Dublajla
+                  {t('demo_scenes.cta')}
                 </button>
               </div>
             </article>

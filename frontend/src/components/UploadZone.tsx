@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { AlertCircle, FileVideo2, UploadCloud } from 'lucide-react'
+import { useLanguage } from '../LanguageContext'
 
 interface UploadZoneProps {
   onFile: (file: File) => void
@@ -21,6 +22,7 @@ export function UploadZone({
   maxFileSizeMb = 50,
   maxDurationSeconds = 60,
 }: UploadZoneProps) {
+  const { t } = useLanguage()
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [localError, setLocalError] = useState('')
@@ -29,15 +31,15 @@ export function UploadZone({
     setLocalError('')
     if (!file) return
     if (!isSupported(file)) {
-      setLocalError('Desteklenmeyen format. MP4, MOV veya WEBM seçin.')
+      setLocalError(t('upload.unsupported'))
       return
     }
     if (file.size === 0) {
-      setLocalError('Boş video dosyası yüklenemez.')
+      setLocalError(t('upload.empty'))
       return
     }
     if (file.size > maxFileSizeMb * 1024 * 1024) {
-      setLocalError(`Video en fazla ${maxFileSizeMb} MB olabilir.`)
+      setLocalError(t('upload.max_size').replace('{size}', String(maxFileSizeMb)))
       return
     }
     onFile(file)
@@ -47,7 +49,7 @@ export function UploadZone({
     <div>
       <button
         type="button"
-        aria-label="Yüklenecek video dosyasını seç"
+        aria-label={t('upload.aria')}
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
         onDragEnter={(event) => {
@@ -71,13 +73,13 @@ export function UploadZone({
           {isDragging ? <FileVideo2 /> : <UploadCloud />}
         </span>
         <span className="font-bold text-zinc-100">
-          {isDragging ? 'Videoyu bırak, başlayalım' : 'Videonu buraya sürükle'}
+          {isDragging ? t('upload.drop') : t('upload.drag')}
         </span>
-        <span className="mt-1 text-sm text-zinc-500">veya bilgisayarından seçmek için tıkla</span>
+        <span className="mt-1 text-sm text-zinc-500">{t('upload.click')}</span>
         <span className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
           <span className="rounded-full bg-white/5 px-2.5 py-1">MP4 · MOV · WEBM</span>
-          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla {maxFileSizeMb} MB</span>
-          <span className="rounded-full bg-white/5 px-2.5 py-1">En fazla {maxDurationSeconds} sn</span>
+          <span className="rounded-full bg-white/5 px-2.5 py-1">{t('upload.max')} {maxFileSizeMb} MB</span>
+          <span className="rounded-full bg-white/5 px-2.5 py-1">{t('upload.max')} {maxDurationSeconds} {t('upload.seconds')}</span>
         </span>
       </button>
       <input

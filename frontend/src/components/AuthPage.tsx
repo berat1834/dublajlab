@@ -32,7 +32,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
     try {
       if (mode === 'register') {
         await register(email, password, name || 'Dublajcı')
-        onToast('Kayıt başarılı! Lütfen giriş yapın.')
+        onToast(t('auth.register_success'))
         setActiveTab('login')
       } else {
         const res = await login(email, password)
@@ -41,11 +41,11 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
           const user = await getMe()
           setCurrentUser(user)
         }
-        onToast('Giriş başarılı! Stüdyoya yönlendiriliyorsunuz.')
+        onToast(t('auth.login_success'))
         setActiveTab('play')
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Bir hata oluştu.'
+      const msg = err instanceof Error ? err.message : t('auth.generic_error')
       onToast(msg)
     } finally {
       setLoading(false)
@@ -79,16 +79,16 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
         </div>
 
         <div className="relative z-10 flex items-center gap-4 text-xs font-bold text-zinc-500">
-          <span className="flex items-center gap-1.5"><PlayCircle className="w-4 h-4 text-lime" /> +5.000 Sahne</span>
-          <span className="flex items-center gap-1.5"><Mic2 className="w-4 h-4 text-violet" /> AI Destekli Mix</span>
+          <span className="flex items-center gap-1.5"><PlayCircle className="w-4 h-4 text-lime" /> {t('auth.feature.scenes')}</span>
+          <span className="flex items-center gap-1.5"><Mic2 className="w-4 h-4 text-violet" /> {t('auth.feature.ai_mix')}</span>
         </div>
 
         {/* Decorative elements & Floating Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-          <div className="absolute top-[10%] left-[10%] -rotate-12 text-zinc-400 font-bold whitespace-nowrap blur-[1px] animate-pulse">"Senin sorunun ne biliyor musun?"</div>
-          <div className="absolute top-[30%] left-[50%] rotate-6 text-zinc-300 font-bold whitespace-nowrap blur-[2px] animate-pulse delay-700">"Hadi oradan!"</div>
-          <div className="absolute top-[60%] left-[20%] -rotate-6 text-zinc-500 font-bold whitespace-nowrap animate-pulse delay-300">"Ben de tam onu diyecektim."</div>
-          <div className="absolute top-[80%] left-[60%] rotate-12 text-zinc-400 font-bold whitespace-nowrap blur-[1px] animate-pulse delay-1000">"Sessizlik!"</div>
+          <div className="absolute top-[10%] left-[10%] -rotate-12 text-zinc-400 font-bold whitespace-nowrap blur-[1px] animate-pulse">{t('auth.quote.1')}</div>
+          <div className="absolute top-[30%] left-[50%] rotate-6 text-zinc-300 font-bold whitespace-nowrap blur-[2px] animate-pulse delay-700">{t('auth.quote.2')}</div>
+          <div className="absolute top-[60%] left-[20%] -rotate-6 text-zinc-500 font-bold whitespace-nowrap animate-pulse delay-300">{t('auth.quote.3')}</div>
+          <div className="absolute top-[80%] left-[60%] rotate-12 text-zinc-400 font-bold whitespace-nowrap blur-[1px] animate-pulse delay-1000">{t('auth.quote.4')}</div>
         </div>
         <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-lime/10 blur-[100px]" />
         <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-violet/10 blur-[100px]" />
@@ -109,7 +109,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-bold text-zinc-400 mb-1.5">Kullanıcı Adı</label>
+                <label className="block text-xs font-bold text-zinc-400 mb-1.5">{t('auth.username')}</label>
                 <input
                   type="text"
                   value={name}
@@ -121,7 +121,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
             )}
             
             <div>
-              <label className="block text-xs font-bold text-zinc-400 mb-1.5">E-posta Adresi</label>
+              <label className="block text-xs font-bold text-zinc-400 mb-1.5">{t('auth.email')}</label>
               <input
                 type="email"
                 value={email}
@@ -132,7 +132,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-zinc-400 mb-1.5">Şifre</label>
+              <label className="block text-xs font-bold text-zinc-400 mb-1.5">{t('auth.password')}</label>
               <input
                 type="password"
                 value={password}
@@ -147,7 +147,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
               disabled={loading}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-4 py-3.5 text-sm font-black text-ink hover:bg-lime/90 transition shadow-glow disabled:opacity-50"
             >
-              {loading ? 'Bekleniyor...' : (mode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur')} <ArrowRight className="h-4 w-4" />
+              {loading ? t('auth.waiting') : (mode === 'login' ? t('auth.login.action') : t('auth.register.action'))} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
@@ -156,7 +156,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
               <div className="w-full border-t border-white/10"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-black/40 px-2 text-zinc-500 font-bold uppercase tracking-wider">veya</span>
+              <span className="bg-black/40 px-2 text-zinc-500 font-bold uppercase tracking-wider">{t('auth.or')}</span>
             </div>
           </div>
 
@@ -170,12 +170,12 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
           </div>
 
           <p className="mt-8 text-center text-xs text-zinc-500">
-            {mode === 'login' ? 'Hesabın yok mu? ' : 'Zaten hesabın var mı? '}
+            {mode === 'login' ? `${t('auth.no_account')} ` : `${t('auth.have_account')} `}
             <button 
               onClick={() => setActiveTab(mode === 'login' ? 'register' : 'login')}
               className="font-bold text-lime hover:underline"
             >
-              {mode === 'login' ? 'Kayıt ol' : 'Giriş yap'}
+              {mode === 'login' ? t('auth.signup_link') : t('auth.login_link')}
             </button>
           </p>
         </div>

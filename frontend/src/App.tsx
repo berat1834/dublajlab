@@ -63,6 +63,7 @@ import {
   getMe,
 } from './lib/api'
 import { shouldShowLipSync } from './lib/lipSync'
+import { useLanguage } from './LanguageContext'
 import type {
   DemoPolicy,
   Tab,
@@ -102,13 +103,13 @@ function templateFilename(template: VideoTemplate) {
   return `${template.id}${extension ?? '.mp4'}`
 }
 
-function explainError(message: string): ErrorDetails {
+function explainError(message: string, t: (key: string) => string): ErrorDetails {
   const normalized = message.toLocaleLowerCase('tr-TR')
   if (normalized.includes('günlük export sınırı') || normalized.includes('çok fazla istek')) {
     return {
-      title: 'Günlük demo limiti doldu',
+      title: t('error.daily_title'),
       message,
-      hint: 'Public demo kotası UTC gün başlangıcında yenilenir. Daha sonra tekrar deneyin.',
+      hint: t('error.daily_hint'),
       icon: ShieldCheck,
     }
   }
@@ -117,61 +118,62 @@ function explainError(message: string): ErrorDetails {
     && (normalized.includes('mb') || normalized.includes('saniye'))
   ) {
     return {
-      title: 'Public demo limiti aşıldı',
+      title: t('error.limit_title'),
       message,
-      hint: 'Daha küçük veya daha kısa bir video/kayıt seçip yeniden deneyin.',
+      hint: t('error.limit_hint'),
       icon: AlertCircle,
     }
   }
   if (normalized.includes('sunucuya ulaşılamadı') || normalized.includes('backend')) {
     return {
-      title: 'Backend bağlantısı kurulamadı',
+      title: t('error.backend_title'),
       message,
-      hint: 'Backend terminalinde sunucunun çalıştığını ve adresin http://localhost:8000 olduğunu kontrol edin.',
+      hint: t('error.backend_hint'),
       icon: ServerCrash,
     }
   }
   if (normalized.includes('ffmpeg') || normalized.includes('medya işlemi')) {
     return {
-      title: 'Medya motoru hazır değil',
+      title: t('error.ffmpeg_title'),
       message,
-      hint: 'FFmpeg kurulumunu ve PATH ayarını kontrol edin; ardından backend terminalini yeniden başlatın.',
+      hint: t('error.ffmpeg_hint'),
       icon: Film,
     }
   }
   if (normalized.includes('mikrofon') || normalized.includes('izin')) {
     return {
-      title: 'Mikrofon erişimi gerekli',
+      title: t('error.microphone_title'),
       message,
-      hint: 'Adres çubuğundaki kilit simgesinden mikrofon iznini açın ve kayıt düğmesine yeniden basın.',
+      hint: t('error.microphone_hint'),
       icon: Mic2,
     }
   }
   return {
-    title: 'İşlem tamamlanamadı',
+    title: t('error.generic_title'),
     message,
-    hint: 'Bilgileri kontrol edip tekrar deneyin. Sorun sürerse backend terminalindeki hata mesajına bakın.',
+    hint: t('error.generic_hint'),
     icon: AlertCircle,
   }
 }
 
 /* ── Mock preview lines used in the hero & empty editor state ── */
 const MOCK_LINES = [
-  { text: 'Toplantı beş dakika sürecek dediler…', time: '0:00 – 0:03' },
-  { text: 'Tüm gün süren o toplantı…', time: '0:03 – 0:06' },
-  { text: 'Neyse, kahve molası…', time: '0:06 – 0:09' },
+  { textKey: 'studio.preview.line1', time: '0:00 – 0:03' },
+  { textKey: 'studio.preview.line2', time: '0:03 – 0:06' },
+  { textKey: 'studio.preview.line3', time: '0:06 – 0:09' },
 ]
 
 /* ── Feature strip items ── */
 const FEATURES = [
-  { icon: Mic2, label: 'Kendi sesim' },
-  { icon: Layers, label: 'Timeline replik' },
-  { icon: Video, label: 'MP4 export' },
-  { icon: Subtitles, label: 'Altyazı gömme' },
-  { icon: ShieldCheck, label: 'Telif bilinci' },
+  { icon: Mic2, labelKey: 'studio.feature.voice' },
+  { icon: Layers, labelKey: 'studio.feature.timeline' },
+  { icon: Video, labelKey: 'studio.feature.export' },
+  { icon: Subtitles, labelKey: 'studio.feature.subtitles' },
+  { icon: ShieldCheck, labelKey: 'studio.feature.copyright' },
 ] as const
 
 function App() {
+  const { t } = useLanguage()
   const videoRef = useRef<HTMLVideoElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
   const activeJobControllerRef = useRef<AbortController | null>(null)
@@ -219,7 +221,7 @@ function App() {
     const urlToken = params.get('token')
     if (urlToken) {
       localStorage.setItem('token', urlToken)
-      window.history.replaceState({}, document.title, window.location.pathname)
+      window.history.replaceState({}, document.title, '/')
     }
 
     if (localStorage.getItem('token')) {
@@ -247,7 +249,7 @@ function App() {
     () => (selectedFile ? URL.createObjectURL(selectedFile) : ''),
     [selectedFile],
   )
-  const errorDetails = useMemo(() => (error ? explainError(error) : null), [error])
+  const errorDetails = useMemo(() => (error ? explainError(error, t) : null), [error, t])
 
   useEffect(() => {
     return () => {
@@ -296,10 +298,10 @@ function App() {
       setError(
         uploadError instanceof Error
           ? uploadError.message
-          : 'Video yüklenirken bir hata oluştu.',
+          : t('action.upload_error'),
       )
       retryActionRef.current = () => handleFile(file)
-      setRetryLabel('Yüklemeyi tekrar dene')
+      setRetryLabel(t('action.retry_upload'))
     }
   }
 
@@ -319,7 +321,7 @@ function App() {
         setStage('uploading')
         const mediaResponse = await fetch(templateAssetUrl(template.video_url))
         if (!mediaResponse.ok) {
-          throw new Error('Template video dosyası yüklenemedi. Dosya yolunu ve lisans metadata\u2019sını kontrol edin.')
+          throw new Error(t('action.template_file_error'))
         }
         const mediaBlob = await mediaResponse.blob()
         const mediaFile = new File([mediaBlob], templateFilename(template), {
@@ -334,7 +336,7 @@ function App() {
       setError(
         templateError instanceof Error
           ? templateError.message
-          : 'Hazır sahne açılamadı.',
+          : t('action.template_error'),
       )
     } finally {
       setSelectingTemplateId('')
@@ -349,18 +351,18 @@ function App() {
     retryActionRef.current = null
     setOutputUrl('')
     setJobProgress(0)
-    setJobMessage('Export isteği hazırlanıyor.')
+    setJobMessage(t('action.export_preparing'))
     setJobError('')
     setStage('processing')
   }
 
   const completeProcessing = (downloadUrl: string) => {
     setJobProgress(100)
-    setJobMessage('Dublaj videosu hazır.')
+    setJobMessage(t('action.export_ready'))
     setOutputUrl(absoluteApiUrl(downloadUrl))
     setStage('completed')
     if (currentUser) {
-      showToast('Dublajın hesabına kaydedildi.')
+      showToast(t('action.saved'))
     }
   }
 
@@ -371,7 +373,7 @@ function App() {
     const message =
       processError instanceof Error
         ? processError.message
-        : 'Video işlenirken bir hata oluştu.'
+        : t('action.processing_error')
     setStage('ready')
     setError(message)
     setJobError(message)
@@ -429,7 +431,7 @@ function App() {
       })
       const completedJob = await monitorJob(createdJob)
       if (!completedJob.download_url) {
-        throw new Error('Job tamamlandı ancak çıktı bağlantısı alınamadı.')
+        throw new Error(t('action.no_output'))
       }
       completeProcessing(completedJob.download_url)
     } catch (processError) {
@@ -440,16 +442,16 @@ function App() {
 
   const handleAiProcess = async () => {
     if (!hasVip) {
-      setError('AI sesle dublaj VIP üyelere özeldir.')
+      setError(t('action.ai_vip'))
       setActiveTab('membership')
       return
     }
     if (!upload) {
-      setError('Önce bir video yükleyin.')
+      setError(t('action.upload_first'))
       return
     }
     if (!text.trim()) {
-      setError('Dublaj metni boş bırakılamaz.')
+      setError(t('action.script_required'))
       return
     }
     const retry = () => handleAiProcess()
@@ -465,7 +467,7 @@ function App() {
       })
       const completedJob = await monitorJob(createdJob)
       if (!completedJob.download_url) {
-        throw new Error('Job tamamlandı ancak çıktı bağlantısı alınamadı.')
+        throw new Error(t('action.no_output'))
       }
       completeProcessing(completedJob.download_url)
     } catch (processError) {
@@ -555,19 +557,18 @@ function App() {
           <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
             <div className="min-w-0">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-lime/20 bg-lime/5 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-lime">
-                <Sparkles className="h-3.5 w-3.5" /> Tarayıcı tabanlı dublaj stüdyosu
+                <Sparkles className="h-3.5 w-3.5" /> {t('studio.badge')}
               </div>
               <h1 className="break-words text-[1.85rem] font-black leading-[1.08] tracking-[-0.035em] text-white sm:text-5xl sm:tracking-[-0.04em] lg:text-[3.4rem]">
-                Kendi sesinle komik
+                {t('studio.hero.line1')}
                 <br className="hidden sm:block" />{' '}
                 <span className="bg-gradient-to-r from-lime via-lime to-emerald-300 bg-clip-text text-transparent">
-                  dublaj videoları
+                  {t('studio.hero.accent')}
                 </span>{' '}
-                oluştur
+                {t('studio.hero.line2')}
               </h1>
               <p className="mt-4 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg">
-                Hazır sahne seç ya da kendi videonu yükle, repliği oku,{' '}
-                <span className="font-semibold text-zinc-300">altyazılı MP4</span> olarak indir.
+                {t('studio.hero.description')}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <button
@@ -575,20 +576,20 @@ function App() {
                   onClick={() => { changeSourceMode('upload'); window.scrollBy({ top: 400, behavior: 'smooth' }); }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] sm:w-auto"
                 >
-                  <Play className="h-4 w-4" /> Hemen Dublaj Yap
+                  <Play className="h-4 w-4" /> {t('studio.cta.start')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab('scenes')}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-zinc-200 transition hover:bg-white/10 sm:w-auto"
                 >
-                  Hazır Sahneleri Keşfet <ArrowRight className="h-4 w-4" />
+                  {t('studio.cta.templates')} <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
               <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-zinc-500">
-                <div className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-lime/70" /> Kendi videonu kullan</div>
-                <div className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-lime/70" /> Telifli içerik yükleme</div>
-                <div className="flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5 text-lime/70" /> Kimseyi taklit etme</div>
+                <div className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-lime/70" /> {t('studio.trust.own_video')}</div>
+                <div className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-lime/70" /> {t('studio.trust.no_copyright')}</div>
+                <div className="flex items-center gap-1.5"><AlertCircle className="h-3.5 w-3.5 text-lime/70" /> {t('studio.trust.no_impersonation')}</div>
               </div>
             </div>
 
@@ -596,9 +597,9 @@ function App() {
             <div className="flex w-full flex-col items-stretch gap-4 lg:w-auto lg:items-end">
               <ol className="grid w-full grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-panel/80 text-xs lg:w-auto">
                 {[
-                  ['1', 'Sahneyi seç', projectReady],
-                  ['2', 'Replikleri kaydet', stage === 'processing' || stage === 'completed'],
-                  ['3', 'MP4\u2019ü indir', stage === 'completed'],
+                  ['1', t('studio.step.source'), projectReady],
+                  ['2', t('studio.step.record'), stage === 'processing' || stage === 'completed'],
+                  ['3', t('studio.step.download'), stage === 'completed'],
                 ].map(([number, label, complete], index) => (
                   <li
                     key={String(number)}
@@ -622,8 +623,8 @@ function App() {
                       </div>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                      <p className="text-[10px] font-bold text-lime">Çıktı örneği</p>
-                      <p className="text-[10px] text-zinc-400">Repliğini oku → MP4 indir</p>
+                      <p className="text-[10px] font-bold text-lime">{t('studio.preview.title')}</p>
+                      <p className="text-[10px] text-zinc-400">{t('studio.preview.subtitle')}</p>
                     </div>
                   </div>
                   <div className="space-y-1.5 p-3">
@@ -632,7 +633,7 @@ function App() {
                         <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-violet/15 text-[9px] font-bold text-violet">
                           {i + 1}
                         </span>
-                        <span className="min-w-0 flex-1 truncate text-[10px] text-zinc-400">{line.text}</span>
+                        <span className="min-w-0 flex-1 truncate text-[10px] text-zinc-400">{t(line.textKey)}</span>
                         <span className="shrink-0 text-[9px] tabular-nums text-zinc-500">{line.time}</span>
                       </div>
                     ))}
@@ -653,12 +654,12 @@ function App() {
 
         {/* ═══════════════════════════ FEATURE STRIP ═══════════════════════════ */}
         <div className="mb-6 flex flex-wrap justify-center gap-2 sm:gap-3">
-          {FEATURES.map(({ icon: Icon, label }) => (
+          {FEATURES.map(({ icon: Icon, labelKey }) => (
             <span
-              key={label}
+              key={labelKey}
               className="feature-strip-item inline-flex items-center gap-2 rounded-xl border border-white/8 bg-white/[0.025] px-3.5 py-2 text-xs font-semibold text-zinc-400 transition hover:border-white/15 hover:text-zinc-200"
             >
-              <Icon className="h-3.5 w-3.5 text-lime" /> {label}
+              <Icon className="h-3.5 w-3.5 text-lime" /> {t(labelKey)}
             </span>
           ))}
         </div>
@@ -668,15 +669,16 @@ function App() {
           <aside className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-sm text-amber-50">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
             <div>
-              <p className="font-bold">Public demo sınırları etkin</p>
+              <p className="font-bold">{t('studio.demo.title')}</p>
               <p className="mt-1 leading-6 text-zinc-400">
-                En fazla {demoPolicy.max_file_size_mb} MB / {demoPolicy.max_video_duration_seconds} saniye video,
-                replik başına {demoPolicy.max_recording_size_mb} MB kayıt ve IP başına günde{' '}
-                {demoPolicy.max_exports_per_ip_per_day} export kullanılabilir.
+                {t('studio.demo.limits')
+                  .replace('{size}', String(demoPolicy.max_file_size_mb))
+                  .replace('{duration}', String(demoPolicy.max_video_duration_seconds))
+                  .replace('{recording}', String(demoPolicy.max_recording_size_mb))
+                  .replace('{exports}', String(demoPolicy.max_exports_per_ip_per_day))}
               </p>
               <p className="mt-1 text-xs leading-5 text-amber-200/80">
-                Bu public demo dosyalarınızı kalıcı olarak saklamaz. Medya temizleme politikası{' '}
-                {demoPolicy.media_ttl_hours} saatliktir.
+                {t('studio.demo.retention').replace('{hours}', String(demoPolicy.media_ttl_hours))}
               </p>
             </div>
           </aside>
@@ -715,9 +717,9 @@ function App() {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                  01 / Kaynak video
+                  {t('studio.source.eyebrow')}
                 </p>
-                <h2 className="mt-1 text-xl font-bold">Sahneni seç</h2>
+                <h2 className="mt-1 text-xl font-bold">{t('studio.source.title')}</h2>
               </div>
               {(selectedFile || selectedTemplate) && (
                 <button
@@ -726,7 +728,7 @@ function App() {
                   disabled={busy}
                   className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-400 transition hover:bg-white/5 hover:text-white disabled:opacity-40"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" /> Kaynağı değiştir
+                  <RotateCcw className="h-3.5 w-3.5" /> {t('studio.source.change')}
                 </button>
               )}
             </div>
@@ -738,7 +740,7 @@ function App() {
                 onClick={() => changeSourceMode('upload')}
                 className={`rounded-lg px-3 py-2.5 transition ${sourceMode === 'upload' ? 'bg-white text-ink' : 'text-zinc-500 hover:text-white'}`}
               >
-                Kendi videonu yükle
+                {t('studio.source.upload')}
               </button>
               <button
                 type="button"
@@ -746,7 +748,7 @@ function App() {
                 onClick={() => changeSourceMode('templates')}
                 className={`rounded-lg px-3 py-2.5 transition ${sourceMode === 'templates' ? 'bg-violet text-white' : 'text-zinc-500 hover:text-white'}`}
               >
-                Hazır sahne seç
+                {t('studio.source.template')}
               </button>
             </div>
 
@@ -773,8 +775,8 @@ function App() {
                       <div className="absolute inset-0 grid place-items-center bg-black/70 backdrop-blur-sm">
                         <div className="text-center">
                           <LoaderCircle className="mx-auto h-7 w-7 animate-spin text-lime" />
-                          <p className="mt-3 text-sm font-semibold text-white">Video doğrulanıyor</p>
-                          <p className="mt-1 text-xs text-zinc-500">Süre ve format kontrol ediliyor…</p>
+                          <p className="mt-3 text-sm font-semibold text-white">{t('studio.video.validating')}</p>
+                          <p className="mt-1 text-xs text-zinc-500">{t('studio.video.checking')}</p>
                         </div>
                       </div>
                     )}
@@ -791,7 +793,7 @@ function App() {
                   </div>
                   {upload && stage !== 'uploading' && (
                     <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-400/10 bg-emerald-400/5 px-3 py-2.5 text-sm text-emerald-300">
-                      <CheckCircle2 className="h-4 w-4" /> Video kullanıma hazır
+                      <CheckCircle2 className="h-4 w-4" /> {t('studio.video.ready')}
                     </div>
                   )}
                 </div>
@@ -818,11 +820,9 @@ function App() {
                   <div className="grid aspect-video place-items-center rounded-xl border border-dashed border-violet/25 bg-violet/[0.04] p-6 text-center">
                     <div>
                       <Film className="mx-auto h-8 w-8 text-violet/60" />
-                      <p className="mt-3 text-sm font-bold text-zinc-300">Demo medya yakında</p>
+                      <p className="mt-3 text-sm font-bold text-zinc-300">{t('studio.template.media_soon')}</p>
                       <p className="mt-1 text-xs leading-5 text-zinc-400">
-                        Replikleri düzenle ve mikrofon kayıt akışını dene.
-                        <br />
-                        Kendi videonu bağlayarak tam export alabilirsin.
+                        {t('studio.template.media_hint')}
                       </p>
                     </div>
                   </div>
@@ -832,14 +832,14 @@ function App() {
                     <div className="min-w-0">
                       <p className="break-words text-sm font-bold text-white">{selectedTemplate.title}</p>
                       <p className="mt-1 text-xs text-zinc-500">
-                        {selectedTemplate.category} · {selectedTemplate.duration_seconds.toFixed(1)} sn · {selectedTemplate.lines.length} replik
+                        {selectedTemplate.category} · {selectedTemplate.duration_seconds.toFixed(1)} {t('studio.template.seconds')} · {selectedTemplate.lines.length} {t('studio.template.lines')}
                       </p>
                     </div>
                     <CheckCircle2 className="h-5 w-5 shrink-0 text-lime" />
                   </div>
                   <p className="mt-3 break-all text-[11px] leading-5 text-zinc-400">
-                    Lisans: {selectedTemplate.license}<br />
-                    Kaynak: {selectedTemplate.source}
+                    {t('studio.template.license')}: {selectedTemplate.license}<br />
+                    {t('studio.template.source')}: {selectedTemplate.source}
                   </p>
                 </div>
               </div>
@@ -851,11 +851,11 @@ function App() {
             <div className="mb-5 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                  02 / Dublaj
+                  {t('studio.editor.eyebrow')}
                 </p>
-                <h2 className="mt-1 text-xl font-bold">Sahneyi seslendir</h2>
+                <h2 className="mt-1 text-xl font-bold">{t('studio.editor.title')}</h2>
                 <p className={`mt-1 text-xs font-bold ${hasVip ? 'text-amber-200' : 'text-zinc-500'}`}>
-                  {hasVip ? 'VIP · 1080p export' : 'Ücretsiz · 720p export'}
+                  {hasVip ? t('studio.plan.vip') : t('studio.plan.free')}
                 </p>
               </div>
               <div className="grid w-full grid-cols-2 rounded-xl border border-white/10 bg-black/20 p-1 text-xs font-semibold sm:w-auto">
@@ -868,13 +868,13 @@ function App() {
                   disabled={busy}
                   className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 transition ${mode === 'my-voice' ? 'bg-lime text-ink' : 'text-zinc-500 hover:text-white'}`}
                 >
-                  <Mic2 className="h-3.5 w-3.5" /> Kendi sesim
+                  <Mic2 className="h-3.5 w-3.5" /> {t('studio.mode.voice')}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     if (!hasVip) {
-                      showToast(currentUser ? 'AI ses modu VIP üyelere özeldir.' : 'AI ses modu için giriş yapıp VIP üyeliği etkinleştirin.')
+                      showToast(currentUser ? t('studio.ai.vip_only') : t('studio.ai.login_vip'))
                       setActiveTab('membership')
                       return
                     }
@@ -884,7 +884,7 @@ function App() {
                   disabled={busy || Boolean(selectedTemplate && !upload)}
                   className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 transition ${mode === 'ai-voice' ? 'bg-violet text-white' : 'text-zinc-500 hover:text-white'}`}
                 >
-                  {hasVip ? <Bot className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5 text-amber-300" />} AI ses · VIP
+                  {hasVip ? <Bot className="h-3.5 w-3.5" /> : <Crown className="h-3.5 w-3.5 text-amber-300" />} {t('studio.mode.ai')}
                 </button>
               </div>
             </div>
@@ -894,13 +894,13 @@ function App() {
                 <Toggle
                   checked={applyLipSync}
                   onChange={setApplyLipSync}
-                  label="Dudak Senkronizasyonu (Deneysel)"
-                  description={hasVip ? 'Yüz hareketlerini dublaj sesine göre işler' : 'VIP üyelik gerektirir'}
+                  label={t('studio.lipsync.title')}
+                  description={hasVip ? t('studio.lipsync.description') : t('studio.lipsync.vip_required')}
                   disabled={busy || !hasVip}
                 />
                 {!hasVip && (
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-amber-300/80">
-                    <LockKeyhole className="h-3.5 w-3.5" /> Yalnızca aktif VIP üyeler kullanabilir.
+                    <LockKeyhole className="h-3.5 w-3.5" /> {t('studio.lipsync.vip_only')}
                   </p>
                 )}
               </div>
@@ -912,16 +912,16 @@ function App() {
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/[0.03] text-zinc-500">
                     <Video className="h-7 w-7" />
                   </span>
-                  <p className="mt-4 text-lg font-bold text-zinc-300">Önce bir kaynak seç</p>
+                  <p className="mt-4 text-lg font-bold text-zinc-300">{t('studio.empty.title')}</p>
                   <p className="mt-2 text-sm leading-6 text-zinc-400">
-                    Hazır sahne seçtiğinde veya videonu yüklediğinde replik zaman çizelgesi burada oluşacak.
+                    {t('studio.empty.description')}
                   </p>
                   {/* Mini preview lines */}
                   <div className="mt-5 space-y-2">
                     {MOCK_LINES.map((line, i) => (
                       <div key={i} className="flex min-w-0 items-center gap-2 rounded-lg border border-white/[0.04] bg-white/[0.025] px-3 py-2 text-left">
                         <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-violet/10 text-[9px] font-bold text-violet">{i + 1}</span>
-                        <span className="min-w-0 flex-1 break-words text-xs text-zinc-400">{line.text}</span>
+                        <span className="min-w-0 flex-1 break-words text-xs text-zinc-400">{t(line.textKey)}</span>
                         <Clock3 className="h-3 w-3 shrink-0 text-zinc-500" />
                       </div>
                     ))}
@@ -932,14 +932,14 @@ function App() {
                       onClick={() => changeSourceMode('templates')}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-violet/15 px-3 py-2 text-xs font-bold text-violet transition hover:bg-violet/25"
                     >
-                      <Sparkles className="h-3.5 w-3.5" /> Hazır sahne seç
+                      <Sparkles className="h-3.5 w-3.5" /> {t('studio.source.template')}
                     </button>
                     <button
                       type="button"
                       onClick={() => changeSourceMode('upload')}
                       className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-2 text-xs font-bold text-zinc-400 transition hover:bg-white/10"
                     >
-                      Video yükle
+                      {t('studio.empty.upload')}
                     </button>
                   </div>
                 </div>
@@ -951,7 +951,7 @@ function App() {
                 videoRef={videoRef}
                 initialLines={selectedTemplate?.lines}
                 videoAvailable={Boolean(inputPreview)}
-                exportUnavailableReason={upload ? '' : 'MP4 export için template video dosyasının projeye güvenli biçimde eklenmesi veya kendi videonun yüklenmesi gerekir.'}
+                exportUnavailableReason={upload ? '' : t('action.template_export_unavailable')}
                 disabled={busy}
                 onError={showEditorError}
                 onProcess={handleRecordingProcess}
@@ -960,19 +960,18 @@ function App() {
               <div className="grid min-h-72 place-items-center rounded-2xl border border-amber-300/20 bg-amber-300/[0.05] p-6 text-center">
                 <div className="max-w-sm">
                   <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-300/10 text-amber-200"><Crown className="h-7 w-7" /></span>
-                  <h3 className="mt-4 text-lg font-black text-white">AI ses modu VIP özelliğidir</h3>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">Kendi sesinle dublaj ücretsizdir. AI ses ve 1080p export için VIP üyeliğini etkinleştir.</p>
-                  <button type="button" onClick={() => setActiveTab('membership')} className="mt-5 rounded-xl bg-amber-300 px-5 py-3 text-sm font-black text-black hover:bg-amber-200">VIP özelliklerini gör</button>
+                  <h3 className="mt-4 text-lg font-black text-white">{t('studio.ai.vip_title')}</h3>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">{t('studio.ai.vip_description')}</p>
+                  <button type="button" onClick={() => setActiveTab('membership')} className="mt-5 rounded-xl bg-amber-300 px-5 py-3 text-sm font-black text-black hover:bg-amber-200">{t('studio.ai.vip_cta')}</button>
                 </div>
               </div>
             ) : (
               <div>
                 <div className="mb-4 rounded-xl border border-violet/20 bg-violet/5 p-3 text-xs leading-5 text-zinc-400">
-                  Opsiyonel mod: Yazdığın metin, gerçek kişileri taklit etmeyen hazır bir
-                  Türkçe yapay sesle okunur.
+                  {t('studio.ai.notice')}
                 </div>
                 <label htmlFor="script" className="text-sm font-semibold text-zinc-200">
-                  Dublaj metni
+                  {t('studio.ai.script')}
                 </label>
                 <div className="relative mt-3">
                   <textarea
@@ -982,7 +981,7 @@ function App() {
                     maxLength={500}
                     disabled={busy}
                     onChange={(event) => setText(event.target.value)}
-                    placeholder="Örn: Toplantı beş dakika sürecek dediklerinde ben…"
+                    placeholder={t('studio.ai.placeholder')}
                     className="w-full resize-none rounded-xl border border-white/10 bg-black/25 px-4 py-3.5 pb-9 text-sm leading-6 text-zinc-100 outline-none transition placeholder:text-zinc-700 focus:border-violet/50 focus:ring-2 focus:ring-violet/10 disabled:opacity-60"
                   />
                   <span className={`absolute bottom-3 right-3 text-xs tabular-nums ${text.length >= 450 ? 'text-amber-300' : 'text-zinc-600'}`}>
@@ -996,15 +995,15 @@ function App() {
                   <Toggle
                     checked={muteOriginal}
                     onChange={setMuteOriginal}
-                    label="Orijinal sesi kıs"
-                    description="AI dublajı öne çıkarır"
+                    label={t('studio.ai.mute')}
+                    description={t('studio.ai.mute_desc')}
                     disabled={busy}
                   />
                   <Toggle
                     checked={burnSubtitles}
                     onChange={setBurnSubtitles}
-                    label="Altyazıyı göm"
-                    description="Metni videoda gösterir"
+                    label={t('studio.ai.subtitles')}
+                    description={t('studio.ai.subtitles_desc')}
                     disabled={busy}
                   />
                 </div>
@@ -1014,11 +1013,11 @@ function App() {
                   onClick={() => void handleAiProcess()}
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-violet/90 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600"
                 >
-                  <WandSparkles className="h-5 w-5" /> AI Sesle Video Oluştur
+                  <WandSparkles className="h-5 w-5" /> {t('studio.ai.create')}
                 </button>
                 {!text.trim() && (
                   <p className="mt-2 text-center text-xs text-zinc-600">
-                    Devam etmek için dublaj metnini yazın.
+                    {t('studio.ai.write_first')}
                   </p>
                 )}
               </div>
@@ -1028,13 +1027,13 @@ function App() {
               <div className="mt-4 rounded-xl border border-lime/20 bg-lime/5 p-4">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-lime/60">
-                    Gerçek job durumu
+                    {t('studio.job.status')}
                   </p>
                   <span className="text-xs font-bold tabular-nums text-lime">%{jobProgress}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm font-semibold text-lime">
                   <LoaderCircle className="h-5 w-5 animate-spin" />
-                  {jobMessage || 'Export sırasına alınıyor…'}
+                  {jobMessage || t('studio.job.queued')}
                 </div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5">
                   <div
@@ -1043,7 +1042,7 @@ function App() {
                   />
                 </div>
                 <p className="mt-2 text-xs text-zinc-500">
-                  Durum backend job servisinden düzenli olarak güncelleniyor.
+                  {t('studio.job.polling')}
                 </p>
               </div>
             )}
@@ -1063,9 +1062,9 @@ function App() {
                 </span>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-lime">
-                    03 / Export hazır
+                    {t('studio.export.ready')}
                   </p>
-                  <h2 className="mt-1 text-xl font-bold">Dublajın paylaşılmaya hazır.</h2>
+                  <h2 className="mt-1 text-xl font-bold">{t('studio.export.title')}</h2>
                 </div>
               </div>
               <a
@@ -1073,7 +1072,7 @@ function App() {
                 download
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-extrabold text-ink transition hover:bg-[#d5ff78] shadow-glow"
               >
-                <Download className="h-4 w-4" /> MP4 indir
+                <Download className="h-4 w-4" /> {t('studio.export.download')}
               </a>
             </div>
             <div className="grid lg:grid-cols-[minmax(0,1fr)_280px] 3xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -1086,32 +1085,32 @@ function App() {
                 />
               </div>
               <div className="flex flex-col justify-center gap-3 border-t border-white/10 p-4 lg:border-l lg:border-t-0 lg:p-5">
-                <p className="text-sm font-bold text-white">Sırada ne var?</p>
+                <p className="text-sm font-bold text-white">{t('studio.export.next')}</p>
                 <p className="text-xs leading-5 text-zinc-500">
-                  Sonucu indirebilir, sosyal medyada paylaşabilir veya yeni projeye başlayabilirsin.
+                  {t('studio.export.description')}
                 </p>
                 <div className="grid grid-cols-2 gap-2 mt-1 mb-2">
-                  <button onClick={() => { navigator.clipboard.writeText(outputUrl); showToast('Bağlantı kopyalandı!') }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white transition hover:bg-white/20">
-                    <Link className="h-3.5 w-3.5" /> Linki Kopyala
+                  <button onClick={() => { navigator.clipboard.writeText(outputUrl); showToast(t('studio.export.copied')) }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white transition hover:bg-white/20">
+                    <Link className="h-3.5 w-3.5" /> {t('studio.export.copy')}
                   </button>
                   <a href={`https://twitter.com/intent/tweet?text=Dublajım%20hazır!&url=${encodeURIComponent(outputUrl)}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-[11px] font-bold text-sky-400 transition hover:bg-sky-500/30">
-                    X'te Paylaş
+                    {t('studio.export.share_x')}
                   </a>
-                  <button onClick={() => showToast('Videonuzu indirip TikTok uygulamasından yükleyebilirsiniz.')} className="inline-flex items-center justify-center gap-2 rounded-xl border border-pink-500/20 bg-pink-500/10 px-3 py-2.5 text-[11px] font-bold text-pink-400 transition hover:bg-pink-500/20">
+                  <button onClick={() => showToast(t('action.tiktok_hint'))} className="inline-flex items-center justify-center gap-2 rounded-xl border border-pink-500/20 bg-pink-500/10 px-3 py-2.5 text-[11px] font-bold text-pink-400 transition hover:bg-pink-500/20">
                     TikTok
                   </button>
-                  <button onClick={() => showToast('Videonuzu indirip Reels olarak paylaşabilirsiniz.')} className="inline-flex items-center justify-center gap-2 rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-3 py-2.5 text-[11px] font-bold text-fuchsia-400 transition hover:bg-fuchsia-500/20">
+                  <button onClick={() => showToast(t('action.reels_hint'))} className="inline-flex items-center justify-center gap-2 rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/10 px-3 py-2.5 text-[11px] font-bold text-fuchsia-400 transition hover:bg-fuchsia-500/20">
                     IG Reels
                   </button>
                 </div>
                 {!hasVip && (
                   <div className="rounded-xl border border-amber-300/20 bg-amber-300/10 p-3 flex items-center justify-between gap-3">
                     <div>
-                      <h4 className="text-xs font-bold text-amber-300">VIP ile daha fazlası</h4>
-                      <p className="text-[10px] text-amber-200/80 mt-0.5">Filigransız ve 1080p kalitesinde export al.</p>
+                      <h4 className="text-xs font-bold text-amber-300">{t('studio.export.vip_title')}</h4>
+                      <p className="text-[10px] text-amber-200/80 mt-0.5">{t('studio.export.vip_desc')}</p>
                     </div>
                     <button onClick={() => setActiveTab('membership')} className="shrink-0 rounded-lg bg-amber-300 px-3 py-2 text-[10px] font-black text-black hover:bg-amber-400 transition">
-                      Geçiş Yap
+                      {t('studio.export.upgrade')}
                     </button>
                   </div>
                 )}
@@ -1121,14 +1120,14 @@ function App() {
                     onClick={retrySameVideo}
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-2 py-3 text-[10px] font-bold text-zinc-300 transition hover:bg-white/10"
                   >
-                    <RefreshCw className="h-3 w-3" /> Aynı video ile dene
+                    <RefreshCw className="h-3 w-3" /> {t('studio.export.same_video')}
                   </button>
                   <button
                     type="button"
                     onClick={reset}
                     className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 px-2 py-3 text-[10px] font-bold text-zinc-400 transition hover:border-white/20 hover:text-white"
                   >
-                    <RotateCcw className="h-3 w-3" /> Yeni video
+                    <RotateCcw className="h-3 w-3" /> {t('studio.export.new_video')}
                   </button>
                 </div>
               </div>
@@ -1150,19 +1149,19 @@ function App() {
           ) : activeTab === 'scenes' ? (
             <div className="py-4">
               <div className="mb-8 max-w-2xl">
-                <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">Sahne Kataloğu</h1>
-                <p className="mt-3 text-zinc-400">Dublaj yapmak için popüler bir sahne seç veya doğrudan projeye başla.</p>
+                <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{t('studio.catalog.title')}</h1>
+                <p className="mt-3 text-zinc-400">{t('studio.catalog.description')}</p>
               </div>
               <TemplateGallery onSelect={handleTabTemplateSelect} />
             </div>
           ) : activeTab === 'dubs' ? (
-            <ShowcaseDubs onToast={showToast} />
+            <ShowcaseDubs onToast={showToast} setActiveTab={setActiveTab} />
           ) : activeTab === 'library' ? (
-            currentUser ? <UserLibrary onToast={showToast} setActiveTab={setActiveTab} /> : <div className="text-center text-white py-12">Lütfen giriş yapın.</div>
+            currentUser ? <UserLibrary onToast={showToast} setActiveTab={setActiveTab} /> : <div className="text-center text-white py-12">{t('studio.auth_required')}</div>
           ) : activeTab === 'admin' ? (
-            currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
+            currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">{t('studio.unauthorized')}</div>
           ) : activeTab === 'admin_ops' ? (
-            currentUser?.role === 'admin' ? <AdminOpsPanel onToast={showToast} /> : <div className="text-center text-white py-12">Bu sayfaya erişim yetkiniz yok.</div>
+            currentUser?.role === 'admin' ? <AdminOpsPanel onToast={showToast} /> : <div className="text-center text-white py-12">{t('studio.unauthorized')}</div>
           ) : activeTab === 'oda_kur' ? (
             <OdaKur setActiveTab={setActiveTab} />
           ) : activeTab === 'account' && currentUser ? (

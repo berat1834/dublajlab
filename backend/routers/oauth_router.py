@@ -21,12 +21,26 @@ DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 
 def get_frontend_url():
-    # Attempt to derive frontend URL from allowed_origins
+    configured_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+    if configured_url:
+        return configured_url
+
+    # Prefer the canonical custom domain when it is present in CORS origins.
     origins = config.allowed_origins()
+    if config.app_environment() != "production":
+        for origin in origins:
+            if "localhost" in origin:
+                return origin.rstrip("/")
+    for origin in origins:
+        if "dublajlab.com.tr" in origin:
+            return origin.rstrip("/")
     for o in origins:
-        if "vercel.app" in o or "localhost" in o:
-            return o
-    return origins[0] if origins else "http://localhost:5173"
+        if "vercel.app" in o:
+            return o.rstrip("/")
+    for origin in origins:
+        if "localhost" in origin:
+            return origin.rstrip("/")
+    return origins[0].rstrip("/") if origins else "http://localhost:5173"
 
 @router.get("/google/login")
 async def google_login(request: Request):

@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { Membership } from './Membership'
 import type { User } from '../types'
+import { LanguageProvider } from '../LanguageContext'
 
 
 const baseUser: User = {
@@ -19,12 +20,14 @@ const baseUser: User = {
 describe('Membership', () => {
   it('shows the VIP purchase action to a free member', () => {
     const markup = renderToStaticMarkup(
-      createElement(Membership, {
-        currentUser: baseUser,
-        setCurrentUser: vi.fn(),
-        setActiveTab: vi.fn(),
-        onToast: vi.fn(),
-      }),
+      createElement(LanguageProvider, null,
+        createElement(Membership, {
+          currentUser: baseUser,
+          setCurrentUser: vi.fn(),
+          setActiveTab: vi.fn(),
+          onToast: vi.fn(),
+        }),
+      ),
     )
 
     expect(markup).toContain('VIP üyelik al')
@@ -34,17 +37,19 @@ describe('Membership', () => {
 
   it('shows active state instead of checkout to a VIP member', () => {
     const markup = renderToStaticMarkup(
-      createElement(Membership, {
-        currentUser: {
-          ...baseUser,
-          membership_tier: 'vip',
-          membership_expires_at: '2026-12-31T00:00:00Z',
-          has_active_vip: true,
-        },
-        setCurrentUser: vi.fn(),
-        setActiveTab: vi.fn(),
-        onToast: vi.fn(),
-      }),
+      createElement(LanguageProvider, null,
+        createElement(Membership, {
+          currentUser: {
+            ...baseUser,
+            membership_tier: 'vip',
+            membership_expires_at: '2026-12-31T00:00:00Z',
+            has_active_vip: true,
+          },
+          setCurrentUser: vi.fn(),
+          setActiveTab: vi.fn(),
+          onToast: vi.fn(),
+        }),
+      ),
     )
 
     expect(markup).toContain('VIP üyeliğin aktif')
