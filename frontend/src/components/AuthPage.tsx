@@ -54,7 +54,8 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
 
   const handleSocial = (provider: 'Google' | 'Discord') => {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
-    window.location.href = `${baseUrl}/api/auth/${provider.toLowerCase()}/login`
+    const returnTo = encodeURIComponent(window.location.origin)
+    window.location.href = `${baseUrl}/api/auth/${provider.toLowerCase()}/login?return_to=${returnTo}`
   }
 
   return (

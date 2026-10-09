@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 import httpx
 import os
 from datetime import timedelta
+from urllib.parse import urlencode, urlsplit
 import logging
 
 from backend.database import get_db
@@ -20,23 +21,54 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 
+CANONICAL_DOMAIN = "dublajlab.com.tr"
+
+
+def _normalize_origin(value: str | None) -> str | None:
+    if not value:
+        return None
+    parts = urlsplit(value.strip())
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        return None
+    return f"{parts.scheme}://{parts.netloc}".lower()
+
+
+def resolve_return_origin(value: str | None) -> str | None:
+    """Return the origin only if it is an allowlisted frontend origin.
+
+    Prevents open redirects: arbitrary origins from the query/state are ignored.
+    """
+    origin = _normalize_origin(value)
+    if not origin:
+        return None
+    allowed = {o.rstrip("/").lower() for o in config.allowed_origins()}
+    if origin not in allowed:
+        return None
+    if config.app_environment() == "production" and not origin.startswith("https://"):
+        return None
+    return origin
+
+
 def get_frontend_url():
     configured_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
     environment = config.app_environment()
-    if configured_url and environment != "production":
+    # Eski bir *.vercel.app FRONTEND_URL değeri, APP_ENV ne olursa olsun
+    # canonical özel domaini ezmemeli.
+    configured_is_stale = "vercel.app" in configured_url
+    if configured_url and not configured_is_stale and environment != "production":
         return configured_url
 
     # Production'da eski bir Vercel FRONTEND_URL değeri canonical özel domaini
     # ezmemeli. Böylece OAuth dönüşü kullanıcıyı farklı bir origin'e taşımaz.
     origins = config.allowed_origins()
-    if environment != "production":
+    if environment != "production" and not configured_is_stale:
         for origin in origins:
             if "localhost" in origin:
                 return origin.rstrip("/")
-    if configured_url and "dublajlab.com.tr" in configured_url:
+    if configured_url and CANONICAL_DOMAIN in configured_url:
         return configured_url
     for origin in origins:
-        if "dublajlab.com.tr" in origin:
+        if CANONICAL_DOMAIN in origin:
             return origin.rstrip("/")
     if configured_url:
         return configured_url
@@ -48,18 +80,31 @@ def get_frontend_url():
             return origin.rstrip("/")
     return origins[0].rstrip("/") if origins else "http://localhost:5173"
 
+def _frontend_redirect(state: str | None, token: str) -> RedirectResponse:
+    frontend_url = resolve_return_origin(state) or get_frontend_url()
+    return RedirectResponse(f"{frontend_url}/oauth-callback?token={token}")
+
+
 @router.get("/google/login")
-async def google_login(request: Request):
+async def google_login(request: Request, return_to: str | None = None):
     if not GOOGLE_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Google OAuth yapılandırılmamış.")
     
     redirect_uri = request.url_for("google_callback")
-    scope = "openid email profile"
-    url = f"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={GOOGLE_CLIENT_ID}&redirect_uri={redirect_uri}&scope={scope}&access_type=offline"
-    return RedirectResponse(url)
+    params = {
+        "response_type": "code",
+        "client_id": GOOGLE_CLIENT_ID,
+        "redirect_uri": str(redirect_uri),
+        "scope": "openid email profile",
+        "access_type": "offline",
+    }
+    origin = resolve_return_origin(return_to)
+    if origin:
+        params["state"] = origin
+    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
 
 @router.get("/google/callback")
-async def google_callback(request: Request, code: str, db: Session = Depends(get_db)):
+async def google_callback(request: Request, code: str, state: str | None = None, db: Session = Depends(get_db)):
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Google OAuth yapılandırılmamış.")
         
@@ -113,21 +158,27 @@ async def google_callback(request: Request, code: str, db: Session = Depends(get
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
-    frontend_url = get_frontend_url()
-    return RedirectResponse(f"{frontend_url}/oauth-callback?token={app_token}")
+    return _frontend_redirect(state, app_token)
 
 @router.get("/discord/login")
-async def discord_login(request: Request):
+async def discord_login(request: Request, return_to: str | None = None):
     if not DISCORD_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Discord OAuth yapılandırılmamış.")
     
     redirect_uri = request.url_for("discord_callback")
-    scope = "identify email"
-    url = f"https://discord.com/api/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&redirect_uri={redirect_uri}&response_type=code&scope={scope}"
-    return RedirectResponse(url)
+    params = {
+        "client_id": DISCORD_CLIENT_ID,
+        "redirect_uri": str(redirect_uri),
+        "response_type": "code",
+        "scope": "identify email",
+    }
+    origin = resolve_return_origin(return_to)
+    if origin:
+        params["state"] = origin
+    return RedirectResponse(f"https://discord.com/api/oauth2/authorize?{urlencode(params)}")
 
 @router.get("/discord/callback")
-async def discord_callback(request: Request, code: str, db: Session = Depends(get_db)):
+async def discord_callback(request: Request, code: str, state: str | None = None, db: Session = Depends(get_db)):
     if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Discord OAuth yapılandırılmamış.")
         
@@ -185,5 +236,4 @@ async def discord_callback(request: Request, code: str, db: Session = Depends(ge
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
-    frontend_url = get_frontend_url()
-    return RedirectResponse(f"{frontend_url}/oauth-callback?token={app_token}")
+    return _frontend_redirect(state, app_token)
