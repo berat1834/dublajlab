@@ -22,18 +22,24 @@ DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 
 def get_frontend_url():
     configured_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
-    if configured_url:
+    environment = config.app_environment()
+    if configured_url and environment != "production":
         return configured_url
 
-    # Prefer the canonical custom domain when it is present in CORS origins.
+    # Production'da eski bir Vercel FRONTEND_URL değeri canonical özel domaini
+    # ezmemeli. Böylece OAuth dönüşü kullanıcıyı farklı bir origin'e taşımaz.
     origins = config.allowed_origins()
-    if config.app_environment() != "production":
+    if environment != "production":
         for origin in origins:
             if "localhost" in origin:
                 return origin.rstrip("/")
+    if configured_url and "dublajlab.com.tr" in configured_url:
+        return configured_url
     for origin in origins:
         if "dublajlab.com.tr" in origin:
             return origin.rstrip("/")
+    if configured_url:
+        return configured_url
     for o in origins:
         if "vercel.app" in o:
             return o.rstrip("/")
