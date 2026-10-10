@@ -38,7 +38,10 @@ def get_my_membership(
     current_user: models_db.User = Depends(get_current_user),
 ) -> schemas.UserResponse:
     response = schemas.UserResponse.model_validate(current_user)
-    return response.model_copy(update={"has_active_vip": has_active_vip(current_user)})
+    return response.model_copy(update={
+        "has_active_vip": has_active_vip(current_user),
+        "has_password": bool(current_user.password_hash),
+    })
 
 @router.post("/shopier-webhook")
 async def shopier_webhook(request: Request):

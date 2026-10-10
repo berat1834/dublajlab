@@ -47,7 +47,7 @@ export function LegalCorporateModal({ pageId, onClose }: LegalCorporateModalProp
             <div className="space-y-4 text-sm text-zinc-300">
               <p>{t('legal.contact.p1')}</p>
               <p>{t('legal.contact.p2')}</p>
-              <p className="font-mono text-[#B8FF4D]">hello@dublajlab.com</p>
+              <p className="font-mono text-[#B8FF4D]">destek@dublajlab.com.tr</p>
               <p className="text-xs text-zinc-500 mt-4">{t('legal.contact.p3')}</p>
             </div>
           </>

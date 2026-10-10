@@ -251,14 +251,26 @@ export async function getMe(): Promise<User> {
   return parseResponse<User>(response)
 }
 
-export async function deleteAccount(password: string): Promise<void> {
+export async function updateProfile(display_name: string, avatar_url: string | null): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/api/me/profile`, {
+    method: 'PATCH',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ display_name, avatar_url }),
+  })
+  return parseResponse<User>(response)
+}
+
+export async function deleteAccount(confirmation: string, password?: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/me/account`, {
     method: 'DELETE',
     headers: {
       ...getAuthHeaders(),
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ password })
+    body: JSON.stringify({ confirmation, password: password || null })
   })
 
   if (!response.ok) {
@@ -422,6 +434,33 @@ export async function getAdminReports(): Promise<ContentReport[]> {
     headers: getAuthHeaders(),
   })
   return parseResponse<ContentReport[]>(response)
+}
+
+export async function getAdminUsers(query = ''): Promise<User[]> {
+  const params = new URLSearchParams()
+  if (query.trim()) params.set('q', query.trim())
+  const suffix = params.size ? `?${params.toString()}` : ''
+  const response = await fetch(`${API_BASE_URL}/api/admin/users${suffix}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<User[]>(response)
+}
+
+export async function updateUserMembership(
+  userId: string,
+  tier: 'free' | 'vip',
+  durationDays = 30,
+): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}/membership`, {
+    method: 'PATCH',
+    headers: {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ tier, duration_days: durationDays }),
+  })
+  return parseResponse<User>(response)
 }
 
 export async function updateReportStatus(reportId: string, status: string): Promise<ContentReport> {

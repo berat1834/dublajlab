@@ -45,7 +45,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
           return (
             <article
               key={template.id}
-              className="card-hover min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-surface/80 hover:border-white/20 shadow-card"
+              className="card-hover min-w-0 flex flex-col h-full overflow-hidden rounded-2xl border border-white/10 bg-surface/80 hover:border-white/20 shadow-card"
             >
               <div className={`${thumbClass(template.category)} relative flex h-24 items-center justify-center overflow-hidden sm:h-28`}>
                 <div className="absolute inset-0 bg-black/20" />
@@ -67,7 +67,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
                 </div>
               </div>
 
-              <div className="p-3.5">
+              <div className="p-3.5 flex flex-col flex-grow">
                 <h3 className="line-clamp-2 break-words font-bold leading-5 text-white">{template.title}</h3>
                 <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-zinc-400">{template.description}</p>
 
@@ -92,7 +92,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
                   type="button"
                   onClick={() => onSelect(template.id)}
                   disabled={Boolean(selectingId)}
-                  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-extrabold text-ink transition hover:bg-zinc-200 disabled:cursor-wait disabled:opacity-50"
+                  className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-extrabold text-ink transition hover:bg-zinc-200 disabled:cursor-wait disabled:opacity-50"
                 >
                   {isSelecting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Mic2 className="h-4 w-4" />}
                   {t('demo_scenes.cta')}

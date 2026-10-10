@@ -15,7 +15,6 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
   const { t } = useLanguage()
   const [refreshing, setRefreshing] = useState(false)
   const isVip = Boolean(currentUser?.has_active_vip)
-  const shopierUrl = (import.meta.env.VITE_SHOPIER_VIP_URL || '').trim()
   const vipPrice = (import.meta.env.VITE_VIP_PRICE_LABEL || '₺199').trim()
   const included = t('membership.included')
   const locked = t('membership.locked')
@@ -31,6 +30,10 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
     if (!currentUser) {
       onToast(t('membership.login_first'))
       setActiveTab('login')
+      return
+    }
+    if (!(import.meta.env.VITE_SHOPIER_VIP_URL || '').trim()) {
+      onToast(t('membership.payment_unavailable'))
       return
     }
 
@@ -54,11 +57,12 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
 
       const data = await response.json();
 
-      if (shopierUrl) {
-        window.open(shopierUrl, '_blank', 'noopener,noreferrer');
-      } else {
-        onToast(t('membership.order_created').replace('{id}', String(data.payment_id)));
+      const checkoutUrl = typeof data.checkout_url === 'string' ? data.checkout_url : ''
+      if (!checkoutUrl) {
+        onToast(t('membership.payment_unavailable'))
+        return
       }
+      window.open(checkoutUrl, '_blank', 'noopener,noreferrer')
     } catch {
       onToast(t('membership.connection_error'));
     }

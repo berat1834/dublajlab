@@ -1,29 +1,53 @@
+import { useLanguage } from '../LanguageContext'
 import { useEffect, useState } from 'react'
-import { getAdminOpsMetrics, type AdminOpsMetrics } from '../lib/api'
-import { Activity, Database, HardDrive, CheckCircle2, XCircle, Users, FileVideo, AlertCircle, Server } from 'lucide-react'
+import { getAdminOpsMetrics, getAdminUsers, updateUserMembership, type AdminOpsMetrics } from '../lib/api'
+import type { User } from '../types'
+import { Activity, Database, HardDrive, CheckCircle2, XCircle, Users, FileVideo, AlertCircle, RefreshCw, Search, Server } from 'lucide-react'
 
 interface AdminOpsPanelProps {
   onToast: (msg: string) => void
 }
 
 export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
+  const { t } = useLanguage()
   const [metrics, setMetrics] = useState<AdminOpsMetrics | null>(null)
+  const [users, setUsers] = useState<User[]>([])
+  const [userQuery, setUserQuery] = useState('')
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        setLoading(true)
-        const data = await getAdminOpsMetrics()
-        setMetrics(data)
-      } catch {
-        onToast('Sistem metrikleri alınamadı.')
-      } finally {
-        setLoading(false)
-      }
+  const refreshDashboard = async (query = userQuery) => {
+    try {
+      setLoading(true)
+      const [metricData, userData] = await Promise.all([
+        getAdminOpsMetrics(),
+        getAdminUsers(query),
+      ])
+      setMetrics(metricData)
+      setUsers(userData)
+      setLastUpdatedAt(new Date())
+    } catch {
+      onToast(t('admin.metrics_error'))
+    } finally {
+      setLoading(false)
     }
-    fetchMetrics()
-  }, [onToast])
+  }
+
+  useEffect(() => {
+    void refreshDashboard('')
+    // Initial load only; manual controls refresh subsequent data.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const changeMembership = async (user: User, tier: 'free' | 'vip') => {
+    try {
+      const updated = await updateUserMembership(user.id, tier, 30)
+      setUsers((items) => items.map((item) => item.id === user.id ? updated : item))
+      onToast(tier === 'vip' ? t('admin.vip_granted') : t('admin.vip_removed'))
+    } catch (error: unknown) {
+      onToast(error instanceof Error ? error.message : t('admin.membership_error'))
+    }
+  }
 
   if (loading) {
     return (
@@ -47,13 +71,21 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
 
   return (
     <div className="max-w-6xl mx-auto py-8 px-4">
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3">
         <div className="p-3 bg-violet-500/10 rounded-xl">
           <Activity className="w-6 h-6 text-violet-400" />
         </div>
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight">Sistem Durumu (Ops)</h1>
-          <p className="text-sm text-zinc-400 mt-1">Uygulama sağlığı ve temel metrikler.</p>
+          <p className="text-sm text-zinc-400 mt-1">{t('admin.subtitle')}</p>
+        </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {lastUpdatedAt && <span className="text-xs text-zinc-500">{t('admin.last_update')}: {lastUpdatedAt.toLocaleTimeString()}</span>}
+          <button type="button" onClick={() => void refreshDashboard()} className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-bold text-zinc-200 hover:bg-white/5">
+            <RefreshCw className="h-3.5 w-3.5" /> {t('admin.refresh')}
+          </button>
         </div>
       </div>
 
@@ -65,13 +97,13 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
           </h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Veritabanı</span>
+              <span className="text-zinc-400">{t('admin.db')}</span>
               <StatusIcon ok={metrics.database_connected} />
             </div>
             <div className="flex justify-between items-center">
               <span className="text-zinc-400">Redis</span>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-500">{metrics.redis_configured ? 'Açık' : 'Kapalı'}</span>
+                <span className="text-xs text-zinc-500">{metrics.redis_configured ? t('admin.on') : t('admin.off')}</span>
                 {metrics.redis_configured && <StatusIcon ok={metrics.redis_connected} />}
               </div>
             </div>
@@ -103,7 +135,7 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               <StatusIcon ok={metrics.media_root_exists} />
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Yazma İzni</span>
+              <span className="text-zinc-400">{t('admin.write_perm')}</span>
               <StatusIcon ok={metrics.media_root_writable} />
             </div>
           </div>
@@ -116,11 +148,11 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
           </h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Toplam Kullanıcı</span>
+              <span className="text-zinc-400">{t('admin.total_users')}</span>
               <span className="text-white font-mono">{metrics.total_users}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Aktif VIP Kullanıcı</span>
+              <span className="text-zinc-400">{t('admin.vip_users')}</span>
               <span className="text-lime-400 font-mono font-bold">{metrics.active_vip_users}</span>
             </div>
           </div>
@@ -137,15 +169,15 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               <span className="text-white font-mono">{metrics.total_projects}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Başarılı Export</span>
+              <span className="text-zinc-400">{t('admin.success_export')}</span>
               <span className="text-lime-400 font-mono">{metrics.completed_exports}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Hatalı Export</span>
+              <span className="text-zinc-400">{t('admin.failed_export')}</span>
               <span className="text-red-400 font-mono">{metrics.failed_exports}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Açık Paylaşımlar</span>
+              <span className="text-zinc-400">{t('admin.public_shares')}</span>
               <span className="text-cyan-400 font-mono">{metrics.public_dubs_count}</span>
             </div>
           </div>
@@ -158,7 +190,7 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
           </h2>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Başarılı (Paid)</span>
+              <span className="text-zinc-400">{t('admin.paid')}</span>
               <span className="text-lime-400 font-mono">{metrics.paid_payments}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -166,10 +198,32 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               <span className="text-amber-400 font-mono">{metrics.pending_payments}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Başarısız (Failed)</span>
+              <span className="text-zinc-400">{t('admin.failed_pay')}</span>
               <span className="text-red-400 font-mono">{metrics.failed_payments}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden mb-8">
+        <div className="flex flex-col gap-3 border-b border-white/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-white">{t('admin.user_management')}</h2>
+            <p className="mt-1 text-xs text-zinc-500">{t('admin.user_management_hint')}</p>
+          </div>
+          <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); void refreshDashboard(userQuery) }}>
+            <input value={userQuery} onChange={(event) => setUserQuery(event.target.value)} placeholder={t('admin.search_users')} className="min-w-0 rounded-lg border border-white/10 bg-black px-3 py-2 text-sm text-white" />
+            <button type="submit" className="rounded-lg border border-white/10 p-2 text-zinc-300 hover:bg-white/5" aria-label={t('admin.search_users')}><Search className="h-4 w-4" /></button>
+          </form>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-left text-sm text-zinc-300">
+            <thead className="bg-white/5 text-xs uppercase text-zinc-500"><tr><th className="px-5 py-3">{t('account.username')}</th><th className="px-5 py-3">E-mail</th><th className="px-5 py-3">{t('drop.membership')}</th><th className="sticky right-0 bg-zinc-900 px-5 py-3 text-right">{t('admin.action')}</th></tr></thead>
+            <tbody className="divide-y divide-white/5">
+              {users.map((user) => <tr key={user.id}><td className="px-5 py-3 font-semibold text-white">{user.display_name}</td><td className="px-5 py-3">{user.email}</td><td className="px-5 py-3">{user.has_active_vip ? 'VIP' : 'Free'}</td><td className="sticky right-0 bg-zinc-900 px-5 py-3 text-right"><button type="button" onClick={() => void changeMembership(user, user.has_active_vip ? 'free' : 'vip')} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold hover:bg-white/5">{user.has_active_vip ? t('admin.remove_vip') : t('admin.grant_vip')}</button></td></tr>)}
+              {!users.length && <tr><td colSpan={4} className="px-5 py-8 text-center text-zinc-500">{t('admin.no_users')}</td></tr>}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -186,7 +240,7 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               <tr>
                 <th className="px-6 py-4 font-semibold">Proje ID</th>
                 <th className="px-6 py-4 font-semibold">Tarih</th>
-                <th className="px-6 py-4 font-semibold">Başlık</th>
+                <th className="px-6 py-4 font-semibold">{t('admin.title')}</th>
                 <th className="px-6 py-4 font-semibold">Durum</th>
               </tr>
             </thead>

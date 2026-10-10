@@ -46,7 +46,7 @@ def test_template_detail_endpoint() -> None:
 
     assert response.status_code == 200
     assert response.json()["id"] == "ofis-surprizi"
-    assert response.json()["video_url"] == "/templates/ofis-surprizi.mp4"
+    assert response.json()["video_url"] is None
     assert response.json()["is_demo"] is True
 
 

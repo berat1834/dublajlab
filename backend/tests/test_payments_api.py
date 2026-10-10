@@ -24,15 +24,28 @@ def test_checkout_disabled_returns_503(auth_headers_factory, monkeypatch):
     response = client.post("/api/payments/checkout?plan=monthly", headers=headers)
     assert response.status_code == 503
 
+def test_checkout_does_not_create_pending_record_without_payment_url(auth_headers_factory, monkeypatch, db_session):
+    headers = auth_headers_factory()
+    monkeypatch.setenv("SHOPIER_ENABLED", "true")
+    monkeypatch.setenv("SHOPIER_API_SECRET", "test_api_secret")
+    monkeypatch.delenv("SHOPIER_PAYMENT_URL", raising=False)
+
+    response = client.post("/api/payments/checkout?plan=monthly", headers=headers)
+
+    assert response.status_code == 503
+    assert db_session.query(Payment).count() == 0
+
 def test_checkout_creates_pending_payment(auth_headers_factory, monkeypatch, db_session):
     headers = auth_headers_factory()
     monkeypatch.setenv("SHOPIER_ENABLED", "true")
     monkeypatch.setenv("SHOPIER_API_SECRET", "test_api_secret")
+    monkeypatch.setenv("SHOPIER_PAYMENT_URL", "https://www.shopier.com/example")
     response = client.post("/api/payments/checkout?plan=monthly", headers=headers)
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "success"
     assert "payment_id" in data
+    assert data["checkout_url"] == "https://www.shopier.com/example"
     
     payment = db_session.query(Payment).filter(Payment.id == data["payment_id"]).first()
     assert payment is not None
@@ -53,7 +66,7 @@ def test_webhook_invalid_signature(monkeypatch):
         }
     )
     assert response.status_code == 400
-    assert response.json()["detail"] == "Invalid signature"
+    assert response.json()["detail"] == "Ödeme imzası geçersiz."
 
 def _generate_signature(order_id, random_nr, api_secret):
     expected_data = random_nr + order_id

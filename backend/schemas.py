@@ -23,8 +23,17 @@ class UserResponse(BaseModel):
     membership_tier: str = "free"
     membership_expires_at: Optional[datetime] = None
     has_active_vip: bool = False
+    has_password: bool = False
     created_at: datetime
     updated_at: datetime
+
+class ProfileUpdate(BaseModel):
+    display_name: str = Field(min_length=2, max_length=50)
+    avatar_url: Optional[str] = Field(default=None, max_length=255)
+
+class AccountDeleteRequest(BaseModel):
+    confirmation: str = Field(min_length=1, max_length=100)
+    password: Optional[str] = Field(default=None, max_length=128)
 
 class Token(BaseModel):
     access_token: str

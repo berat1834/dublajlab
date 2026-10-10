@@ -63,6 +63,7 @@ import {
   getMe,
 } from './lib/api'
 import { shouldShowLipSync } from './lib/lipSync'
+import { pathForTab, routeFromPath } from './lib/navigation'
 import { useLanguage } from './LanguageContext'
 import type {
   DemoPolicy,
@@ -204,11 +205,12 @@ function App() {
   const [jobMessage, setJobMessage] = useState('')
   const [jobError, setJobError] = useState('')
   const [demoPolicy, setDemoPolicy] = useState<DemoPolicy | null>(null)
-  const [activeTab, setActiveTab] = useState<Tab>('play')
+  const initialRoute = routeFromPath(window.location.pathname)
+  const [activeTab, setActiveTab] = useState<Tab>(initialRoute.tab)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [showHowTo, setShowHowTo] = useState(false)
-  const [detailTemplateId, setDetailTemplateId] = useState<string | null>(null)
+  const [detailTemplateId, setDetailTemplateId] = useState<string | null>(initialRoute.templateId)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const hasVip = Boolean(currentUser?.has_active_vip)
 
@@ -217,8 +219,9 @@ function App() {
   }, [demoPolicy, hasVip])
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const urlToken = params.get('token')
+    const queryParams = new URLSearchParams(window.location.search)
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+    const urlToken = hashParams.get('token') || queryParams.get('token')
     if (urlToken) {
       localStorage.setItem('token', urlToken)
       window.history.replaceState({}, document.title, '/')
@@ -227,6 +230,23 @@ function App() {
     if (localStorage.getItem('token')) {
       getMe().then(user => setCurrentUser(user)).catch(() => localStorage.removeItem('token'))
     }
+  }, [])
+
+  useEffect(() => {
+    const path = pathForTab(activeTab, detailTemplateId)
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, document.title, path)
+    }
+  }, [activeTab, detailTemplateId])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = routeFromPath(window.location.pathname)
+      setDetailTemplateId(route.templateId)
+      setActiveTab(route.tab)
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
 
@@ -595,7 +615,7 @@ function App() {
 
             {/* ── Steps indicator + mock preview ── */}
             <div className="flex w-full flex-col items-stretch gap-4 lg:w-auto lg:items-end">
-              <ol className="grid w-full grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-panel/80 text-xs lg:w-auto">
+              <ol className="flex flex-col sm:grid w-full sm:grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-panel/80 text-xs lg:w-auto">
                 {[
                   ['1', t('studio.step.source'), projectReady],
                   ['2', t('studio.step.record'), stage === 'processing' || stage === 'completed'],

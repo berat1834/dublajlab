@@ -1,3 +1,4 @@
+import { useLanguage } from '../LanguageContext'
 import { useState } from 'react'
 import { AlertTriangle, X } from 'lucide-react'
 import { reportPublicDub } from '../lib/api'
@@ -8,15 +9,15 @@ interface ReportModalProps {
   onToast: (msg: string) => void
 }
 
-const REASONS = [
-  { id: 'copyright', label: 'Telif Hakkı İhlali' },
-  { id: 'inappropriate', label: 'Uygunsuz / Sakıncalı İçerik' },
-  { id: 'misleading', label: 'Yanıltıcı İçerik / Deepfake' },
-  { id: 'personal_data', label: 'Kişisel Veri İhlali' },
-  { id: 'other', label: 'Diğer' },
-]
-
 export function ReportModal({ projectId, onClose, onToast }: ReportModalProps) {
+  const { t } = useLanguage()
+  const REASONS = [
+    { id: 'copyright', label: t('report.copyright') },
+    { id: 'inappropriate', label: t('report.inappropriate') },
+    { id: 'misleading', label: t('report.misleading') },
+    { id: 'personal_data', label: t('report.personal_data') },
+    { id: 'other', label: t('report.other') },
+  ]
   const [reason, setReason] = useState(REASONS[0].id)
   const [details, setDetails] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -26,13 +27,13 @@ export function ReportModal({ projectId, onClose, onToast }: ReportModalProps) {
     setIsSubmitting(true)
     try {
       await reportPublicDub(projectId, reason, details)
-      onToast('Raporunuz başarıyla alındı. Teşekkür ederiz.')
+      onToast(t('report.success'))
       onClose()
     } catch (err: unknown) {
       if (err instanceof Error) {
-        onToast(err.message || 'Rapor gönderilemedi.')
+        onToast(err.message || t('report.error'))
       } else {
-        onToast('Rapor gönderilemedi.')
+        onToast(t('report.error'))
       }
     } finally {
       setIsSubmitting(false)
@@ -44,6 +45,7 @@ export function ReportModal({ projectId, onClose, onToast }: ReportModalProps) {
       <div className="bg-zinc-900 border border-white/10 rounded-2xl w-full max-w-md p-6 shadow-2xl relative">
         <button
           onClick={onClose}
+          aria-label={t('report.cancel')}
           className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-full transition-colors"
         >
           <X className="w-5 h-5" />
@@ -54,14 +56,14 @@ export function ReportModal({ projectId, onClose, onToast }: ReportModalProps) {
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">İçeriği Raporla</h2>
-            <p className="text-sm text-zinc-400">Bu dublaj neden uygunsuz?</p>
+            <h2 className="text-xl font-bold text-white">{t('report.title')}</h2>
+            <p className="text-sm text-zinc-400">{t('report.question')}</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">Sebep</label>
+            <label className="block text-sm font-medium text-zinc-300 mb-2">{t('report.reason')}</label>
             <div className="space-y-2">
               {REASONS.map((r) => (
                 <label key={r.id} className="flex items-center gap-3 p-3 rounded-xl border border-white/5 bg-white/5 cursor-pointer hover:bg-white/10 transition">
@@ -81,14 +83,14 @@ export function ReportModal({ projectId, onClose, onToast }: ReportModalProps) {
 
           <div>
             <label htmlFor="details" className="block text-sm font-medium text-zinc-300 mb-2">
-              Ek Açıklama (İsteğe Bağlı)
+              {t('report.details')}
             </label>
             <textarea
               id="details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               className="w-full h-24 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-lime-400 focus:ring-1 focus:ring-lime-400 resize-none"
-              placeholder="Detayları buraya yazabilirsiniz..."
+              placeholder={t("report.placeholder")}
             />
           </div>
 
@@ -98,14 +100,14 @@ export function ReportModal({ projectId, onClose, onToast }: ReportModalProps) {
               onClick={onClose}
               className="flex-1 py-3 px-4 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl transition-colors"
             >
-              İptal
+              {t('report.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="flex-1 py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Gönderiliyor...' : 'Raporla'}
+              {isSubmitting ? t('report.submitting') : t('report.submit')}
             </button>
           </div>
         </form>

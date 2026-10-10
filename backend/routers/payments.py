@@ -5,20 +5,15 @@ import json
 import logging
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Form
-from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from urllib.parse import urlencode
 
 from backend.database import get_db
 from backend.models_db import User, Payment
 from backend.routers.auth_router import get_current_user
 from backend.config import (
     is_shopier_enabled,
-    get_shopier_api_key,
     get_shopier_api_secret,
-    get_shopier_callback_secret,
-    get_shopier_return_url,
-    get_shopier_cancel_url
+    get_shopier_payment_url,
 )
 
 router = APIRouter()
@@ -40,11 +35,12 @@ async def create_checkout(
         )
 
     api_secret = get_shopier_api_secret()
-    if not api_secret:
-        logger.error("SHOPIER_ENABLED=true ama SHOPIER_API_SECRET eksik.")
+    payment_url = get_shopier_payment_url()
+    if not api_secret or not payment_url:
+        logger.error("SHOPIER_ENABLED=true ama ödeme secret veya ödeme URL'si eksik.")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Ödeme altyapısı yapılandırılmamış."
+            detail="Ödeme altyapısı henüz kullanıma hazır değil."
         )
 
     if plan != "monthly":
@@ -78,13 +74,14 @@ async def create_checkout(
         "amount": VIP_PRICE,
         "currency": "TRY",
         "order_id": payment.id, # Using our payment ID as order ID
+        "checkout_url": payment_url,
         "message": "Ödeme kaydı oluşturuldu."
     }
 
 @router.post("/webhook")
 async def shopier_webhook(
     request: Request,
-    status: str = Form(...),
+    payment_status: str = Form(..., alias="status"),
     invoiceId: str = Form(...),
     orderId: str = Form(...),
     isTest: str = Form(None),
@@ -112,19 +109,19 @@ async def shopier_webhook(
     ).digest()
     expected_signature = base64.b64encode(mac).decode('utf-8')
 
-    if expected_signature != signature:
+    if not hmac.compare_digest(expected_signature, signature):
         logger.warning(f"Invalid shopier signature for order {orderId}")
-        raise HTTPException(status_code=400, detail="Invalid signature")
+        raise HTTPException(status_code=400, detail="Ödeme imzası geçersiz.")
 
     payment = db.query(Payment).filter(Payment.id == orderId).first()
     if not payment:
-        raise HTTPException(status_code=404, detail="Payment not found")
+        raise HTTPException(status_code=404, detail="Ödeme kaydı bulunamadı.")
         
     if payment.status in ["paid", "failed", "cancelled"]:
         # Idempotency: return 200 OK so Shopier doesn't retry
         return {"status": "ok", "message": "Already processed"}
 
-    if status == "success":
+    if payment_status == "success":
         payment.status = "paid"
         payment.provider_order_id = invoiceId
         
@@ -144,7 +141,7 @@ async def shopier_webhook(
 
     # Store raw event safely (without sensitive info, just basic status)
     safe_event = {
-        "status": status,
+        "status": payment_status,
         "invoiceId": invoiceId,
         "isTest": isTest,
         "signature_valid": True

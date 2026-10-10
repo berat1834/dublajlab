@@ -68,7 +68,6 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo, cu
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-300">{t('footer.links.play')}</h3>
             <ul className="mt-4 space-y-3 text-sm text-zinc-500">
-              <li><button onClick={() => handleNav('oda_kur')} className="hover:text-white">{t('footer.links.oda_kur')}</button></li>
               <li><button onClick={() => handleNav('scenes')} className="hover:text-white">{t('footer.links.scenes')}</button></li>
               <li><button onClick={() => setShowHowTo(true)} className="hover:text-white">{t('footer.links.howto')}</button></li>
               <li><button onClick={() => onToast(t('toast.suggest_soon'))} className="hover:text-white">{t('footer.links.suggest')}</button></li>

@@ -56,9 +56,9 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
       <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
         <div className="mx-auto flex h-14 max-w-[1440px] items-center justify-between px-3 sm:h-16 sm:px-6 3xl:max-w-[1600px] 4xl:max-w-[1800px]">
           <div className="flex items-center gap-6 lg:gap-10">
-            <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab('play'); }} className="block shrink-0" aria-label="DublajLab ana sayfa">
+            <button onClick={() => setActiveTab('play')} className="block shrink-0" aria-label="DublajLab ana sayfa">
               <img src="/assets/dublajlab-logo.svg" alt="DublajLab" className="h-8 w-auto max-w-[150px] sm:h-9 sm:max-w-[170px]" />
-            </a>
+            </button>
             <div className="hidden items-center gap-2 md:flex text-sm font-semibold text-zinc-400">
               <button onClick={() => setActiveTab('play')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'play' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>{t('nav.play')}</button>
               <button onClick={() => setActiveTab('scenes')} className={`rounded-lg px-3 py-1.5 transition ${activeTab === 'scenes' ? 'bg-white/10 text-white' : 'hover:bg-white/5 hover:text-white'}`}>{t('nav.scenes')}</button>
@@ -121,16 +121,6 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                       </div>
                       
                       <div className="px-4 py-3 border-b border-white/10">
-                        <div className="flex justify-between text-xs font-bold text-zinc-400 mb-2">
-                          <span>{t('nav.level')}</span>
-                          <span>0 / 100 XP</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-white w-[10%]"></div>
-                        </div>
-                      </div>
-
-                      <div className="px-4 py-3 border-b border-white/10">
                         <div className="flex items-center gap-2 mb-1">
                           <Diamond className="h-3 w-3 text-amber-500" />
                           <span className="text-xs font-black text-white">{currentUser.has_active_vip ? t('nav.vip_active') : t('nav.vip_join')}</span>
@@ -143,9 +133,6 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                         <button onClick={() => handleDropdownNav('profile')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.profile')}</button>
                         <button onClick={() => handleDropdownNav('membership')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.membership')}</button>
                         <button onClick={() => handleDropdownNav('library')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.library')}</button>
-                        <button onClick={() => handleDropdownNav('user_scenes')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.scenes')}</button>
-                        <button onClick={() => handleDropdownNav('user_favorites')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.favorites')}</button>
-                        <button onClick={() => handleDropdownNav('user_credits')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.credits')}</button>
                         <button onClick={() => handleDropdownNav('account')} className="w-full text-left px-4 py-2 text-sm text-zinc-300 hover:text-white hover:bg-white/5 transition">{t('drop.account')}</button>
                       </div>
 
@@ -168,13 +155,13 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
               <Crown className="h-4 w-4" /> {currentUser?.has_active_vip ? t('nav.vip_active') : t('vip.button')}
             </button>
           </div>
-          <button className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          <button aria-label={mobileMenuOpen ? t("nav.close_menu") : t("nav.open_menu")} className="md:hidden text-white" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X /> : <Menu />}
           </button>
         </div>
       </nav>
       {mobileMenuOpen && (
-        <div className="border-b border-white/10 bg-black/95 px-4 py-4 md:hidden text-sm font-medium" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+        <div className="border-b border-white/10 bg-black/95 px-4 py-4 md:hidden text-sm font-medium max-h-[80vh] overflow-y-auto" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           <div className="flex flex-col gap-4 text-zinc-300">
             <button onClick={() => { setActiveTab('play'); setMobileMenuOpen(false); }} className="text-left">{t('nav.play')}</button>
             <button onClick={() => { setActiveTab('scenes'); setMobileMenuOpen(false); }} className="text-left">{t('nav.scenes')}</button>

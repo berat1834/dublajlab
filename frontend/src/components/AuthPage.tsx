@@ -31,7 +31,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
     setLoading(true)
     try {
       if (mode === 'register') {
-        await register(email, password, name || 'Dublajcı')
+        await register(email, password, name || t('auth.default_name'))
         onToast(t('auth.register_success'))
         setActiveTab('login')
       } else {

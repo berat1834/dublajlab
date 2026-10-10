@@ -6,11 +6,17 @@ import os
 from datetime import timedelta
 from urllib.parse import urlencode, urlsplit
 import logging
+import base64
+import hashlib
+import hmac
+import json
+import secrets
 
 from backend.database import get_db
 import backend.models_db as models_db
 import backend.auth as auth
 import backend.config as config
+from backend.services.admin_role_service import grant_configured_admin_role
 
 router = APIRouter()
 logger = logging.getLogger("dublajlab")
@@ -22,6 +28,7 @@ DISCORD_CLIENT_ID = os.getenv("DISCORD_CLIENT_ID")
 DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 
 CANONICAL_DOMAIN = "dublajlab.com.tr"
+OAUTH_STATE_COOKIE = "dublajlab_oauth_state"
 
 
 def _normalize_origin(value: str | None) -> str | None:
@@ -80,9 +87,62 @@ def get_frontend_url():
             return origin.rstrip("/")
     return origins[0].rstrip("/") if origins else "http://localhost:5173"
 
-def _frontend_redirect(state: str | None, token: str) -> RedirectResponse:
-    frontend_url = resolve_return_origin(state) or get_frontend_url()
-    return RedirectResponse(f"{frontend_url}/oauth-callback?token={token}")
+def _encode_state(origin: str | None, nonce: str) -> str:
+    payload = json.dumps(
+        {"origin": origin, "nonce": nonce}, separators=(",", ":")
+    ).encode("utf-8")
+    encoded = base64.urlsafe_b64encode(payload).decode("ascii").rstrip("=")
+    signature = hmac.new(
+        auth.SECRET_KEY.encode("utf-8"), encoded.encode("ascii"), hashlib.sha256
+    ).hexdigest()
+    return f"{encoded}.{signature}"
+
+
+def _decode_state(state: str | None) -> tuple[str | None, str]:
+    try:
+        encoded, signature = (state or "").split(".", 1)
+        expected = hmac.new(
+            auth.SECRET_KEY.encode("utf-8"), encoded.encode("ascii"), hashlib.sha256
+        ).hexdigest()
+        if not hmac.compare_digest(signature, expected):
+            raise ValueError("invalid signature")
+        padding = "=" * (-len(encoded) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(encoded + padding))
+        nonce = payload.get("nonce")
+        if not isinstance(nonce, str) or not nonce:
+            raise ValueError("missing nonce")
+        return resolve_return_origin(payload.get("origin")), nonce
+    except (ValueError, TypeError, json.JSONDecodeError):
+        raise HTTPException(status_code=400, detail="OAuth güvenlik doğrulaması başarısız.")
+
+
+def _frontend_redirect(origin: str | None, token: str) -> RedirectResponse:
+    frontend_url = origin or get_frontend_url()
+    response = RedirectResponse(f"{frontend_url}/oauth-callback#token={token}")
+    response.delete_cookie(OAUTH_STATE_COOKIE, path="/api/auth")
+    return response
+
+
+def _oauth_login_redirect(url: str, nonce: str) -> RedirectResponse:
+    response = RedirectResponse(url)
+    response.set_cookie(
+        OAUTH_STATE_COOKIE,
+        nonce,
+        max_age=600,
+        httponly=True,
+        secure=config.app_environment() == "production",
+        samesite="lax",
+        path="/api/auth",
+    )
+    return response
+
+
+def _verified_callback_origin(request: Request, state: str | None) -> str | None:
+    origin, nonce = _decode_state(state)
+    cookie_nonce = request.cookies.get(OAUTH_STATE_COOKIE)
+    if not cookie_nonce or not hmac.compare_digest(cookie_nonce, nonce):
+        raise HTTPException(status_code=400, detail="OAuth oturumu geçersiz veya süresi dolmuş.")
+    return origin
 
 
 @router.get("/google/login")
@@ -99,15 +159,18 @@ async def google_login(request: Request, return_to: str | None = None):
         "access_type": "offline",
     }
     origin = resolve_return_origin(return_to)
-    if origin:
-        params["state"] = origin
-    return RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
+    nonce = secrets.token_urlsafe(32)
+    params["state"] = _encode_state(origin, nonce)
+    return _oauth_login_redirect(
+        f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}", nonce
+    )
 
 @router.get("/google/callback")
 async def google_callback(request: Request, code: str, state: str | None = None, db: Session = Depends(get_db)):
     if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Google OAuth yapılandırılmamış.")
         
+    origin = _verified_callback_origin(request, state)
     redirect_uri = request.url_for("google_callback")
     
     async with httpx.AsyncClient() as client:
@@ -151,6 +214,8 @@ async def google_callback(request: Request, code: str, state: str | None = None,
     elif not user.google_id:
         user.google_id = google_id
         db.commit()
+
+    grant_configured_admin_role(user, db)
         
     # Generate JWT
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -158,7 +223,7 @@ async def google_callback(request: Request, code: str, state: str | None = None,
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
-    return _frontend_redirect(state, app_token)
+    return _frontend_redirect(origin, app_token)
 
 @router.get("/discord/login")
 async def discord_login(request: Request, return_to: str | None = None):
@@ -173,15 +238,18 @@ async def discord_login(request: Request, return_to: str | None = None):
         "scope": "identify email",
     }
     origin = resolve_return_origin(return_to)
-    if origin:
-        params["state"] = origin
-    return RedirectResponse(f"https://discord.com/api/oauth2/authorize?{urlencode(params)}")
+    nonce = secrets.token_urlsafe(32)
+    params["state"] = _encode_state(origin, nonce)
+    return _oauth_login_redirect(
+        f"https://discord.com/api/oauth2/authorize?{urlencode(params)}", nonce
+    )
 
 @router.get("/discord/callback")
 async def discord_callback(request: Request, code: str, state: str | None = None, db: Session = Depends(get_db)):
     if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Discord OAuth yapılandırılmamış.")
         
+    origin = _verified_callback_origin(request, state)
     redirect_uri = request.url_for("discord_callback")
     
     async with httpx.AsyncClient() as client:
@@ -229,6 +297,8 @@ async def discord_callback(request: Request, code: str, state: str | None = None
     elif not user.discord_id:
         user.discord_id = discord_id
         db.commit()
+
+    grant_configured_admin_role(user, db)
         
     # Generate JWT
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -236,4 +306,4 @@ async def discord_callback(request: Request, code: str, state: str | None = None
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
     
-    return _frontend_redirect(state, app_token)
+    return _frontend_redirect(origin, app_token)

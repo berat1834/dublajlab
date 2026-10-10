@@ -7,22 +7,41 @@ from backend.database import get_db
 import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
-from backend.auth import get_password_hash, verify_password
+from backend.auth import verify_password
 
 router = APIRouter()
 
 @router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
-def delete_account(body: dict, db: Session = Depends(get_db), current_user: models_db.User = Depends(get_current_user)):
-    password = body.get("password")
-    if not password:
-        raise HTTPException(status_code=400, detail="Şifre gerekli.")
+def delete_account(body: schemas.AccountDeleteRequest, db: Session = Depends(get_db), current_user: models_db.User = Depends(get_current_user)):
+    if body.confirmation.strip() != current_user.display_name:
+        raise HTTPException(status_code=400, detail="Kullanıcı adı eşleşmiyor.")
 
-    if not current_user.hashed_password or not verify_password(password, current_user.hashed_password):
+    if current_user.password_hash and (
+        not body.password or not verify_password(body.password, current_user.password_hash)
+    ):
         raise HTTPException(status_code=400, detail="Geçersiz şifre.")
 
     db.delete(current_user)
     db.commit()
     return None
+
+@router.patch("/profile", response_model=schemas.UserResponse)
+def update_profile(
+    profile: schemas.ProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: models_db.User = Depends(get_current_user),
+):
+    current_user.display_name = profile.display_name.strip()
+    current_user.avatar_url = profile.avatar_url.strip() if profile.avatar_url else None
+    db.commit()
+    db.refresh(current_user)
+
+    from backend.services.membership_service import has_active_vip
+    response = schemas.UserResponse.model_validate(current_user)
+    return response.model_copy(update={
+        "has_active_vip": has_active_vip(current_user),
+        "has_password": bool(current_user.password_hash),
+    })
 
 @router.get("/projects", response_model=List[schemas.ProjectResponse])
 def get_user_projects(db: Session = Depends(get_db), current_user: models_db.User = Depends(get_current_user)):

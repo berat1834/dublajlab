@@ -1,4 +1,6 @@
 from backend.routers import oauth_router
+from fastapi import HTTPException
+import pytest
 
 
 def test_frontend_url_prefers_explicit_configuration(monkeypatch):
@@ -98,3 +100,44 @@ def test_return_origin_rejects_unknown_origin(monkeypatch):
     assert oauth_router.resolve_return_origin("https://evil.example.com") is None
     assert oauth_router.resolve_return_origin("not-a-url") is None
     assert oauth_router.resolve_return_origin(None) is None
+
+
+def test_oauth_state_is_signed_and_preserves_allowlisted_origin(monkeypatch):
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setattr(
+        oauth_router.config,
+        "allowed_origins",
+        lambda: ["https://www.dublajlab.com.tr"],
+    )
+
+    state = oauth_router._encode_state("https://www.dublajlab.com.tr", "nonce-value")
+
+    assert oauth_router._decode_state(state) == (
+        "https://www.dublajlab.com.tr",
+        "nonce-value",
+    )
+
+
+def test_oauth_state_rejects_tampering():
+    state = oauth_router._encode_state(None, "nonce-value")
+
+    with pytest.raises(HTTPException) as exc_info:
+        oauth_router._decode_state(f"{state}tampered")
+
+    assert exc_info.value.status_code == 400
+
+
+def test_oauth_token_redirect_uses_url_fragment(monkeypatch):
+    monkeypatch.setattr(
+        oauth_router.config,
+        "allowed_origins",
+        lambda: ["https://www.dublajlab.com.tr"],
+    )
+
+    response = oauth_router._frontend_redirect(
+        "https://www.dublajlab.com.tr", "secret-token"
+    )
+
+    assert response.headers["location"] == (
+        "https://www.dublajlab.com.tr/oauth-callback#token=secret-token"
+    )

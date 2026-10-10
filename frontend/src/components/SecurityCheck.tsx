@@ -1,7 +1,9 @@
+import { useLanguage } from '../LanguageContext'
 import { useEffect, useState } from 'react'
 import { ShieldCheck, LoaderCircle, AlertTriangle } from 'lucide-react'
 
 export function SecurityCheck({ onComplete }: { onComplete: () => void }) {
+  const { t } = useLanguage()
   const [phase, setPhase] = useState(0)
 
   useEffect(() => {
@@ -31,14 +33,14 @@ export function SecurityCheck({ onComplete }: { onComplete: () => void }) {
           </div>
           
           <h2 className="text-xl font-black text-white mb-2">
-            {phase < 3 ? 'Güvenlik Kontrolü' : 'Bağlantı Güvenli'}
+            {phase < 3 ? t('security.check') : t('security.safe')}
           </h2>
           
           <div className="h-6 text-sm font-medium text-zinc-500 mb-8">
-            {phase === 0 && 'DublajLab sunucularına bağlanılıyor...'}
-            {phase === 1 && 'Tarayıcı imzası doğrulanıyor...'}
-            {phase === 2 && 'Bot koruması atlatılıyor...'}
-            {phase === 3 && 'Yönlendiriliyor...'}
+            {phase === 0 && t('security.connecting')}
+            {phase === 1 && t('security.verifying')}
+            {phase === 2 && t('security.bot_check')}
+            {phase === 3 && t('security.redirecting')}
           </div>
 
           <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">

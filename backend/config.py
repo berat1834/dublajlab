@@ -217,6 +217,9 @@ def get_shopier_api_key() -> str:
 def get_shopier_api_secret() -> str:
     return os.getenv("SHOPIER_API_SECRET", "")
 
+def get_shopier_payment_url() -> str:
+    return os.getenv("SHOPIER_PAYMENT_URL", "").strip()
+
 def get_shopier_callback_secret() -> str:
     return os.getenv("SHOPIER_CALLBACK_SECRET", "")
 

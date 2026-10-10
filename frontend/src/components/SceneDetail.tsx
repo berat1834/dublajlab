@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   Play,
-  Users,
   Mic2,
   Scale
 } from 'lucide-react'
 import { fetchTemplate } from '../lib/api'
 import type { VideoTemplate, Tab } from '../types'
 import { VipPromo } from './VipPromo'
+import { useLanguage } from '../LanguageContext'
 
 interface SceneDetailProps {
   templateId: string
@@ -27,7 +27,8 @@ function thumbClass(category: string): string {
   return 'thumb-default'
 }
 
-export function SceneDetail({ templateId, onBack, onPlay, onToast, setActiveTab }: SceneDetailProps) {
+export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetailProps) {
+  const { t, language } = useLanguage()
   const [template, setTemplate] = useState<VideoTemplate | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -44,20 +45,20 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast, setActiveTab 
       })
       .catch(() => {
         if (active) {
-          setError('Sahne detayları yüklenemedi.')
+          setError(t('scene.load_error'))
           setLoading(false)
         }
       })
     return () => { active = false }
-  }, [templateId])
+  }, [templateId, t])
 
   const characterCount = template?.character_count || 1;
-  const playCount = template?.play_count || Math.floor(Math.random() * 5000) + 500;
+  const playCount = template?.play_count;
 
   if (loading) {
     return (
       <div className="py-20 text-center text-zinc-500">
-        Yükleniyor...
+        {t('scene.loading')}
       </div>
     )
   }
@@ -65,9 +66,9 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast, setActiveTab 
   if (error || !template) {
     return (
       <div className="py-20 text-center text-red-400">
-        {error || 'Sahne bulunamadı.'}
+        {error || t('scene.not_found')}
         <br />
-        <button onClick={onBack} className="mt-4 text-white underline">Geri Dön</button>
+        <button onClick={onBack} className="mt-4 text-white underline">{t('scene.back')}</button>
       </div>
     )
   }
@@ -79,7 +80,7 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast, setActiveTab 
   return (
     <div className="mx-auto max-w-5xl py-8 px-4">
       <button onClick={onBack} className="mb-6 flex items-center gap-2 text-sm font-bold text-zinc-400 hover:text-white transition">
-        <ArrowLeft className="h-4 w-4" /> Ana sayfa / Sahneler / <span className="text-zinc-200">{template.title}</span>
+        <ArrowLeft className="h-4 w-4" /> {t('scene.breadcrumb')} / <span className="text-zinc-200">{template.title}</span>
       </button>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
@@ -115,34 +116,31 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast, setActiveTab 
 
           <div className="grid grid-cols-3 gap-2 rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex flex-col gap-1 border-r border-white/10">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Karakter</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{t('scene.characters')}</span>
               <span className="text-lg font-black text-white">{characterCount}</span>
             </div>
             <div className="flex flex-col gap-1 border-r border-white/10 pl-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Süre</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{t('scene.duration')}</span>
               <span className="text-lg font-black text-white">0:{template.duration_seconds < 10 ? `0${template.duration_seconds}` : template.duration_seconds}</span>
             </div>
             <div className="flex flex-col gap-1 pl-3">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Oynanma</span>
-              <span className="text-lg font-black text-white">{playCount.toLocaleString('tr-TR')}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">{t('scene.plays')}</span>
+              <span className="text-lg font-black text-white">{playCount == null ? '—' : playCount.toLocaleString(language === 'TR' ? 'tr-TR' : 'en-US')}</span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button onClick={() => setActiveTab('oda_kur')} className="rounded-xl bg-lime px-6 py-3.5 text-sm font-bold text-ink hover:bg-[#d5ff78] transition shadow-glow flex-1 flex justify-center items-center gap-2">
-              <Users className="h-4 w-4" /> Bu sahneyle oda kur
-            </button>
-            <button onClick={() => onPlay(template.id)} className="rounded-xl border border-white/20 bg-white/5 px-6 py-3.5 text-sm font-bold text-white hover:bg-white/10 transition flex-1 flex justify-center items-center gap-2">
-              <Mic2 className="h-4 w-4" /> Tek başına oyna
+            <button onClick={() => onPlay(template.id)} className="rounded-xl bg-lime px-6 py-3.5 text-sm font-bold text-ink hover:bg-[#d5ff78] transition shadow-glow flex-1 flex justify-center items-center gap-2">
+              <Mic2 className="h-4 w-4" /> {t('scene.play_solo')}
             </button>
           </div>
 
           <button onClick={onBack} className="rounded-xl border border-white/10 px-6 py-3 text-sm font-bold text-zinc-400 hover:text-white hover:border-white/20 transition w-full">
-            Başka sahne seç
+            {t('scene.choose_another')}
           </button>
 
           <p className="text-[11px] leading-5 text-zinc-500">
-            Tek başına oynarsan sahnedeki tüm karakterleri sırayla sen seslendirirsin. 
+            {t('scene.solo_hint')}
             <br />
             <span className="mt-2 block">
               <Scale className="h-3 w-3 inline mr-1" /> {template.license} · {template.source}
@@ -155,27 +153,27 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast, setActiveTab 
 
       {/* How to Play Section */}
       <div className="mb-12">
-        <h3 className="text-xl font-bold text-white mb-8">Bu sahne nasıl oynanır?</h3>
+        <h3 className="text-xl font-bold text-white mb-8">{t('scene.how')}</h3>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <span className="text-xs font-bold text-lime mb-2 block">01 / Oda kur</span>
-            <p className="text-sm font-bold text-zinc-200 mb-1">Arkadaşlarını çağır veya tek oyna</p>
-            <p className="text-xs text-zinc-500 leading-relaxed">Sahneyi ister tek başına üstlen, istersen arkadaşlarına link gönderip karakterleri bölüşün.</p>
+            <span className="text-xs font-bold text-lime mb-2 block">01 / {t('scene.step_select')}</span>
+            <p className="text-sm font-bold text-zinc-200 mb-1">{t('scene.step_select_title')}</p>
+            <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_select_desc')}</p>
           </div>
           <div>
             <span className="text-xs font-bold text-violet mb-2 block">02 / Stüdyo</span>
-            <p className="text-sm font-bold text-zinc-200 mb-1">Replikleri kaydet</p>
-            <p className="text-xs text-zinc-500 leading-relaxed">Sahne akarken sıran geldiğinde mikrofon ikonuna tıkla ve kendi sesinle canlandır.</p>
+            <p className="text-sm font-bold text-zinc-200 mb-1">{t('scene.step_record_title')}</p>
+            <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_record_desc')}</p>
           </div>
           <div>
             <span className="text-xs font-bold text-emerald-400 mb-2 block">03 / İşleme</span>
-            <p className="text-sm font-bold text-zinc-200 mb-1">Otomatik Mix</p>
-            <p className="text-xs text-zinc-500 leading-relaxed">Tüm kayıtlar tamamlandığında sistem orijinal sesi kısar ve senin sesini sahneye yerleştirir.</p>
+            <p className="text-sm font-bold text-zinc-200 mb-1">{t('scene.step_mix_title')}</p>
+            <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_mix_desc')}</p>
           </div>
           <div>
             <span className="text-xs font-bold text-amber-400 mb-2 block">04 / Sonuç</span>
-            <p className="text-sm font-bold text-zinc-200 mb-1">MP4 İndir ve Paylaş</p>
-            <p className="text-xs text-zinc-500 leading-relaxed">Altyazıların otomatik gömüldüğü yüksek kaliteli videonu indirip her yerde paylaş.</p>
+            <p className="text-sm font-bold text-zinc-200 mb-1">{t('scene.step_download_title')}</p>
+            <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_download_desc')}</p>
           </div>
         </div>
       </div>

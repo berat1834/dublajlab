@@ -1,3 +1,4 @@
+import { useLanguage } from '../LanguageContext'
 import { useEffect, useState } from 'react'
 import { getAdminReports, updateReportStatus, updateProjectModeration, type ContentReport } from '../lib/api'
 import { Shield, EyeOff, X } from 'lucide-react'
@@ -7,6 +8,7 @@ interface AdminModerationPanelProps {
 }
 
 export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
+  const { t } = useLanguage()
   const [reports, setReports] = useState<ContentReport[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -17,7 +19,7 @@ export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
         const data = await getAdminReports()
         setReports(data)
       } catch {
-        onToast('Raporlar yüklenemedi.')
+        onToast(t('mod.reports_error'))
       } finally {
         setLoading(false)
       }
@@ -29,18 +31,18 @@ export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
     try {
       const updated = await updateReportStatus(reportId, status)
       setReports(reports.map(r => r.id === reportId ? updated : r))
-      onToast('Rapor durumu güncellendi.')
+      onToast(t('mod.status_updated'))
     } catch {
-      onToast('İşlem başarısız.')
+      onToast(t('mod.action_failed'))
     }
   }
 
   const handleHideProject = async (projectId: string, reportId: string) => {
-    if (!window.confirm('Bu projeyi gizlemek istediğinize emin misiniz?')) return
+    if (!window.confirm(t('mod.hide_confirm'))) return
     try {
       await updateProjectModeration(projectId, 'hidden')
       await handleUpdateStatus(reportId, 'action_taken')
-      onToast('Proje gizlendi ve rapor kapatıldı.')
+      onToast(t('mod.hidden_success'))
     } catch {
       onToast('Proje gizlenemedi.')
     }
@@ -62,7 +64,7 @@ export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
         </div>
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight">Moderasyon Paneli</h1>
-          <p className="text-sm text-zinc-400 mt-1">Kullanıcı bildirimlerini ve şüpheli içerikleri yönetin.</p>
+          <p className="text-sm text-zinc-400 mt-1">{t('mod.subtitle')}</p>
         </div>
       </div>
 
@@ -72,10 +74,10 @@ export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
             <thead className="text-xs text-zinc-400 uppercase bg-white/5 border-b border-white/10">
               <tr>
                 <th className="px-6 py-4 font-semibold">Tarih</th>
-                <th className="px-6 py-4 font-semibold">Sebep</th>
+                <th className="px-6 py-4 font-semibold">{t('mod.reason')}</th>
                 <th className="px-6 py-4 font-semibold">Detay</th>
                 <th className="px-6 py-4 font-semibold">Proje ID</th>
-                <th className="px-6 py-4 font-semibold">Durum</th>
+                <th className="px-6 py-4 font-semibold">{t('mod.status')}</th>
                 <th className="px-6 py-4 font-semibold text-right">İşlem</th>
               </tr>
             </thead>

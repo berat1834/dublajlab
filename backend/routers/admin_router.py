@@ -1,9 +1,9 @@
 import asyncio
 import os
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
-from typing import List, Dict, Any
+from sqlalchemy import case, func, or_
+from typing import List, Dict, Any, Literal
 from datetime import datetime, timedelta, timezone
 
 from backend.database import get_db
@@ -22,6 +22,32 @@ def get_admin_user(current_user: models_db.User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Yalnızca yöneticiler erişebilir.")
     return current_user
+
+
+def _user_response(user: models_db.User) -> schemas.UserResponse:
+    response = schemas.UserResponse.model_validate(user)
+    return response.model_copy(update={
+        "has_active_vip": has_active_vip(user),
+        "has_password": bool(user.password_hash),
+    })
+
+
+@router.get("/users", response_model=List[schemas.UserResponse])
+def list_users(
+    q: str | None = Query(default=None, max_length=100),
+    limit: int = Query(default=25, ge=1, le=100),
+    db: Session = Depends(get_db),
+    admin: models_db.User = Depends(get_admin_user),
+):
+    query = db.query(models_db.User)
+    if q and q.strip():
+        pattern = f"%{q.strip()}%"
+        query = query.filter(or_(
+            models_db.User.email.ilike(pattern),
+            models_db.User.display_name.ilike(pattern),
+        ))
+    users = query.order_by(models_db.User.created_at.desc()).limit(limit).all()
+    return [_user_response(user) for user in users]
 
 
 @router.patch("/users/{user_id}/membership", response_model=schemas.UserResponse)
@@ -43,19 +69,12 @@ def update_user_membership(
     )
     db.commit()
     db.refresh(user)
-    response = schemas.UserResponse.model_validate(user)
-    return response.model_copy(update={"has_active_vip": has_active_vip(user)})
+    return _user_response(user)
 
 @router.get("/reports", response_model=List[schemas.ContentReportResponse])
 def get_reports(db: Session = Depends(get_db), admin: models_db.User = Depends(get_admin_user)):
     reports = db.query(models_db.ContentReport).order_by(
-        models_db.ContentReport.status == "pending", # True evaluates to 1, False to 0. Actually we want pending first.
-        models_db.ContentReport.created_at.desc()
-    ).all()
-    # A simple order by pending first (status == pending is not portable across all DBs like Postgres, but works in SQLite,
-    # let's just order by created_at desc)
-
-    reports = db.query(models_db.ContentReport).order_by(
+        case((models_db.ContentReport.status == "pending", 0), else_=1),
         models_db.ContentReport.created_at.desc()
     ).all()
     return reports
@@ -63,7 +82,7 @@ def get_reports(db: Session = Depends(get_db), admin: models_db.User = Depends(g
 @router.patch("/reports/{report_id}")
 def update_report_status(
     report_id: str,
-    status: str, # "reviewed", "dismissed", "action_taken"
+    status: Literal["reviewed", "dismissed", "action_taken"],
     db: Session = Depends(get_db),
     admin: models_db.User = Depends(get_admin_user)
 ):
@@ -81,7 +100,7 @@ def update_report_status(
 @router.patch("/projects/{project_id}/moderation")
 def update_project_moderation(
     project_id: str,
-    moderation_status: str, # "visible", "hidden"
+    moderation_status: Literal["visible", "hidden"],
     db: Session = Depends(get_db),
     admin: models_db.User = Depends(get_admin_user)
 ):

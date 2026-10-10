@@ -7,8 +7,10 @@ interface UserLibraryProps {
   onToast: (msg: string) => void
   setActiveTab: (tab: Tab) => void
 }
+import { useLanguage } from '../LanguageContext'
 
 export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
+  const { t } = useLanguage()
   const [projects, setProjects] = useState<DubbingProject[]>([])
   const [exports, setExports] = useState<DubbingExport[]>([])
   const [loading, setLoading] = useState(true)
@@ -24,7 +26,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
         setProjects(projs)
         setExports(exps)
       } catch {
-        onToast('Projeler yüklenirken hata oluştu.')
+        onToast(t('library.fetch_error'))
       } finally {
         setLoading(false)
       }
@@ -33,7 +35,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
   }, [onToast])
 
   const handleDelete = async (projectId: string) => {
-    if (!window.confirm('Bu projeyi silmek istediğinize emin misiniz?')) return
+    if (!window.confirm(t('library.delete_confirm'))) return
     try {
       await deleteUserProject(projectId)
       onToast('Proje silindi.')
@@ -41,9 +43,9 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
       setExports(exports.filter(e => e.project_id !== projectId))
     } catch (err: unknown) {
       if (err instanceof Error) {
-        onToast(err.message || 'Silme işlemi başarısız.')
+        onToast(err.message || t('library.delete_error'))
       } else {
-        onToast('Silme işlemi başarısız.')
+        onToast(t('library.delete_error'))
       }
     }
   }
@@ -54,12 +56,12 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
     try {
       const updated = await updateProjectVisibility(project.id, newVisibility)
       setProjects(projects.map(p => p.id === project.id ? updated : p))
-      onToast(newVisibility === 'public' ? 'Proje herkese açık yapıldı.' : 'Proje gizlendi.')
+      onToast(newVisibility === 'public' ? t('library.made_public') : t('library.made_private'))
     } catch (err: unknown) {
       if (err instanceof Error) {
-        onToast(err.message || 'Güncelleme başarısız.')
+        onToast(err.message || t('library.update_error'))
       } else {
-        onToast('Güncelleme başarısız.')
+        onToast(t('library.update_error'))
       }
     }
   }
@@ -76,17 +78,17 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-0 pb-24">
         <div className="mb-12">
-          <h1 className="text-3xl font-black text-white tracking-tight">Dublajlarım</h1>
-          <p className="text-zinc-400 mt-2">Yer aldığın 0 dublaj. İzle, indir ya da stüdyoda yeniden miksle.</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">{t('library.title')}</h1>
+          <p className="text-zinc-400 mt-2">{t('library.empty_subtitle')}</p>
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] py-24 px-4 flex flex-col items-center text-center mb-12">
-          <h3 className="text-lg font-bold text-white mb-2">Henüz dublajın yok</h3>
+          <h3 className="text-lg font-bold text-white mb-2">{t('library.empty_title')}</h3>
           <p className="text-sm text-zinc-500 max-w-sm mb-8">
-            Bir oda kur, arkadaşlarını çağır — ilk dublajın burada görünsün.
+            {t('library.empty_desc')}
           </p>
-          <button onClick={() => setActiveTab('oda_kur')} className="px-6 py-2.5 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-500 transition">
-            Oda kur
+          <button onClick={() => setActiveTab('play')} className="px-6 py-2.5 rounded-xl bg-lime text-black text-sm font-bold hover:brightness-110 transition">
+            {t('preview.upload_own')}
           </button>
         </div>
 
@@ -95,8 +97,8 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
             <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-500 mb-3">
               DublajLab VIP
             </div>
-            <h2 className="text-2xl font-black text-white">Dublaj daha hızlı, daha yüksek kalitede.</h2>
-            <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile 1080p çıktı ve AI sesle dublaj modunu açarsın.</p>
+            <h2 className="text-2xl font-black text-white">{t('membership.hero')}</h2>
+            <p className="text-sm text-zinc-400 mt-2">{t('promo.vip_desc')}</p>
           </div>
           <button onClick={() => setActiveTab('membership')} className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
             VIP Ol
@@ -109,8 +111,8 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-8">
       <div className="mb-12">
-        <h1 className="text-3xl font-black text-white tracking-tight">Dublajlarım</h1>
-        <p className="text-zinc-400 mt-2">Yer aldığın {projects.length} dublaj. İzle, indir ya da stüdyoda yeniden miksle.</p>
+        <h1 className="text-3xl font-black text-white tracking-tight">{t('library.title')}</h1>
+        <p className="text-zinc-400 mt-2">{t('library.subtitle').replace('{count}', String(projects.length))}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -166,10 +168,10 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                       <button
                         onClick={() => handleToggleVisibility(project, relatedExport)}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-colors border ${project.visibility === 'public' ? 'bg-lime-400/10 text-lime-400 border-lime-400/30 hover:bg-lime-400/20' : 'bg-white/5 text-zinc-300 border-white/10 hover:bg-white/10'}`}
-                        title={project.visibility === 'public' ? 'Şu an herkese açık. Gizlemek için tıkla.' : 'Herkese açık yaptığında Dublajlar sayfasında görünür.'}
+                        title={project.visibility === 'public' ? t('library.public_tooltip') : t('library.private_tooltip')}
                       >
                         {project.visibility === 'public' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                        <span className="hidden sm:inline">{project.visibility === 'public' ? 'Açık' : 'Gizli'}</span>
+                        <span className="hidden sm:inline">{project.visibility === 'public' ? t('library.public') : t('library.private')}</span>
                       </button>
                       <a
                         href={absoluteApiUrl(relatedExport.download_url)}
@@ -205,8 +207,8 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-500 mb-3">
             DublajLab VIP
           </div>
-          <h2 className="text-2xl font-black text-white">Dublaj daha hızlı, daha yüksek kalitede.</h2>
-          <p className="text-sm text-zinc-400 mt-2">VIP üyelik ile 1080p çıktı ve AI sesle dublaj modunu açarsın.</p>
+          <h2 className="text-2xl font-black text-white">{t('membership.hero')}</h2>
+          <p className="text-sm text-zinc-400 mt-2">{t('promo.vip_desc')}</p>
         </div>
         <button onClick={() => setActiveTab('membership')} className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
           VIP Ol
