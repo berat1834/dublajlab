@@ -161,17 +161,17 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetail
             <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_select_desc')}</p>
           </div>
           <div>
-            <span className="text-xs font-bold text-violet mb-2 block">02 / Stüdyo</span>
+            <span className="text-xs font-bold text-violet mb-2 block">02 / {t('scene.step_studio')}</span>
             <p className="text-sm font-bold text-zinc-200 mb-1">{t('scene.step_record_title')}</p>
             <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_record_desc')}</p>
           </div>
           <div>
-            <span className="text-xs font-bold text-emerald-400 mb-2 block">03 / İşleme</span>
+            <span className="text-xs font-bold text-emerald-400 mb-2 block">03 / {t('scene.step_processing')}</span>
             <p className="text-sm font-bold text-zinc-200 mb-1">{t('scene.step_mix_title')}</p>
             <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_mix_desc')}</p>
           </div>
           <div>
-            <span className="text-xs font-bold text-amber-400 mb-2 block">04 / Sonuç</span>
+            <span className="text-xs font-bold text-amber-400 mb-2 block">04 / {t('scene.step_result')}</span>
             <p className="text-sm font-bold text-zinc-200 mb-1">{t('scene.step_download_title')}</p>
             <p className="text-xs text-zinc-500 leading-relaxed">{t('scene.step_download_desc')}</p>
           </div>

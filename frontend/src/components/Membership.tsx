@@ -117,7 +117,7 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
         <section className="relative overflow-hidden rounded-3xl border border-amber-300/35 bg-gradient-to-b from-amber-300/10 to-white/[0.035] p-7 shadow-[0_24px_80px_rgba(245,158,11,0.08)]">
           <div className="absolute right-5 top-5 rounded-full bg-amber-300 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-black">VIP</div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-200">{t('membership.days')}</p>
-          <h2 className="mt-3 text-3xl font-black text-white">Stüdyo VIP</h2>
+          <h2 className="mt-3 text-3xl font-black text-white">{t('membership.studio_vip')}</h2>
           <p className="mt-3 text-sm leading-6 text-zinc-300">{t('membership.vip_desc')}</p>
           <div className="mt-8 flex items-end gap-2"><span className="text-4xl font-black text-white">{vipPrice}</span><span className="pb-1 text-sm text-zinc-500">{t('membership.period')}</span></div>
           <div className="mt-7 space-y-3 text-sm text-white">

@@ -78,7 +78,7 @@ export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
                 <th className="px-6 py-4 font-semibold">Detay</th>
                 <th className="px-6 py-4 font-semibold">Proje ID</th>
                 <th className="px-6 py-4 font-semibold">{t('mod.status')}</th>
-                <th className="px-6 py-4 font-semibold text-right">İşlem</th>
+                <th className="px-6 py-4 font-semibold text-right">{t('admin.action')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -119,7 +119,7 @@ export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
                         <button
                           onClick={() => handleUpdateStatus(report.id, 'dismissed')}
                           className="p-2 text-white/60 hover:text-zinc-300 hover:bg-white/10 rounded-lg transition-colors"
-                          title="Raporu Reddet (Görmezden Gel)"
+                          title="{t('admin.reject_report')}"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -131,7 +131,7 @@ export function AdminModerationPanel({ onToast }: AdminModerationPanelProps) {
               {reports.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
-                    Bekleyen veya geçmiş rapor bulunamadı.
+                    {t('admin.no_reports')}
                   </td>
                 </tr>
               )}

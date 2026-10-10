@@ -60,7 +60,7 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
   if (!metrics) {
     return (
       <div className="max-w-6xl mx-auto py-12 px-4 flex justify-center text-zinc-400">
-        Veri yüklenemedi.
+        {t('admin.data_load_failed')}
       </div>
     )
   }
@@ -264,7 +264,7 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               {metrics.recent_failed_jobs.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-6 py-8 text-center text-zinc-500">
-                    Son zamanlarda hata alan proje bulunamadı.
+                    {t('admin.no_recent_errors')}
                   </td>
                 </tr>
               )}

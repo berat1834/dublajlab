@@ -183,7 +183,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                       </a>
                     </>
                   ) : (
-                    <div className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-zinc-400 font-medium rounded-xl cursor-not-allowed" title="Dosya sunucudan silinmiş (Süre aşımı)">
+                    <div className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-zinc-400 font-medium rounded-xl cursor-not-allowed" title="{t('library.file_expired_desc')}">
                       <AlertCircle className="w-4 h-4" />
                       Süresi Dolmuş
                     </div>

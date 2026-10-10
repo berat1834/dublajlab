@@ -57,7 +57,7 @@ const translations: Record<string, Record<Language, string>> = {
   'auth.login.desc': { TR: 'Kaldığın yerden devam etmek için giriş yap.', EN: 'Log in to continue where you left off.' },
   'auth.register.title': { TR: 'Maceraya Katıl', EN: 'Join the Adventure' },
   'auth.register.desc': { TR: 'Ücretsiz hesabını oluştur ve ilk dublajını yap.', EN: 'Create your free account and make your first dub.' },
-  'auth.feature.scenes': { TR: '+5.000 Sahne', EN: '+5,000 Scenes' },
+  'auth.feature.scenes': { TR: 'Popüler Sahneler', EN: 'Popular Scenes' },
   'auth.feature.ai_mix': { TR: 'AI Destekli Mix', EN: 'AI-assisted Mix' },
   'auth.quote.1': { TR: '"Senin sorunun ne biliyor musun?"', EN: '"Do you know what your problem is?"' },
   'auth.quote.2': { TR: '"Hadi oradan!"', EN: '"Oh, come on!"' },
@@ -81,8 +81,8 @@ const translations: Record<string, Record<Language, string>> = {
   // Studio
   'studio.badge': { TR: 'Tarayıcı tabanlı dublaj stüdyosu', EN: 'Browser-based dubbing studio' },
   'studio.hero.line1': { TR: 'Kendi sesinle komik', EN: 'Create funny dubbed' },
-  'studio.hero.accent': { TR: 'dublaj videoları', EN: 'videos with your voice' },
-  'studio.hero.line2': { TR: 'oluştur', EN: '' },
+  'studio.hero.accent': { TR: 'dublaj videoları', EN: 'dubbed videos' },
+  'studio.hero.line2': { TR: 'oluştur', EN: 'with your voice' },
   'studio.hero.description': { TR: 'Hazır sahne seç ya da kendi videonu yükle, repliği oku, altyazılı MP4 olarak indir.', EN: 'Choose a ready-made scene or upload your own video, read the lines, and download a subtitled MP4.' },
   'studio.cta.start': { TR: 'Hemen Dublaj Yap', EN: 'Start Dubbing' },
   'studio.cta.templates': { TR: 'Hazır Sahneleri Keşfet', EN: 'Explore Ready Scenes' },
@@ -383,14 +383,10 @@ const translations: Record<string, Record<Language, string>> = {
   'library.empty_title': { TR: 'Henüz dublajın yok', EN: 'You have no dubs yet' },
   'library.empty_desc': { TR: 'Kendi videonu yükle ve ilk dublajını oluştur; tamamlanan çıktı burada görünsün.', EN: 'Upload your own video and create your first dub; the completed result will appear here.' },
   'library.subtitle': { TR: 'Yer aldığın {count} dublaj. İzle, indir ya da stüdyoda yeniden miksle.', EN: '{count} dubs you participated in. Watch, download or remix in the studio.' },
-  'library.status_completed': { TR: 'Tamamlandı', EN: 'Completed' },
-  'library.status_processing': { TR: 'İşleniyor', EN: 'Processing' },
-  'library.status_failed': { TR: 'Başarısız', EN: 'Failed' },
   'library.public_tooltip': { TR: 'Şu an herkese açık. Gizlemek için tıkla.', EN: 'Currently public. Click to make it private.' },
   'library.private_tooltip': { TR: 'Herkese açık yaptığında Dublajlar sayfasında görünür.', EN: 'When you make it public, it will appear on the Dubs page.' },
   'library.public': { TR: 'Açık', EN: 'Public' },
   'library.private': { TR: 'Gizli', EN: 'Private' },
-  'library.download': { TR: 'İndir', EN: 'Download' },
   'library.expired_tooltip': { TR: 'Dosya sunucudan silinmiş (Süre aşımı)', EN: 'File deleted from server (Expired)' },
   'library.expired': { TR: 'Süresi Dolmuş', EN: 'Expired' },
 
@@ -462,7 +458,6 @@ const translations: Record<string, Record<Language, string>> = {
   'account.err_generic': { TR: 'Bir hata oluştu', EN: 'An error occurred' },
   'account.badge_novice': { TR: 'Acemi Denek', EN: 'Novice Subject' },
   'account.level_1': { TR: 'Seviye 1', EN: 'Level 1' },
-  'account.public_profile': { TR: 'Herkese açık profilim', EN: 'My public profile' },
   'account.status_title': { TR: 'Deney Statüsü', EN: 'Experiment Status' },
   'account.vip_access': { TR: 'VIP Erişim', EN: 'VIP Access' },
   'account.free_access': { TR: 'Ücretsiz Erişim', EN: 'Free Access' },
@@ -505,7 +500,6 @@ const translations: Record<string, Record<Language, string>> = {
   'account.verify_ownership': { TR: 'Hesabın gerçekten sana ait olduğunu doğruluyoruz.', EN: 'We are verifying that the account really belongs to you.' },
   'account.deleting': { TR: 'Siliniyor...', EN: 'Deleting...' },
   'account.delete_permanently': { TR: 'Hesabı kalıcı olarak sil', EN: 'Permanently delete account' },
-  'account.cancel': { TR: 'Vazgeç', EN: 'Cancel' },
 
   // Membership
   'membership.lab_vip': { TR: 'DublajLab VIP', EN: 'DublajLab VIP' },
@@ -613,7 +607,6 @@ const translations: Record<string, Record<Language, string>> = {
   'admin.user_management': { TR: 'Kullanıcı ve VIP Yönetimi', EN: 'User and VIP Management' },
   'admin.user_management_hint': { TR: 'Kullanıcı ara; doğrulanmış işlemler için 30 günlük VIP aç veya kapat.', EN: 'Search users; grant or remove 30-day VIP after verification.' },
   'admin.search_users': { TR: 'Ad veya e-posta ara', EN: 'Search name or email' },
-  'admin.action': { TR: 'İşlem', EN: 'Action' },
   'admin.grant_vip': { TR: '30 gün VIP ver', EN: 'Grant VIP for 30 days' },
   'admin.remove_vip': { TR: 'VIP kaldır', EN: 'Remove VIP' },
   'admin.vip_granted': { TR: 'VIP erişimi açıldı.', EN: 'VIP access granted.' },
@@ -744,6 +737,22 @@ const translations: Record<string, Record<Language, string>> = {
   'footer.links.oda_kur': { TR: 'Oda kur', EN: 'Create Room' },
   'footer.disclaimer': { TR: 'DublajLab kullanıcıların gönderdiği içeriklerde gerekli kullanım haklarına sahip olduklarını beyan etmelerini zorunlu tutar. Hak sahibinden geçerli bir ihlal bildirimi alınırsa içerik incelenir ve gerekirse erişimden kaldırılır.', EN: 'DublajLab requires users to declare that they have the necessary usage rights in the content they submit. If a valid infringement notice is received from the right holder, the content is reviewed and removed if necessary.' },
 
+
+  // Auto-added keys
+  'account.del_title': { TR: 'Hesabı kalıcı olarak sil', EN: 'Delete account permanently' },
+  'account.del_warning': { TR: 'Bu işlem geri alınamaz. Devam etmeden önce aşağıdakileri oku:', EN: 'This action cannot be undone. Read the following before continuing:' },
+  'account.del_kvkk': { TR: 'Verilerinin nasıl işlendiğini KVKK aydınlatma metninde okuyabilirsin.', EN: 'You can read about how your data is processed in the privacy policy.' },
+  'account.del_intent': { TR: 'Hesabımı silmek istiyorum', EN: 'I want to delete my account' },
+  'admin.reject_report': { TR: 'Raporu Reddet (Görmezden Gel)', EN: 'Reject Report (Ignore)' },
+  'admin.no_reports': { TR: 'Bekleyen veya geçmiş rapor bulunamadı.', EN: 'No pending or past reports found.' },
+  'admin.data_load_failed': { TR: 'Veri yüklenemedi.', EN: 'Failed to load data.' },
+  'admin.no_recent_errors': { TR: 'Son zamanlarda hata alan proje bulunamadı.', EN: 'No recently failed projects found.' },
+  'membership.studio_vip': { TR: 'Stüdyo VIP', EN: 'Studio VIP' },
+  'scene.step_studio': { TR: 'Stüdyo', EN: 'Studio' },
+  'scene.step_processing': { TR: 'İşleme', EN: 'Processing' },
+  'scene.step_result': { TR: 'Sonuç', EN: 'Result' },
+  'library.file_expired_desc': { TR: 'Dosya sunucudan silinmiş (Süre aşımı)', EN: 'File deleted from server (Expired)' },
+  'library.status_expired': { TR: 'Süresi Dolmuş', EN: 'Expired' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

@@ -95,7 +95,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
           </div>
         </div>
         <button onClick={() => setActiveTab('profile')} className="px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-white hover:bg-white/10 transition">
-          Herkese açık profilim
+          {t('account.public_profile')}
         </button>
       </div>
 
@@ -228,10 +228,10 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
         {/* Security & Danger Zone */}
         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 mt-8">
           <h3 className="text-lg font-bold text-red-500 flex items-center gap-2 mb-2">
-            <Trash2 className="h-5 w-5" /> Hesabı kalıcı olarak sil
+            <Trash2 className="h-5 w-5" /> {t('account.del_title')}
           </h3>
           <p className="text-sm text-red-400/80 mb-4">
-            Bu işlem geri alınamaz. Devam etmeden önce aşağıdakileri oku:
+            {t('account.del_warning')}
           </p>
           <ul className="list-disc pl-5 text-sm text-red-400/70 space-y-2 mb-6">
             <li>{t('account.del_rule1')}</li>
@@ -240,7 +240,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
             <li>{t('account.del_rule4')}</li>
           </ul>
           <p className="text-xs text-red-500/50 mb-6">
-            Verilerinin nasıl işlendiğini KVKK aydınlatma metninde okuyabilirsin.
+            {t('account.del_kvkk')}
           </p>
           {!showDeleteConfirm ? (
             <button onClick={() => setShowDeleteConfirm(true)} className="px-6 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition">
