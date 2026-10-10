@@ -14,6 +14,7 @@ const baseUser: User = {
   membership_tier: 'free',
   membership_expires_at: null,
   has_active_vip: false,
+  mfa_enabled: false,
 }
 
 

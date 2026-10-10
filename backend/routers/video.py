@@ -17,7 +17,7 @@ from backend.services.rate_limit_service import enforce_public_demo_export_limit
 from backend.services.subtitle_service import SubtitleService
 from backend.services.tts_service import TTSService
 from backend import models_db
-from backend.routers.auth_router import get_current_user
+from backend.routers.auth_router import get_current_user, get_current_user_optional
 from backend.services.membership_service import require_active_vip
 
 
@@ -93,7 +93,7 @@ async def process_video(
     ensure_media_tools()
     video_path = storage_service.get_video_path(payload.video_id)
     metadata = storage_service.get_video_metadata(payload.video_id)
-    await enforce_public_demo_export_limit(request)
+    await enforce_public_demo_export_limit(request, current_user)
     job_id = str(uuid4())
     audio_path = storage_service.audio_path(job_id)
     subtitle_path = storage_service.subtitle_path(job_id)
@@ -157,6 +157,7 @@ async def process_recordings(
     mute_original_audio: bool = Form(True),
     burn_subtitles: bool = Form(True),
     recordings: list[UploadFile] = File(...),
+    current_user: models_db.User | None = Depends(get_current_user_optional),
 ) -> ProcessResponse:
     ensure_media_tools()
     video_path = storage_service.get_video_path(video_id)
@@ -203,7 +204,7 @@ async def process_recordings(
         line.model_copy(update={"end": min(line.end, duration)}) for line in lines
     ]
 
-    await enforce_public_demo_export_limit(request)
+    await enforce_public_demo_export_limit(request, current_user)
     job_id = str(uuid4())
     subtitle_path = storage_service.subtitle_path(job_id)
     output_id, output_path = storage_service.new_output_path()

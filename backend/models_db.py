@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Boolean, Column, String, DateTime, Integer, UniqueConstraint
+from sqlalchemy import Boolean, Column, String, DateTime, Integer, Text, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 from backend.database import Base
@@ -19,6 +19,11 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     membership_tier = Column(String(20), default="free", nullable=False)
     membership_expires_at = Column(DateTime(timezone=True), nullable=True)
+    mfa_enabled = Column(Boolean, default=False, nullable=False)
+    mfa_secret_encrypted = Column(String(255), nullable=True)
+    mfa_pending_secret_encrypted = Column(String(255), nullable=True)
+    mfa_recovery_code_hashes = Column(Text, nullable=True)
+    mfa_last_totp_step = Column(Integer, nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

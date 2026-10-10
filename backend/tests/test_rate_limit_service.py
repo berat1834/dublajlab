@@ -1,20 +1,31 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 
 import pytest
+from fastapi import HTTPException
 from starlette.requests import Request
 
+from backend import auth
 from backend.services.rate_limit_service import (
     DailyExportRateLimiter,
+    enforce_public_demo_export_limit,
+    export_rate_limiter,
     resolve_client_ip,
 )
 
 
-def _request(remote_ip: str, forwarded_for: str | None = None) -> Request:
+def _request(
+    remote_ip: str,
+    forwarded_for: str | None = None,
+    authorization: str | None = None,
+) -> Request:
     headers = []
     if forwarded_for:
         headers.append((b"x-forwarded-for", forwarded_for.encode("ascii")))
+    if authorization:
+        headers.append((b"authorization", authorization.encode("ascii")))
     return Request(
         {
             "type": "http",
@@ -55,6 +66,27 @@ async def test_daily_export_limiter_resets_on_next_utc_day() -> None:
     current[0] += timedelta(minutes=2)
 
     assert (await limiter.consume("203.0.113.20", 1)).allowed is True
+
+
+@pytest.mark.asyncio
+async def test_admin_bypasses_public_demo_export_limit(monkeypatch) -> None:
+    monkeypatch.setenv("PUBLIC_DEMO_MODE", "true")
+    monkeypatch.setenv("DEMO_MAX_EXPORTS_PER_IP_PER_DAY", "1")
+    await export_rate_limiter.reset()
+    admin_id = "mfa-admin-id"
+    admin_token = auth.create_access_token({"sub": admin_id, "amr": "totp"})
+    request = _request("203.0.113.40", authorization=f"Bearer {admin_token}")
+    admin = SimpleNamespace(role="admin", mfa_enabled=True, id=admin_id)
+
+    await enforce_public_demo_export_limit(request, admin)
+    await enforce_public_demo_export_limit(request, admin)
+    regular_request = _request("203.0.113.41")
+    await enforce_public_demo_export_limit(regular_request, SimpleNamespace(role="user"))
+    with pytest.raises(HTTPException) as error:
+        await enforce_public_demo_export_limit(regular_request, SimpleNamespace(role="user"))
+
+    assert error.value.status_code == 429
+    await export_rate_limiter.reset()
 
 
 def test_forwarded_ip_is_used_only_when_proxy_headers_are_trusted() -> None:

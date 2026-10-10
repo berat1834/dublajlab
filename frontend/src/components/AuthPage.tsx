@@ -165,7 +165,7 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
             <button type="button" onClick={() => handleSocial('Google')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white hover:bg-white/10 transition">
               <Mail className="h-4 w-4" /> Google
             </button>
-            <button type="button" onClick={() => handleSocial('Discord')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#5865F2]/20 py-3 text-sm font-bold text-white hover:bg-[#5865F2]/40 transition text-[#5865F2]">
+            <button type="button" onClick={() => handleSocial('Discord')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#5865F2]/20 py-3 text-sm font-bold hover:bg-[#5865F2]/40 transition text-[#5865F2]">
               <Github className="h-4 w-4" /> Discord
             </button>
           </div>

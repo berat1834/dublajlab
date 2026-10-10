@@ -24,6 +24,7 @@ class UserResponse(BaseModel):
     membership_expires_at: Optional[datetime] = None
     has_active_vip: bool = False
     has_password: bool = False
+    mfa_enabled: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -38,6 +39,24 @@ class AccountDeleteRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class MFASetupStartRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=128)
+
+class MFASetupStartResponse(BaseModel):
+    secret: str
+    otpauth_uri: str
+
+class MFACodeRequest(BaseModel):
+    code: str = Field(min_length=6, max_length=32)
+
+class MFASetupConfirmResponse(BaseModel):
+    recovery_codes: list[str]
+
+class MFAVerifyResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
 
 class MembershipAdminUpdate(BaseModel):
     tier: str = Field(pattern="^(free|vip)$")

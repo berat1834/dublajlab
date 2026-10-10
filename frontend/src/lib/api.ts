@@ -221,8 +221,35 @@ export function absoluteApiUrl(path: string): string {
 // ═══════════════════════════ AUTH API ═══════════════════════════
 
 function getAuthHeaders(): HeadersInit {
+  const adminToken = typeof sessionStorage === 'undefined' ? null : sessionStorage.getItem('admin_mfa_token')
+  const adminExpiresAt = typeof sessionStorage === 'undefined'
+    ? 0
+    : Number(sessionStorage.getItem('admin_mfa_expires_at') || 0)
+  if (adminToken && adminExpiresAt > Date.now()) {
+    return { Authorization: `Bearer ${adminToken}` }
+  }
+  if (adminToken) clearAdminMfaSession()
+  return getPrimaryAuthHeaders()
+}
+
+function getPrimaryAuthHeaders(): HeadersInit {
   const token = localStorage.getItem('token')
   return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+export function clearAdminMfaSession() {
+  if (typeof sessionStorage === 'undefined') return
+  sessionStorage.removeItem('admin_mfa_token')
+  sessionStorage.removeItem('admin_mfa_expires_at')
+}
+
+export function getAdminMfaSessionExpiry(): number {
+  if (typeof sessionStorage === 'undefined') return 0
+  const token = sessionStorage.getItem('admin_mfa_token')
+  const expiresAt = Number(sessionStorage.getItem('admin_mfa_expires_at') || 0)
+  if (token && expiresAt > Date.now()) return expiresAt
+  if (token) clearAdminMfaSession()
+  return 0
 }
 
 export async function login(email: string, password: string): Promise<AuthResponse> {
@@ -231,7 +258,42 @@ export async function login(email: string, password: string): Promise<AuthRespon
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   })
-  return parseResponse<AuthResponse>(response)
+  const result = await parseResponse<AuthResponse>(response)
+  clearAdminMfaSession()
+  return result
+}
+
+export async function startAdminMfaSetup(password: string): Promise<{ secret: string; otpauth_uri: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/mfa/setup`, {
+    method: 'POST',
+    headers: { ...getPrimaryAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  })
+  return parseResponse(response)
+}
+
+export async function confirmAdminMfaSetup(code: string): Promise<{ recovery_codes: string[] }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/mfa/setup/confirm`, {
+    method: 'POST',
+    headers: { ...getPrimaryAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  })
+  return parseResponse(response)
+}
+
+export async function verifyAdminMfa(code: string): Promise<number> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/mfa/verify`, {
+    method: 'POST',
+    headers: { ...getPrimaryAuthHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
+  })
+  const result = await parseResponse<{ access_token: string; expires_in: number }>(response)
+  const expiresAt = Date.now() + result.expires_in * 1000
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem('admin_mfa_token', result.access_token)
+    sessionStorage.setItem('admin_mfa_expires_at', String(expiresAt))
+  }
+  return expiresAt
 }
 
 export async function register(email: string, password: string, display_name: string): Promise<User> {

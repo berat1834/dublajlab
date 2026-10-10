@@ -3,6 +3,7 @@ import { User, Shield, Trash2, Edit3, Image as ImageIcon, MessageSquare, Diamond
 import type { User as UserType, Tab } from '../types'
 import { deleteAccount, updateProfile } from '../lib/api'
 import { useLanguage } from '../LanguageContext'
+import { AdminMfaSettings } from './AdminMfaSettings'
 
 interface AccountSettingsProps {
   currentUser: UserType
@@ -100,6 +101,9 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
       </div>
 
       <div className="space-y-6">
+        {currentUser.role === 'admin' && (
+          <AdminMfaSettings currentUser={currentUser} setCurrentUser={setCurrentUser} onToast={onToast} />
+        )}
         {/* Membership Card (Custom Lab Theme) */}
         <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.03] to-transparent p-6">
           <div className={`absolute top-0 left-0 w-1 h-full ${currentUser.has_active_vip ? 'bg-amber-300' : 'bg-zinc-700'}`}></div>

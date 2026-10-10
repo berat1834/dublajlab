@@ -10,6 +10,13 @@ def test_admin_metrics_forbidden_for_user(auth_headers_factory):
     response = client.get("/api/admin/ops/metrics", headers=headers)
     assert response.status_code == 403
 
+
+def test_admin_metrics_requires_mfa_step_up(auth_headers_factory):
+    headers = auth_headers_factory(role="admin", mfa_verified=False)
+    response = client.get("/api/admin/ops/metrics", headers=headers)
+    assert response.status_code == 403
+
+
 def test_admin_metrics_success_for_admin(auth_headers_factory, db_session):
     headers = auth_headers_factory(role="admin")
     

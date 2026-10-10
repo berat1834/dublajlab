@@ -206,7 +206,7 @@ async def create_ai_job(
     ensure_media_tools()
     dubbing_job_service.storage_service.get_video_path(payload.video_id)
     metadata = dubbing_job_service.storage_service.get_video_metadata(payload.video_id)
-    await enforce_public_demo_export_limit(request)
+    await enforce_public_demo_export_limit(request, current_user)
     job = await job_registry.create("AI dublaj export sırasına alındı.")
 
     project_id = None
@@ -255,7 +255,7 @@ async def create_recording_job(
         recording_ids,
         float(metadata["duration_seconds"]),
     )
-    await enforce_public_demo_export_limit(request)
+    await enforce_public_demo_export_limit(request, current_user)
     job = await job_registry.create("Mikrofon kayıtları export sırasına alındı.")
 
     project_id = None

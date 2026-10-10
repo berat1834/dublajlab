@@ -1,6 +1,7 @@
 import asyncio
 import os
 from fastapi import APIRouter, Depends, HTTPException, Query
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from sqlalchemy import case, func, or_
 from typing import List, Dict, Any, Literal
@@ -10,6 +11,8 @@ from backend.database import get_db
 import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
+from backend.routers.auth_router import oauth2_scheme
+import backend.auth as auth
 from backend.services.membership_service import has_active_vip
 from backend.config import get_redis_url, MEDIA_ROOT, is_shopier_enabled, lip_sync_availability, STORAGE_PROVIDER
 from backend.routers.video import ffmpeg_service
@@ -18,9 +21,20 @@ from backend.services.storage_provider import get_storage_provider
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
-def get_admin_user(current_user: models_db.User = Depends(get_current_user)):
+def get_admin_user(
+    current_user: models_db.User = Depends(get_current_user),
+    token: str = Depends(oauth2_scheme),
+):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Yalnızca yöneticiler erişebilir.")
+    if not current_user.mfa_enabled:
+        raise HTTPException(status_code=403, detail="Önce yönetici MFA kurulumunu tamamlayın.")
+    try:
+        claims = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
+    except JWTError as exc:
+        raise HTTPException(status_code=401, detail="Oturum geçersiz.") from exc
+    if claims.get("amr") != "totp":
+        raise HTTPException(status_code=403, detail="Admin paneli için MFA kodunu doğrulayın.")
     return current_user
 
 

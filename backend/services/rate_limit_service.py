@@ -7,7 +7,9 @@ from threading import RLock
 from typing import Callable
 
 from fastapi import HTTPException, Request, status
+from jose import JWTError, jwt
 
+from backend import auth
 from backend.config import public_demo_policy, get_redis_url
 import redis.asyncio as redis
 
@@ -119,7 +121,24 @@ def resolve_client_ip(request: Request, trust_proxy_headers: bool = False) -> st
 export_rate_limiter = DailyExportRateLimiter()
 
 
-async def enforce_public_demo_export_limit(request: Request) -> None:
+async def enforce_public_demo_export_limit(
+    request: Request,
+    current_user: object | None = None,
+) -> None:
+    authorization = request.headers.get("Authorization", "")
+    token = authorization[7:].strip() if authorization.startswith("Bearer ") else ""
+    try:
+        claims = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM]) if token else {}
+    except JWTError:
+        claims = {}
+    if (
+        getattr(current_user, "role", None) == "admin"
+        and getattr(current_user, "mfa_enabled", False)
+        and claims.get("amr") == "totp"
+        and claims.get("sub") == str(getattr(current_user, "id", ""))
+    ):
+        return
+
     policy = public_demo_policy()
     if not policy.enabled:
         return

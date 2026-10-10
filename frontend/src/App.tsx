@@ -45,6 +45,7 @@ import { LegalCorporateModal } from './components/LegalCorporateModal'
 import { UserLibrary } from './components/UserLibrary'
 import { AdminModerationPanel } from './components/AdminModerationPanel'
 import { AdminOpsPanel } from './components/AdminOpsPanel'
+import { AdminMfaGate } from './components/AdminMfaGate'
 import { AccountSettings } from './components/AccountSettings'
 import { PublicProfile } from './components/PublicProfile'
 import { Membership } from './components/Membership'
@@ -61,6 +62,7 @@ import {
   uploadVideo,
   waitForJobCompletion,
   getMe,
+  clearAdminMfaSession,
 } from './lib/api'
 import { shouldShowLipSync } from './lib/lipSync'
 import { pathForTab, routeFromPath } from './lib/navigation'
@@ -281,6 +283,7 @@ function App() {
     const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
     const urlToken = hashParams.get('token') || queryParams.get('token')
     if (urlToken) {
+      clearAdminMfaSession()
       localStorage.setItem('token', urlToken)
       window.history.replaceState({}, document.title, '/')
     }
@@ -1238,9 +1241,17 @@ function App() {
           ) : activeTab === 'library' ? (
             currentUser ? <UserLibrary onToast={showToast} setActiveTab={setActiveTab} /> : <div className="text-center text-white py-12">{t('studio.auth_required')}</div>
           ) : activeTab === 'admin' ? (
-            currentUser?.role === 'admin' ? <AdminModerationPanel onToast={showToast} /> : <div className="text-center text-white py-12">{t('studio.unauthorized')}</div>
+            currentUser?.role === 'admin' ? (
+              <AdminMfaGate mfaEnabled={currentUser.mfa_enabled} onSetup={() => setActiveTab('account')}>
+                <AdminModerationPanel onToast={showToast} />
+              </AdminMfaGate>
+            ) : <div className="text-center text-white py-12">{t('studio.unauthorized')}</div>
           ) : activeTab === 'admin_ops' ? (
-            currentUser?.role === 'admin' ? <AdminOpsPanel onToast={showToast} /> : <div className="text-center text-white py-12">{t('studio.unauthorized')}</div>
+            currentUser?.role === 'admin' ? (
+              <AdminMfaGate mfaEnabled={currentUser.mfa_enabled} onSetup={() => setActiveTab('account')}>
+                <AdminOpsPanel onToast={showToast} />
+              </AdminMfaGate>
+            ) : <div className="text-center text-white py-12">{t('studio.unauthorized')}</div>
           ) : activeTab === 'oda_kur' ? (
             <OdaKur setActiveTab={setActiveTab} />
           ) : activeTab === 'account' && currentUser ? (

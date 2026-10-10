@@ -25,6 +25,13 @@ yorum gizleme, sistem sağlık metrikleri ve admin işlem kayıtları bulunur. Y
 yalnız arayüzde değil backend endpoint'lerinde de uygulanır. Yeni migration'lar container
 başlarken `alembic upgrade head` ile uygulanır. Admin ekranları normal kullanıcılara açık değildir.
 
+Admin hesapları Hesap Ayarları'ndan authenticator tabanlı MFA kurmalıdır. MFA kurulmadan
+admin API'leri kapalıdır; başarılı TOTP veya tek kullanımlık kurtarma kodu 10 dakikalık
+admin erişim token'ı verir. Kurtarma kodlarını çevrimdışı saklayın. TOTP seed'i veritabanında
+`JWT_SECRET`'ten türetilen Fernet anahtarıyla şifrelenir; `JWT_SECRET` döndürülürse admin
+MFA'yı yeniden kurmalıdır. Public demo IP başına günlük export sınırı normal ziyaretçilerde
+devam eder; yalnız MFA doğrulaması yapılmış admin oturumu bu sınırdan muaftır.
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline

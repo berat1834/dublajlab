@@ -58,12 +58,15 @@ def auth_headers_factory(db_session):
         membership_tier: str = "free",
         role: str = "user",
         active_days: int = 30,
+        mfa_verified: bool = True,
+        mfa_enabled: bool | None = None,
     ) -> dict[str, str]:
         user = models_db.User(
             email=f"{uuid4()}@dublajlab.com",
             password_hash=auth.get_password_hash("testpassword"),
             display_name="Test User",
             role=role,
+            mfa_enabled=(role == "admin") if mfa_enabled is None else mfa_enabled,
             membership_tier=membership_tier,
             membership_expires_at=(
                 datetime.now(timezone.utc) + timedelta(days=active_days)
@@ -74,7 +77,10 @@ def auth_headers_factory(db_session):
         db_session.add(user)
         db_session.commit()
         db_session.refresh(user)
-        token = auth.create_access_token({"sub": user.id})
+        claims = {"sub": user.id}
+        if role == "admin" and mfa_verified:
+            claims["amr"] = "totp"
+        token = auth.create_access_token(claims)
         return {"Authorization": f"Bearer {token}"}
 
     return create_headers

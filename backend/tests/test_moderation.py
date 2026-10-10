@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 from uuid import uuid4
 from unittest.mock import MagicMock
 
+from backend import auth
 from backend.main import app
 from backend.models_db import User, DubbingProject, DubbingExport, ContentReport
 from backend.routers.auth_router import get_current_user
@@ -64,7 +65,8 @@ def test_admin_hide_project_removes_from_feed(db_session, monkeypatch):
         email=f"admin_{uuid4().hex[:6]}@example.com",
         password_hash="hashed_pw",
         display_name="Admin User",
-        role="admin"
+        role="admin",
+        mfa_enabled=True,
     )
     db_session.add(admin_user)
     db_session.commit()
@@ -108,7 +110,11 @@ def test_admin_hide_project_removes_from_feed(db_session, monkeypatch):
 
     # Login as admin and hide it
     app.dependency_overrides[get_current_user] = override_user(admin_user)
-    res_hide = client.patch(f"/api/admin/projects/{project.id}/moderation?moderation_status=hidden")
+    admin_token = auth.create_access_token({"sub": admin_user.id, "amr": "totp"})
+    res_hide = client.patch(
+        f"/api/admin/projects/{project.id}/moderation?moderation_status=hidden",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
     assert res_hide.status_code == 200
 
     # Check it's hidden
@@ -130,6 +136,6 @@ def test_normal_user_cannot_access_admin(db_session):
     db_session.refresh(normal_user)
 
     app.dependency_overrides[get_current_user] = override_user(normal_user)
-    res = client.get("/api/admin/reports")
+    res = client.get("/api/admin/reports", headers={"Authorization": "Bearer test-token"})
     assert res.status_code == 403
     app.dependency_overrides.pop(get_current_user, None)

@@ -81,6 +81,7 @@ export interface User {
   membership_tier: 'free' | 'vip'
   membership_expires_at?: string | null
   has_active_vip: boolean
+  mfa_enabled: boolean
   has_password?: boolean
   discord_linked?: boolean
 }

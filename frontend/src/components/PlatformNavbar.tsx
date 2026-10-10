@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, Diamond } from 'lucide-react'
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
+import { clearAdminMfaSession } from '../lib/api'
 
 interface PlatformNavbarProps {
   activeTab: Tab
@@ -41,6 +42,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
 
   const handleLogout = () => {
     localStorage.removeItem('token')
+    clearAdminMfaSession()
     if (setCurrentUser) setCurrentUser(null)
     setActiveTab('play')
     setDropdownOpen(false)
