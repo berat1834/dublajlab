@@ -133,6 +133,7 @@ const translations: Record<string, Record<Language, string>> = {
   'studio.export.description': { TR: 'Sonucu indirebilir, sosyal medyada paylaşabilir veya yeni projeye başlayabilirsin.', EN: 'Download the result, share it on social media, or start a new project.' },
   'studio.export.copy': { TR: 'Linki Kopyala', EN: 'Copy Link' },
   'studio.export.share_x': { TR: "X'te Paylaş", EN: 'Share on X' },
+  'studio.export.share_text': { TR: 'Dublajım hazır!', EN: 'My dub is ready!' },
   'studio.export.same_video': { TR: 'Aynı video ile dene', EN: 'Try the same video' },
   'studio.export.new_video': { TR: 'Yeni video', EN: 'New video' },
   'studio.template.media_soon': { TR: 'Demo medya yakında', EN: 'Demo media coming soon' },
@@ -162,6 +163,15 @@ const translations: Record<string, Record<Language, string>> = {
   'studio.job.status': { TR: 'Gerçek job durumu', EN: 'Live job status' },
   'studio.job.queued': { TR: 'Export sırasına alınıyor…', EN: 'Export is being queued…' },
   'studio.job.polling': { TR: 'Durum backend job servisinden düzenli olarak güncelleniyor.', EN: 'Status is updated regularly by the backend job service.' },
+  'studio.job.ai_audio': { TR: 'AI ses hazırlanıyor.', EN: 'Preparing AI voice…' },
+  'studio.job.recordings_validated': { TR: 'Ses kayıtları doğrulandı.', EN: 'Audio recordings validated…' },
+  'studio.job.face_analysis': { TR: 'Yüz analiz ediliyor…', EN: 'Analyzing the face…' },
+  'studio.job.lipsync': { TR: 'Dudak senkronizasyonu uygulanıyor…', EN: 'Applying lip sync…' },
+  'studio.job.subtitles': { TR: 'Altyazılar hazırlanıyor…', EN: 'Preparing subtitles…' },
+  'studio.job.mixing': { TR: 'Video, ses ve altyazı birleştiriliyor…', EN: 'Mixing video, audio, and subtitles…' },
+  'studio.job.timeline': { TR: 'Kayıtlar zaman çizelgesine yerleştiriliyor…', EN: 'Placing recordings on the timeline…' },
+  'studio.job.saving': { TR: 'MP4 çıktısı kaydediliyor…', EN: 'Saving the MP4 output…' },
+  'studio.job.processing': { TR: 'Video işleniyor…', EN: 'Processing the video…' },
   'studio.export.copied': { TR: 'Bağlantı kopyalandı!', EN: 'Link copied!' },
   'studio.export.vip_title': { TR: 'VIP ile daha fazlası', EN: 'Get more with VIP' },
   'studio.export.vip_desc': { TR: 'Filigransız ve 1080p kalitesinde export al.', EN: 'Export without a watermark in 1080p quality.' },
@@ -260,6 +270,11 @@ const translations: Record<string, Record<Language, string>> = {
   'dubs.comments': { TR: 'Yorumlar', EN: 'Comments' },
   'dubs.download': { TR: 'İndir', EN: 'Download' },
   'dubs.comedy': { TR: 'Komedi', EN: 'Comedy' },
+  'dubs.empty_title': { TR: 'İlk dublajı sen paylaş', EN: 'Share the first dub' },
+  'dubs.empty_desc': { TR: 'Topluluk akışında henüz yayınlanmış bir video yok. Kendi videonu seslendirip görünürlüğünü herkese açık yapabilirsin.', EN: 'There are no published videos in the community feed yet. Dub your own video and make it public when it is ready.' },
+  'dubs.empty_cta': { TR: 'Dublaj oluşturmaya başla', EN: 'Create a dub' },
+  'dubs.load_error_title': { TR: 'Dublajlar yüklenemedi', EN: 'Dubs could not be loaded' },
+  'dubs.load_error_desc': { TR: 'Sunucuya şu anda ulaşılamıyor. Biraz sonra tekrar deneyebilir veya stüdyoda çalışmaya devam edebilirsin.', EN: 'The server is currently unavailable. Try again shortly or continue working in the studio.' },
   'comments.load_error': { TR: 'Yorumlar yüklenirken hata oluştu.', EN: 'Comments could not be loaded.' },
   'comments.added': { TR: 'Yorumunuz eklendi.', EN: 'Your comment was added.' },
   'comments.add_error': { TR: 'Yorum eklenemedi (1-500 karakter olmalı).', EN: 'Comment could not be added (must be 1-500 characters).' },
@@ -321,8 +336,15 @@ const translations: Record<string, Record<Language, string>> = {
   'error.microphone_hint': { TR: 'Adres çubuğundaki kilit simgesinden mikrofon iznini açın ve kayıt düğmesine yeniden basın.', EN: 'Allow microphone access from the lock icon in the address bar, then press record again.' },
   'error.generic_title': { TR: 'İşlem tamamlanamadı', EN: 'The operation could not be completed' },
   'error.generic_hint': { TR: 'Bilgileri kontrol edip tekrar deneyin. Sorun sürerse sunucu hata kayıtlarını kontrol edin.', EN: 'Check the information and try again. If the issue continues, check the server error logs.' },
+  'error.server_message': { TR: 'İstek tamamlanamadı. Bilgileri kontrol edip tekrar deneyin.', EN: 'The request could not be completed. Check your input and try again.' },
+  'error.backend_message': { TR: 'Sunucuya ulaşılamadı.', EN: 'The server could not be reached.' },
+  'error.ffmpeg_message': { TR: 'Medya işlemi tamamlanamadı.', EN: 'Media processing could not be completed.' },
+  'error.limit_message': { TR: 'Public demo sınırı aşıldı.', EN: 'A public demo limit was exceeded.' },
+  'error.vip_message': { TR: 'Bu özellik yalnızca VIP kullanıcılara açıktır.', EN: 'This feature is available to VIP users only.' },
+  'error.lipsync_message': { TR: 'Dudak senkronizasyonu şu anda kullanılamıyor.', EN: 'Lip sync is currently unavailable.' },
   'action.upload_error': { TR: 'Video yüklenirken bir hata oluştu.', EN: 'An error occurred while uploading the video.' },
   'action.retry_upload': { TR: 'Yüklemeyi tekrar dene', EN: 'Retry upload' },
+  'action.retry_export': { TR: 'Export’u tekrar dene', EN: 'Retry export' },
   'action.template_file_error': { TR: 'Template video dosyası yüklenemedi. Dosya yolunu ve lisans metadata’sını kontrol edin.', EN: 'The template video could not be loaded. Check the file path and license metadata.' },
   'action.template_error': { TR: 'Hazır sahne açılamadı.', EN: 'The ready scene could not be opened.' },
   'action.export_preparing': { TR: 'Export isteği hazırlanıyor.', EN: 'Preparing export request.' },
@@ -378,7 +400,9 @@ const translations: Record<string, Record<Language, string>> = {
   'library.made_public': { TR: 'Proje herkese açık yapıldı.', EN: 'Project is now public.' },
   'library.made_private': { TR: 'Proje gizlendi.', EN: 'Project is now private.' },
   'library.update_error': { TR: 'Güncelleme başarısız.', EN: 'Update failed.' },
-  'library.title': { TR: 'Dublajlarım', EN: 'My Dubs' },
+  'library.title': { TR: 'Kataloğum', EN: 'My Library' },
+  'library.deleted': { TR: 'Proje silindi.', EN: 'Project deleted.' },
+  'library.delete': { TR: 'Projeyi sil', EN: 'Delete project' },
   'library.empty_subtitle': { TR: 'Yer aldığın 0 dublaj. İzle, indir ya da stüdyoda yeniden miksle.', EN: '0 dubs you participated in. Watch, download or remix in the studio.' },
   'library.empty_title': { TR: 'Henüz dublajın yok', EN: 'You have no dubs yet' },
   'library.empty_desc': { TR: 'Kendi videonu yükle ve ilk dublajını oluştur; tamamlanan çıktı burada görünsün.', EN: 'Upload your own video and create your first dub; the completed result will appear here.' },
@@ -613,6 +637,12 @@ const translations: Record<string, Record<Language, string>> = {
   'admin.vip_removed': { TR: 'VIP erişimi kaldırıldı.', EN: 'VIP access removed.' },
   'admin.membership_error': { TR: 'Üyelik güncellenemedi.', EN: 'Membership could not be updated.' },
   'admin.no_users': { TR: 'Kullanıcı bulunamadı.', EN: 'No users found.' },
+  'admin.audit_logs': { TR: 'Yönetici İşlem Kayıtları', EN: 'Admin Audit Logs' },
+  'admin.no_audit_logs': { TR: 'Henüz yönetici işlemi yok.', EN: 'No admin actions yet.' },
+  'admin.panel_title': { TR: 'Sistem Durumu (Ops)', EN: 'System Status (Ops)' },
+  'admin.total_projects': { TR: 'Toplam Proje', EN: 'Total Projects' },
+  'admin.pending': { TR: 'Bekleyen', EN: 'Pending' },
+  'admin.recent_failed': { TR: 'Son Hata Alan Projeler', EN: 'Recent Failed Projects' },
   'preview.badge': { TR: 'Tasarım önizlemesi · Yakında', EN: 'Design preview · Coming soon' },
   'preview.room_title': { TR: 'Çok oyunculu odalar henüz aktif değil', EN: 'Multiplayer rooms are not active yet' },
   'preview.room_desc': { TR: 'Oda kodu, oyuncu eşleştirme ve kredi sistemi için henüz güvenli bir backend akışı yok. Şimdilik tek kişilik dublaj stüdyosunu kullanabilirsin.', EN: 'Room codes, player matching, and credits do not have a production backend yet. You can use the solo dubbing studio for now.' },
@@ -654,6 +684,17 @@ const translations: Record<string, Record<Language, string>> = {
   'mod.reports_error': { TR: 'Raporlar yüklenemedi.', EN: 'Failed to load reports.' },
   'mod.status_updated': { TR: 'Rapor durumu güncellendi.', EN: 'Report status updated.' },
   'mod.action_failed': { TR: 'İşlem başarısız.', EN: 'Operation failed.' },
+  'mod.visible_comments': { TR: 'Görünür Yorumlar', EN: 'Visible Comments' },
+  'mod.hide_comment': { TR: 'Yorumu gizle', EN: 'Hide comment' },
+  'mod.comment_hide_confirm': { TR: 'Bu yorumu gizlemek istediğine emin misin?', EN: 'Are you sure you want to hide this comment?' },
+  'mod.comment_hidden': { TR: 'Yorum gizlendi.', EN: 'Comment hidden.' },
+  'mod.no_comments': { TR: 'Moderasyon bekleyen görünür yorum yok.', EN: 'There are no visible comments awaiting moderation.' },
+  'mod.panel_title': { TR: 'Moderasyon Paneli', EN: 'Moderation Panel' },
+  'mod.hide_project': { TR: 'Projeyi gizle', EN: 'Hide project' },
+  'common.date': { TR: 'Tarih', EN: 'Date' },
+  'common.seconds_short': { TR: 'sn', EN: 'sec' },
+  'common.details': { TR: 'Detay', EN: 'Details' },
+  'common.project_id': { TR: 'Proje ID', EN: 'Project ID' },
   'mod.hide_confirm': { TR: 'Bu projeyi gizlemek istediğinize emin misiniz?', EN: 'Are you sure you want to hide this project?' },
   'mod.hidden_success': { TR: 'Proje gizlendi ve rapor kapatıldı.', EN: 'Project hidden and report closed.' },
   'mod.subtitle': { TR: 'Kullanıcı bildirimlerini ve şüpheli içerikleri yönetin.', EN: 'Manage user notifications and suspicious content.' },
@@ -785,6 +826,10 @@ const translations: Record<string, Record<Language, string>> = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+export function translate(key: string, language: Language): string {
+  return translations[key]?.[language] || key;
+}
+
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>(() => {
     const storedLanguage = typeof window === 'undefined'
@@ -799,7 +844,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   }, [language]);
 
   const t = (key: string): string => {
-    return translations[key]?.[language] || key;
+    return translate(key, language);
   };
 
   return (

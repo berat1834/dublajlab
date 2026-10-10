@@ -125,7 +125,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
         <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] overflow-hidden">
           <div className="px-6 py-5 border-b border-white/10">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Edit3 className="h-5 w-5 text-lime-400" /> Profilini Düzenle
+              <Edit3 className="h-5 w-5 text-lime-400" /> {t('account.edit_title')}
             </h3>
             <p className="text-sm text-zinc-500 mt-1">{t('account.edit_desc')}</p>
           </div>
@@ -175,7 +175,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
               <span>{t('account.email_unverified')}</span>
             </div>
             <div className="text-sm text-zinc-400">
-              Şifreni değiştirmek için e-postana bir sıfırlama bağlantısı iste:{' '}
+              {t('account.pw_reset_prefix')}
               <a href="mailto:destek@dublajlab.com.tr?subject=Şifre%20Sıfırlama" className="text-white font-bold underline hover:text-lime-400 transition">{t('account.contact_support')}</a>
             </div>
           </div>
@@ -209,7 +209,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-[#5865F2]/10 blur-3xl rounded-full pointer-events-none"></div>
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
-                <MessageSquare className="h-5 w-5 text-[#5865F2]" /> Discord Bağlantısı
+                <MessageSquare className="h-5 w-5 text-[#5865F2]" /> {t('account.discord_title')}
               </h3>
               <p className="text-sm text-zinc-400 mb-6">{t('account.discord_desc')}</p>
             </div>
@@ -219,7 +219,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
               </div>
             ) : (
               <button onClick={handleDiscordConnect} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2">
-                <MessageSquare className="h-4 w-4" /> Discord Hesabını Bağla
+                <MessageSquare className="h-4 w-4" /> {t('account.connect_discord')}
               </button>
             )}
           </div>
@@ -244,7 +244,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
           </p>
           {!showDeleteConfirm ? (
             <button onClick={() => setShowDeleteConfirm(true)} className="px-6 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-500 text-sm font-bold hover:bg-red-500 hover:text-white transition">
-              Hesabımı silmek istiyorum
+              {t('account.want_to_delete')}
             </button>
           ) : (
             <div className="rounded-xl border border-red-500/30 bg-black/40 p-5 mt-4">
@@ -272,7 +272,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
                   {isDeleting ? t('account.deleting') : t('account.delete_permanently')}
                 </button>
                 <button disabled={isDeleting} onClick={() => setShowDeleteConfirm(false)} className="px-5 py-2.5 rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 text-sm font-bold transition disabled:opacity-50">
-                  Vazgeç
+                  {t('account.cancel')}
                 </button>
               </div>
             </div>

@@ -23,6 +23,11 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    @property
+    def has_password(self) -> bool:
+        """Expose password availability without ever exposing the hash."""
+        return bool(self.password_hash)
+
 class DubbingProject(Base):
     __tablename__ = "dubbing_projects"
 
@@ -111,7 +116,13 @@ class Payment(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    @property
-    def has_password(self) -> bool:
-        """Tell clients whether password confirmation is available without exposing its hash."""
-        return bool(self.password_hash)
+class AdminAuditLog(Base):
+    __tablename__ = "admin_audit_logs"
+
+    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    admin_user_id = Column(String(36), index=True, nullable=False)
+    action = Column(String(80), nullable=False)
+    target_type = Column(String(50), nullable=False)
+    target_id = Column(String(100), nullable=False)
+    details = Column(String(500), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

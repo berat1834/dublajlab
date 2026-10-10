@@ -115,3 +115,22 @@ class CommentResponse(BaseModel):
     body: str
     created_at: datetime
     is_mine: bool = False
+
+class AdminCommentResponse(BaseModel):
+    id: str
+    project_id: str
+    user_id: str
+    display_name: str
+    body: str
+    status: str
+    created_at: datetime
+
+class AdminAuditLogResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: str
+    admin_user_id: str
+    action: str
+    target_type: str
+    target_id: str
+    details: Optional[str] = None
+    created_at: datetime

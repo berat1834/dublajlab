@@ -7,6 +7,22 @@ from backend.main import app
 client = TestClient(app)
 
 
+def test_user_has_password_does_not_expose_hash():
+    password_user = models_db.User(
+        email="password@example.com",
+        display_name="Password",
+        password_hash="secret-hash",
+    )
+    oauth_user = models_db.User(
+        email="oauth@example.com",
+        display_name="OAuth",
+        password_hash=None,
+    )
+
+    assert password_user.has_password is True
+    assert oauth_user.has_password is False
+
+
 def test_profile_update_is_persisted(auth_headers_factory, db_session):
     headers = auth_headers_factory()
 

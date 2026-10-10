@@ -10,6 +10,7 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
   const { language, t } = useLanguage()
   const [dubs, setDubs] = useState<PublicDub[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [reportingProjectId, setReportingProjectId] = useState<string | null>(null)
   const [commentingProjectId, setCommentingProjectId] = useState<string | null>(null)
 
@@ -19,7 +20,7 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
         const data = await getPublicDubs()
         setDubs(data)
       } catch {
-        // Silently fail on network error for MVP
+        setLoadError(true)
       } finally {
         setLoading(false)
       }
@@ -81,11 +82,6 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
       <div className="mb-8">
         <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{t('dubs.title')}</h1>
         <p className="mt-3 text-zinc-400">{t('dubs.description')}</p>
-        {dubs.length === 0 && !loading && (
-          <div className="mt-3 inline-block rounded-lg bg-violet-500/10 border border-violet-500/20 px-3 py-1.5 text-xs text-violet-300">
-            {t('dubs.demo_notice')}
-          </div>
-        )}
       </div>
 
       {loading ? (
@@ -110,7 +106,7 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-bold text-white line-clamp-1">{dub.title}</h3>
-                  <button onClick={() => setReportingProjectId(dub.project_id)} className="text-zinc-500 hover:text-red-400 transition" title={t('dubs.report')}>
+                  <button onClick={() => setReportingProjectId(dub.project_id)} className="text-zinc-500 hover:text-red-400 transition" title={t('dubs.report')} aria-label={t('dubs.report')}>
                     <Flag className="w-4 h-4" />
                   </button>
                 </div>
@@ -124,6 +120,7 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
                       onClick={() => handleLikeToggle(dub)}
                       className={`flex items-center gap-1 transition ${dub.liked_by_me ? 'text-red-500 hover:text-red-400' : 'hover:text-red-400'}`}
                       title={dub.liked_by_me ? t('dubs.unlike') : t('dubs.like')}
+                      aria-label={dub.liked_by_me ? t('dubs.unlike') : t('dubs.like')}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={dub.liked_by_me ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                       {dub.like_count}
@@ -132,12 +129,13 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
                       onClick={() => setCommentingProjectId(dub.project_id)}
                       className="flex items-center gap-1 hover:text-lime-400 transition"
                       title={t('dubs.comments')}
+                      aria-label={t('dubs.comments')}
                     >
                       <MessageSquare className="h-3 w-3" /> {t('dubs.comments')}
                     </button>
                   </div>
                   {dub.download_url && (
-                    <a href={absoluteApiUrl(dub.download_url)} download className="p-1.5 bg-lime-400/10 text-lime-400 rounded-md hover:bg-lime-400/20 transition" title={t('dubs.download')}>
+                    <a href={absoluteApiUrl(dub.download_url)} download className="p-1.5 bg-lime-400/10 text-lime-400 rounded-md hover:bg-lime-400/20 transition" title={t('dubs.download')} aria-label={t('dubs.download')}>
                       <Download className="w-3 h-3" />
                     </a>
                   )}
@@ -147,27 +145,19 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="group overflow-hidden rounded-2xl border border-white/10 bg-surface/80 shadow-card transition">
-              <div className="relative aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 grid place-items-center">
-                <Play className="h-10 w-10 text-white/40 group-hover:text-lime transition group-hover:scale-110" />
-                <span className="absolute top-2 right-2 rounded-full bg-violet-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-glow-sm">
-                  Demo
-                </span>
-                <span className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold text-white uppercase">{t('dubs.comedy')}</span>
-                <span className="absolute bottom-2 right-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] tabular-nums text-white">0:15</span>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-white line-clamp-1">Demo Dublaj #{i}</h3>
-                <p className="mt-1 text-xs text-zinc-500">Oyuncu{i}99</p>
-                <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-zinc-400">
-                  <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {i * 120}</span>
-                  <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" /> {i * 12}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div className="rounded-3xl border border-white/10 bg-white/[0.025] px-6 py-14 text-center shadow-card">
+          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-lime/20 bg-lime/10 text-lime">
+            <Play className="h-6 w-6" />
+          </div>
+          <h2 className="mt-5 text-xl font-black text-white">
+            {loadError ? t('dubs.load_error_title') : t('dubs.empty_title')}
+          </h2>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-zinc-400">
+            {loadError ? t('dubs.load_error_desc') : t('dubs.empty_desc')}
+          </p>
+          <button type="button" onClick={() => setActiveTab('play')} className="mt-6 rounded-xl bg-lime px-5 py-3 text-sm font-black text-ink transition hover:bg-[#d5ff78]">
+            {t('dubs.empty_cta')}
+          </button>
         </div>
       )}
     </div>

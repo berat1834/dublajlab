@@ -31,7 +31,7 @@ export function UserFavorites({ setActiveTab }: UserFavoritesProps) {
       <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-6">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-500 mb-3">
-            DublajLab VIP
+            {t('membership.lab_vip')}
           </div>
           <h2 className="text-2xl font-black text-white">{t('membership.hero')}</h2>
           <p className="text-sm text-zinc-400 mt-2">{t('promo.vip_desc')}</p>

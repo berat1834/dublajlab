@@ -484,6 +484,7 @@ export interface AdminOpsMetrics {
   database_connected: boolean;
   redis_configured: boolean;
   redis_connected: boolean;
+  redis_error: string | null;
   media_root_exists: boolean;
   media_root_writable: boolean;
   ffmpeg_available: boolean;
@@ -510,6 +511,48 @@ export interface AdminOpsMetrics {
     created_at: string | null;
     status: string;
   }>;
+}
+
+export interface AdminComment {
+  id: string
+  project_id: string
+  user_id: string
+  display_name: string
+  body: string
+  status: string
+  created_at: string
+}
+
+export interface AdminAuditLog {
+  id: string
+  admin_user_id: string
+  action: string
+  target_type: string
+  target_id: string
+  details?: string | null
+  created_at: string
+}
+
+export async function getAdminComments(): Promise<AdminComment[]> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/comments?comment_status=visible`, {
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<AdminComment[]>(response)
+}
+
+export async function hideAdminComment(commentId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/comments/${commentId}/hide`, {
+    method: 'PATCH',
+    headers: getAuthHeaders(),
+  })
+  await parseResponse<{ message: string }>(response)
+}
+
+export async function getAdminAuditLogs(): Promise<AdminAuditLog[]> {
+  const response = await fetch(`${API_BASE_URL}/api/admin/audit-logs`, {
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<AdminAuditLog[]>(response)
 }
 
 export async function getAdminOpsMetrics(): Promise<AdminOpsMetrics> {

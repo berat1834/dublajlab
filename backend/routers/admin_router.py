@@ -32,6 +32,23 @@ def _user_response(user: models_db.User) -> schemas.UserResponse:
     })
 
 
+def _record_audit(
+    db: Session,
+    admin: models_db.User,
+    action: str,
+    target_type: str,
+    target_id: str,
+    details: str | None = None,
+) -> None:
+    db.add(models_db.AdminAuditLog(
+        admin_user_id=admin.id,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        details=details,
+    ))
+
+
 @router.get("/users", response_model=List[schemas.UserResponse])
 def list_users(
     q: str | None = Query(default=None, max_length=100),
@@ -67,6 +84,10 @@ def update_user_membership(
         if payload.tier == "vip"
         else None
     )
+    _record_audit(
+        db, admin, "membership_updated", "user", user.id,
+        f"tier={payload.tier};duration_days={payload.duration_days}",
+    )
     db.commit()
     db.refresh(user)
     return _user_response(user)
@@ -93,6 +114,7 @@ def update_report_status(
     report.status = status
     report.reviewed_at = datetime.now(timezone.utc)
     report.reviewed_by = admin.id
+    _record_audit(db, admin, "report_status_updated", "report", report.id, f"status={status}")
     db.commit()
     db.refresh(report)
     return report
@@ -109,6 +131,10 @@ def update_project_moderation(
         raise HTTPException(status_code=404, detail="Proje bulunamadı.")
 
     project.moderation_status = moderation_status
+    _record_audit(
+        db, admin, "project_moderation_updated", "project", project.id,
+        f"moderation_status={moderation_status}",
+    )
     db.commit()
     db.refresh(project)
     return project
@@ -126,8 +152,46 @@ def hide_comment(
     comment.status = "hidden"
     comment.hidden_at = datetime.now(timezone.utc)
     comment.hidden_by = admin.id
+    _record_audit(db, admin, "comment_hidden", "comment", comment.id)
     db.commit()
     return {"message": "Yorum gizlendi."}
+
+
+@router.get("/comments", response_model=List[schemas.AdminCommentResponse])
+def list_comments(
+    comment_status: Literal["visible", "hidden", "all"] = "visible",
+    db: Session = Depends(get_db),
+    admin: models_db.User = Depends(get_admin_user),
+):
+    query = db.query(models_db.DubbingComment, models_db.User.display_name).outerjoin(
+        models_db.User, models_db.User.id == models_db.DubbingComment.user_id
+    )
+    if comment_status != "all":
+        query = query.filter(models_db.DubbingComment.status == comment_status)
+    rows = query.order_by(models_db.DubbingComment.created_at.desc()).limit(100).all()
+    return [
+        schemas.AdminCommentResponse(
+            id=comment.id,
+            project_id=comment.project_id,
+            user_id=comment.user_id,
+            display_name=display_name or "Silinmiş kullanıcı",
+            body=comment.body,
+            status=comment.status,
+            created_at=comment.created_at,
+        )
+        for comment, display_name in rows
+    ]
+
+
+@router.get("/audit-logs", response_model=List[schemas.AdminAuditLogResponse])
+def list_audit_logs(
+    limit: int = Query(default=50, ge=1, le=200),
+    db: Session = Depends(get_db),
+    admin: models_db.User = Depends(get_admin_user),
+):
+    return db.query(models_db.AdminAuditLog).order_by(
+        models_db.AdminAuditLog.created_at.desc()
+    ).limit(limit).all()
 
 @router.get("/ops/metrics")
 async def get_ops_metrics(
@@ -138,6 +202,7 @@ async def get_ops_metrics(
     redis_url = get_redis_url()
     redis_configured = bool(redis_url)
     redis_connected = False
+    redis_error = None
     if redis_configured:
         try:
             import redis.asyncio as aioredis
@@ -145,8 +210,8 @@ async def get_ops_metrics(
             await client.ping()
             redis_connected = True
             await client.aclose()
-        except Exception:
-            pass
+        except Exception as exc:
+            redis_error = type(exc).__name__
 
     media_root_exists = MEDIA_ROOT.exists()
     media_root_writable = os.access(MEDIA_ROOT, os.W_OK) if media_root_exists else False
@@ -203,13 +268,14 @@ async def get_ops_metrics(
         "database_connected": database_connected,
         "redis_configured": redis_configured,
         "redis_connected": redis_connected,
+        "redis_error": redis_error,
         "media_root_exists": media_root_exists,
         "media_root_writable": media_root_writable,
         "storage_provider": storage_provider_name,
         "storage_configured": storage_configured,
         "storage_accessible": storage_accessible,
         "ffmpeg_available": ffmpeg_status.available,
-        "ffprobe_available": ffmpeg_status.available, # Assuming ffprobe is also checked
+        "ffprobe_available": bool(ffmpeg_status.ffprobe_path),
         "lipsync_enabled": lip_sync_enabled,
         "lipsync_provider": lip_sync_provider,
         "shopier_enabled": is_shopier_enabled(),

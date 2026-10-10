@@ -9,6 +9,7 @@ import { fetchTemplate } from '../lib/api'
 import type { VideoTemplate, Tab } from '../types'
 import { VipPromo } from './VipPromo'
 import { useLanguage } from '../LanguageContext'
+import { localizeTemplate } from '../lib/templateUtils'
 
 interface SceneDetailProps {
   templateId: string
@@ -39,7 +40,7 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetail
     fetchTemplate(templateId)
       .then((data) => {
         if (active) {
-          setTemplate(data)
+          setTemplate(localizeTemplate(data, language))
           setLoading(false)
         }
       })
@@ -50,7 +51,7 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetail
         }
       })
     return () => { active = false }
-  }, [templateId, t])
+  }, [language, templateId, t])
 
   const characterCount = template?.character_count || 1;
   const playCount = template?.play_count;

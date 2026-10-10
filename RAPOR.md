@@ -1,6 +1,11 @@
 # DublajLab Project Report
 
-## Current Status (Public Beta + Portfolio Ready - Sprint 50)
+## Current Status (Public Beta + Portfolio Ready - Sprint 51)
+
+- **Sprint 51 canlı denetim düzeltmeleri:** Hesap/profil, OAuth state, auth rate limit,
+  template 404, i18n, stabil SPA URL'leri, güvenlik header'ları, ödeme fail-closed davranışı,
+  gerçek boş feed durumu ve admin kullanıcı/VIP/yorum/audit araçları tamamlandı.
+- Fresh Alembic migration zinciri ve container startup migration'ı doğrulandı.
 
 - **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
   - ✅ **Canlı URL (Canonical)**: Özel alan adı **`https://www.dublajlab.com.tr`** açılıyor ve canonical/SEO metadata bu adresi kullanıyor. Vercel deployment altyapısı özel alan adının arkasında çalışmaya devam ediyor.
@@ -75,10 +80,20 @@
 | 42 | Observability + Admin Ops Metrics | [sprint-42-observability-admin-ops.md](docs/reports/sprint-42-observability-admin-ops.md) |
 | 43 | Cloudflare R2 / S3 Media Storage Migration Plan + Abstraction | [sprint-43-object-storage-abstraction.md](docs/reports/sprint-43-object-storage-abstraction.md) |
 | 44 | R2 production enable hazırlığı ve migration smoke | [sprint-44-r2-production-smoke.md](docs/reports/sprint-44-r2-production-smoke.md) |
+| 51 | Canlı site denetimi düzeltmeleri ve admin hardening | [sprint-51-live-audit-remediation.md](docs/reports/sprint-51-live-audit-remediation.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
 ## Latest Validation
+
+- Sprint 51: backend 141 test toplandı; 140 geçti, credential gerektiren R2 staging testi skip edildi.
+- Sprint 51: frontend Vitest 15/15, ESLint, TypeScript/Vite production build geçti;
+  Play/Dubs/My Library İngilizce regresyon testi eklendi.
+- Sprint 51: fresh SQLite `alembic upgrade head` ve `git diff --check` geçti.
+- Sprint 51: Docker Compose config geçti; yerel Docker Desktop engine kapalı olduğundan image
+  build CI/deploy pipeline sonucuyla doğrulanacaktır.
+- Sprint 51: `npm audit` Tailwind 3 build zincirinde 7 transitive bulgu raporladı;
+  upstream `braces` düzeltmesi henüz yayımlanmadığı için kırıcı Tailwind 4 geçişi ayrı QA işi olarak kaydedildi.
 
 - Sprint 28 doğrulaması: backend 92/92 ve Wav2Lip bağımlılık/komut testleri geçti.
 - Sprint 28 doğrulaması: frontend Vitest, ESLint, Vite production build ve `npm audit` geçti.
@@ -95,6 +110,10 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Sprint 44 canlı erişim kontrolü: `https://www.dublajlab.com.tr` ile Railway `health`, `ffmpeg`, `demo-policy` ve `templates` endpointleri HTTP 200 döndürdü. Bu kontrol R2 obje yazma smoke'u yerine geçmez.
 
 ## Known Risks
+
+- JWT tarayıcıda `localStorage` içinde tutuluyor; HttpOnly cookie tabanlı oturum ayrı güvenlik çalışması gerektirir.
+- Login brute-force limiti tek process belleğindedir; çoklu replica için Redis'e taşınmalıdır.
+- Admin rolü env listesinden çıkarıldığında önceden atanmış rol otomatik geri alınmaz.
 
 - Wav2Lip CPU üzerinde çalışmaktadır; GPU hızlandırması (CUDA) yapılandırılmamıştır. Yüksek çözünürlüklü videolarda işlem süresi çok uzun olabilir.
 - Açık Wav2Lip kodu/ağırlıkları ticari kullanıma izin vermez; canlı VIP özelliği için ticari lisanslı model veya sağlayıcı seçilmelidir.

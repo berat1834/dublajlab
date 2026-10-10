@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { fetchTemplates } from '../lib/api'
 import type { VideoTemplate } from '../types'
-import { thumbClass, ThumbIcon, difficulty } from '../lib/templateUtils'
+import { thumbClass, ThumbIcon, difficulty, localizeTemplate } from '../lib/templateUtils'
 import { useLanguage } from '../LanguageContext'
 
 interface TemplateGalleryProps {
@@ -24,7 +24,7 @@ export function TemplateGallery({
   selectingId,
   onSelect,
 }: TemplateGalleryProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [templates, setTemplates] = useState<VideoTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
@@ -39,7 +39,7 @@ export function TemplateGallery({
     setLoadError('')
     void fetchTemplates()
       .then((items) => {
-        if (!cancelled) setTemplates(items)
+        if (!cancelled) setTemplates(items.map((item) => localizeTemplate(item, language)))
       })
       .catch((error: unknown) => {
         if (cancelled) return
@@ -54,7 +54,7 @@ export function TemplateGallery({
     return () => {
       cancelled = true
     }
-  }, [reloadKey, t])
+  }, [language, reloadKey, t])
 
   if (loading) {
     return (

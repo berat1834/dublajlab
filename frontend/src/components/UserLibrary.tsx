@@ -10,7 +10,7 @@ interface UserLibraryProps {
 import { useLanguage } from '../LanguageContext'
 
 export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [projects, setProjects] = useState<DubbingProject[]>([])
   const [exports, setExports] = useState<DubbingExport[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,13 +32,13 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
       }
     }
     fetchData()
-  }, [onToast])
+  }, [onToast, t])
 
   const handleDelete = async (projectId: string) => {
     if (!window.confirm(t('library.delete_confirm'))) return
     try {
       await deleteUserProject(projectId)
-      onToast('Proje silindi.')
+      onToast(t('library.deleted'))
       setProjects(projects.filter(p => p.id !== projectId))
       setExports(exports.filter(e => e.project_id !== projectId))
     } catch (err: unknown) {
@@ -95,7 +95,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
         <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
             <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-500 mb-3">
-              DublajLab VIP
+              {t('membership.lab_vip')}
             </div>
             <h2 className="text-2xl font-black text-white">{t('membership.hero')}</h2>
             <p className="text-sm text-zinc-400 mt-2">{t('promo.vip_desc')}</p>
@@ -118,7 +118,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
       <div className="grid grid-cols-1 gap-4">
         {projects.map((project) => {
           const relatedExport = exports.find(e => e.project_id === project.id)
-          const dateStr = new Date(project.created_at).toLocaleDateString('tr-TR', {
+          const dateStr = new Date(project.created_at).toLocaleDateString(language === 'TR' ? 'tr-TR' : 'en-US', {
             day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
           })
 
@@ -192,7 +192,8 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                 <button
                   onClick={() => handleDelete(project.id)}
                   className="p-2 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
-                  title="Projeyi Sil"
+                  title={t('library.delete')}
+                  aria-label={t('library.delete')}
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -205,7 +206,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
       <div className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-500/10 to-transparent p-8 flex flex-col md:flex-row items-center justify-between gap-6 mt-12">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/20 text-[10px] font-black uppercase tracking-widest text-amber-500 mb-3">
-            DublajLab VIP
+            {t('membership.lab_vip')}
           </div>
           <h2 className="text-2xl font-black text-white">{t('membership.hero')}</h2>
           <p className="text-sm text-zinc-400 mt-2">{t('promo.vip_desc')}</p>

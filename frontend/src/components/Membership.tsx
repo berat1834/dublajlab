@@ -88,7 +88,7 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
         <div className="absolute inset-x-1/4 top-0 h-32 bg-amber-300/10 blur-3xl" />
         <div className="relative">
           <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/10 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-amber-200">
-            <Crown className="h-4 w-4" /> DublajLab VIP
+            <Crown className="h-4 w-4" /> {t('membership.lab_vip')}
           </span>
           <h1 className="mt-6 text-4xl font-black tracking-tight text-white sm:text-6xl">{t('membership.hero')}</h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-zinc-300 sm:text-lg">

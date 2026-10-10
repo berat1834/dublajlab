@@ -18,6 +18,13 @@ DublajLab, kısa sahneleri veya kendi videolarınızı kendi mikrofonunuzla sesl
 > Durum: Public Beta. Ürün temel özellikleriyle test edilebilir ve stabil durumdadır.
  Production aşamasında HTTPS kullanımı **zorunludur**. Mümkünse HttpOnly çerezlere (cookies) geçilmesi tavsiye edilir.
 
+## Yönetim ve moderasyon
+
+`ADMIN_EMAILS` içinde tanımlanan yöneticiler için kullanıcı/VIP yönetimi, içerik raporları,
+yorum gizleme, sistem sağlık metrikleri ve admin işlem kayıtları bulunur. Yetki kontrolleri
+yalnız arayüzde değil backend endpoint'lerinde de uygulanır. Yeni migration'lar container
+başlarken `alembic upgrade head` ile uygulanır. Admin ekranları normal kullanıcılara açık değildir.
+
 ### Sonraki teknik geliştirmeler
 
 - [ ] Dalga formu ve sürüklenebilir timeline
@@ -52,11 +59,16 @@ Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vok
 
 ## Bilinen sınırlar
 
-- Export istekleri arka plan job'ına alınır; ancak registry process belleğindedir. Backend yeniden başlarsa job durumları kaybolur ve birden fazla worker arasında paylaşılmaz.
-- BackgroundTasks tabanlı worker aynı uygulama sürecinde çalışır; yoğun production kullanımı için Redis/Celery veya RQ, retry politikası ve concurrency limiti gerekir.
+- Export istekleri arka plan job'ına alınır. Redis yapılandırılırsa job durumu Redis'te tutulur;
+  Redis yoksa process belleği fallback'i kullanıldığı için restart sırasında durum kaybolabilir.
+- BackgroundTasks tabanlı worker aynı uygulama sürecinde çalışır; yoğun production kullanımı için Celery/RQ, retry politikası ve concurrency limiti gerekir.
 - Kaynak ve çıktı videoları uygulama içinde otomatik zamanlanmaz; TTL policy'li cleanup endpoint'i cron/zamanlanmış görevle çağrılmalıdır.
-- Public demo export limiter process belleğindedir; restart durumunda sıfırlanır ve çoklu worker/container arasında paylaşılmaz.
+- Public demo export limiter Redis yapılandırılmadığında process belleğine düşer; bu fallback
+  restart durumunda sıfırlanır ve çoklu worker/container arasında paylaşılmaz.
 - Mikrofon formatı tarayıcıya göre WebM/Opus veya MP4/AAC olabilir; FFmpeg’in ilgili decoder ile derlenmiş olması gerekir.
 - Bu geliştirme ortamında FFmpeg kurulu değilse gerçek medya smoke testi yapılamaz.
 - Replik zamanları form alanlarıyla düzenlenir; görsel sürükle-bırak timeline henüz yoktur.
-- Platform arayüzündeki Discord ve Footer (Gizlilik, Kullanım Koşulları vb.) bağlantılarının bir kısmı hâlâ placeholder durumundadır. VIP yetkisi backend tarafından uygulanır; ancak otomatik ödeme doğrulaması eklenene kadar doğrulanmış siparişler admin endpoint'iyle etkinleştirilir. Canlı ticari kullanımdan önce gerçek yasal metinler, Discord davet bağlantısı ve ödeme callback doğrulaması hazırlanmalıdır.
+- Platform arayüzündeki Discord bağlantısı ve bazı kurumsal metinler beta/taslak durumundadır.
+  VIP yetkisi backend tarafından uygulanır. Shopier checkout yalnız gerekli provider ayarları
+  mevcutsa açılır; canlı ticari kullanımdan önce gerçek yasal metinler ve gerçek Shopier
+  sandbox/callback doğrulaması tamamlanmalıdır.

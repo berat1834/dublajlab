@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Clock3, Flame, LoaderCircle, Mic2, Scale } from 'lucide-react'
 import { fetchTemplates } from '../lib/api'
 import type { VideoTemplate } from '../types'
-import { thumbClass, ThumbIcon, difficulty } from '../lib/templateUtils'
+import { thumbClass, ThumbIcon, difficulty, localizeTemplate } from '../lib/templateUtils'
 import { useLanguage } from '../LanguageContext'
 
 interface DemoTeaserProps {
@@ -11,7 +11,7 @@ interface DemoTeaserProps {
 }
 
 export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const [templates, setTemplates] = useState<VideoTemplate[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -20,7 +20,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
     void fetchTemplates()
       .then((items) => {
         if (active) {
-          const demos = items.filter(t => t.is_demo).slice(0, 3)
+          const demos = items.filter(t => t.is_demo).slice(0, 3).map((item) => localizeTemplate(item, language))
           setTemplates(demos)
         }
       })
@@ -29,7 +29,7 @@ export function DemoTeaser({ onSelect, selectingId }: DemoTeaserProps) {
         if (active) setLoading(false)
       })
     return () => { active = false }
-  }, [])
+  }, [language])
 
   if (loading || templates.length === 0) return null
 

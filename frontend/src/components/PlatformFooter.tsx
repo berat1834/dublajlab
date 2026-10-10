@@ -28,10 +28,10 @@ export function PlatformFooter({ setActiveTab, handleLegalLink, setShowHowTo, cu
   }
 
   const socialLinks = [
-    { url: import.meta.env.VITE_SOCIAL_X_URL, label: 'X', ariaLabel: 'X Hesabı' },
-    { url: import.meta.env.VITE_SOCIAL_INSTAGRAM_URL, label: 'IG', ariaLabel: 'Instagram Hesabı' },
-    { url: import.meta.env.VITE_SOCIAL_DISCORD_URL, label: 'DC', ariaLabel: 'Discord Hesabı' },
-    { url: import.meta.env.VITE_SOCIAL_LINKEDIN_URL, label: 'IN', ariaLabel: 'LinkedIn Hesabı' },
+    { url: import.meta.env.VITE_SOCIAL_X_URL, label: 'X', ariaLabel: 'X' },
+    { url: import.meta.env.VITE_SOCIAL_INSTAGRAM_URL, label: 'IG', ariaLabel: 'Instagram' },
+    { url: import.meta.env.VITE_SOCIAL_DISCORD_URL, label: 'DC', ariaLabel: 'Discord' },
+    { url: import.meta.env.VITE_SOCIAL_LINKEDIN_URL, label: 'IN', ariaLabel: 'LinkedIn' },
   ]
 
   return (

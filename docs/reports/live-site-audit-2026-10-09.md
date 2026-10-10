@@ -1,5 +1,9 @@
 # DublajLab Canlı Site ve Yönetim Paneli Denetimi
 
+> **Düzeltme durumu (10 Ekim 2026):** Bu rapordaki bulgular tek tek ele alındı.
+> Uygulanan çözümler, test sonuçları ve bilinçli olarak kalan mimari/manüel riskler
+> [Sprint 51 düzeltme raporunda](sprint-51-live-audit-remediation.md) kayıtlıdır.
+
 Tarih: 9 Ekim 2026  
 Canlı frontend: `https://www.dublajlab.com.tr`  
 Canlı backend: `https://backend-production-c956d.up.railway.app`
@@ -294,4 +298,3 @@ yeniden test et.
 - Gerçek admin hesabıyla rapor kapatma ve proje gizleme.
 - Gerçek Shopier sandbox/callback akışı.
 - 375 px genişlikte mobil navbar, kayıt timeline ve export sonuç ekranı.
-

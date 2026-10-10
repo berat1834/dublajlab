@@ -64,6 +64,7 @@ import {
 } from './lib/api'
 import { shouldShowLipSync } from './lib/lipSync'
 import { pathForTab, routeFromPath } from './lib/navigation'
+import { localizeTemplate } from './lib/templateUtils'
 import { useLanguage } from './LanguageContext'
 import type {
   DemoPolicy,
@@ -157,6 +158,63 @@ function explainError(message: string, t: (key: string) => string): ErrorDetails
   }
 }
 
+function localizeJobMessage(
+  message: string,
+  progress: number,
+  language: 'TR' | 'EN',
+  t: (key: string) => string,
+) {
+  if (language === 'TR') return message || t('studio.job.queued')
+
+  const normalized = message.toLocaleLowerCase('tr-TR')
+  const knownStages: Array<[string, string]> = [
+    ['ai ses hazırlanıyor', 'studio.job.ai_audio'],
+    ['ses kayıtları doğrulandı', 'studio.job.recordings_validated'],
+    ['yüz analiz ediliyor', 'studio.job.face_analysis'],
+    ['dudak senkronizasyonu uygulanıyor', 'studio.job.lipsync'],
+    ['altyazı hazırlanıyor', 'studio.job.subtitles'],
+    ['altyazılar hazırlandı', 'studio.job.subtitles'],
+    ['video, ses ve altyazı birleştiriliyor', 'studio.job.mixing'],
+    ['kayıtlar zaman çizelgesine yerleştiriliyor', 'studio.job.timeline'],
+    ['mp4 çıktısı kaydediliyor', 'studio.job.saving'],
+    ['sıraya alındı', 'studio.job.queued'],
+  ]
+  const matched = knownStages.find(([needle]) => normalized.includes(needle))
+  if (matched) return t(matched[1])
+  if (progress >= 90) return t('studio.job.saving')
+  if (progress >= 55) return t('studio.job.mixing')
+  if (progress >= 20) return t('studio.job.processing')
+  return t('studio.job.queued')
+}
+
+function localizeServerMessage(
+  message: string,
+  language: 'TR' | 'EN',
+  t: (key: string) => string,
+) {
+  if (language === 'TR') return message
+  const normalized = message.toLocaleLowerCase('tr-TR')
+  if (normalized.includes('replik bitiş zamanı') || normalized.includes('video süresini aşıyor')) {
+    return t('timeline.duration_error')
+  }
+  if (normalized.includes('sadece vip') || normalized.includes('vip kullanıc')) {
+    return t('error.vip_message')
+  }
+  if (normalized.includes('dudak senkronizasyonu')) {
+    return t('error.lipsync_message')
+  }
+  if (normalized.includes('ffmpeg') || normalized.includes('medya işlemi')) {
+    return t('error.ffmpeg_message')
+  }
+  if (normalized.includes('sunucuya ulaşılamadı') || normalized.includes('backend')) {
+    return t('error.backend_message')
+  }
+  if (normalized.includes('en fazla') || normalized.includes('izin verilen sınırı')) {
+    return t('error.limit_message')
+  }
+  return t('error.server_message')
+}
+
 /* ── Mock preview lines used in the hero & empty editor state ── */
 const MOCK_LINES = [
   { textKey: 'studio.preview.line1', time: '0:00 – 0:03' },
@@ -174,7 +232,7 @@ const FEATURES = [
 ] as const
 
 function App() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const videoRef = useRef<HTMLVideoElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
   const activeJobControllerRef = useRef<AbortController | null>(null)
@@ -317,7 +375,7 @@ function App() {
       setStage('idle')
       setError(
         uploadError instanceof Error
-          ? uploadError.message
+          ? localizeServerMessage(uploadError.message, language, t)
           : t('action.upload_error'),
       )
       retryActionRef.current = () => handleFile(file)
@@ -331,7 +389,7 @@ function App() {
     setOutputUrl('')
     let loadedTemplate: VideoTemplate | null = null
     try {
-      const template = await fetchTemplate(templateId)
+      const template = localizeTemplate(await fetchTemplate(templateId), language)
       loadedTemplate = template
       setSelectedTemplate(template)
       setSelectedFile(null)
@@ -355,7 +413,7 @@ function App() {
       setStage(loadedTemplate ? 'ready' : 'idle')
       setError(
         templateError instanceof Error
-          ? templateError.message
+          ? localizeServerMessage(templateError.message, language, t)
           : t('action.template_error'),
       )
     } finally {
@@ -390,28 +448,29 @@ function App() {
     processError: unknown,
     retryAction: () => Promise<void>,
   ) => {
-    const message =
+    const rawMessage =
       processError instanceof Error
         ? processError.message
         : t('action.processing_error')
+    const message = localizeServerMessage(rawMessage, language, t)
     setStage('ready')
     setError(message)
     setJobError(message)
     retryActionRef.current = retryAction
-    setRetryLabel('Export\u2019u tekrar dene')
+    setRetryLabel(t('action.retry_export'))
   }
 
   const monitorJob = async (createdJob: JobResponse): Promise<JobResponse> => {
     const controller = new AbortController()
     activeJobControllerRef.current = controller
     setJobProgress(createdJob.progress)
-    setJobMessage(createdJob.message)
+    setJobMessage(localizeJobMessage(createdJob.message, createdJob.progress, language, t))
     try {
       return await waitForJobCompletion(
         createdJob.job_id,
         (job) => {
           setJobProgress(job.progress)
-          setJobMessage(job.message)
+          setJobMessage(localizeJobMessage(job.message, job.progress, language, t))
         },
         controller.signal,
       )
@@ -807,7 +866,7 @@ function App() {
                     </span>
                     <span className="shrink-0 text-zinc-500">
                       {upload
-                        ? `${upload.duration_seconds.toFixed(1)} sn · ${formatBytes(upload.size_bytes)}`
+                        ? `${upload.duration_seconds.toFixed(1)} ${t('common.seconds_short')} · ${formatBytes(upload.size_bytes)}`
                         : formatBytes(selectedFile.size)}
                     </span>
                   </div>
@@ -1113,7 +1172,7 @@ function App() {
                   <button onClick={() => { navigator.clipboard.writeText(outputUrl); showToast(t('studio.export.copied')) }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white transition hover:bg-white/20">
                     <Link className="h-3.5 w-3.5" /> {t('studio.export.copy')}
                   </button>
-                  <a href={`https://twitter.com/intent/tweet?text=Dublajım%20hazır!&url=${encodeURIComponent(outputUrl)}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-[11px] font-bold text-sky-400 transition hover:bg-sky-500/30">
+                  <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(t('studio.export.share_text'))}&url=${encodeURIComponent(outputUrl)}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-[11px] font-bold text-sky-400 transition hover:bg-sky-500/30">
                     {t('studio.export.share_x')}
                   </a>
                   <button onClick={() => showToast(t('action.tiktok_hint'))} className="inline-flex items-center justify-center gap-2 rounded-xl border border-pink-500/20 bg-pink-500/10 px-3 py-2.5 text-[11px] font-bold text-pink-400 transition hover:bg-pink-500/20">
