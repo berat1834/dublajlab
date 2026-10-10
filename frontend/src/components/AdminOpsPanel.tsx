@@ -1,5 +1,5 @@
 import { useLanguage } from '../LanguageContext'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getAdminAuditLogs, getAdminOpsMetrics, getAdminUsers, updateUserMembership, type AdminAuditLog, type AdminOpsMetrics } from '../lib/api'
 import type { User } from '../types'
 import { Activity, Database, HardDrive, CheckCircle2, XCircle, Users, FileVideo, AlertCircle, RefreshCw, Search, Server } from 'lucide-react'
@@ -15,8 +15,10 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
   const [users, setUsers] = useState<User[]>([])
   const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([])
   const [userQuery, setUserQuery] = useState('')
+  const [userSearchError, setUserSearchError] = useState(false)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
   const [loading, setLoading] = useState(true)
+  const previousUserQuery = useRef(userQuery)
 
   const refreshDashboard = async (query = userQuery) => {
     try {
@@ -42,6 +44,30 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
     // Initial load only; manual controls refresh subsequent data.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (previousUserQuery.current === userQuery) return
+    previousUserQuery.current = userQuery
+
+    let cancelled = false
+    const timeoutId = window.setTimeout(() => {
+      getAdminUsers(userQuery.trim())
+        .then((filteredUsers) => {
+          if (!cancelled) {
+            setUsers(filteredUsers)
+            setUserSearchError(false)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setUserSearchError(true)
+        })
+    }, 300)
+
+    return () => {
+      cancelled = true
+      window.clearTimeout(timeoutId)
+    }
+  }, [userQuery])
 
   const changeMembership = async (user: User, tier: 'free' | 'vip') => {
     try {
@@ -221,6 +247,7 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
             <button type="submit" className="rounded-lg border border-white/10 p-2 text-zinc-300 hover:bg-white/5" aria-label={t('admin.search_users')}><Search className="h-4 w-4" /></button>
           </form>
         </div>
+        {userSearchError && <p className="border-b border-white/10 px-5 py-3 text-sm text-red-300">{t('admin.metrics_error')}</p>}
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm text-zinc-300">
             <thead className="bg-white/5 text-xs uppercase text-zinc-500"><tr><th className="px-5 py-3">{t('account.username')}</th><th className="px-5 py-3">E-mail</th><th className="px-5 py-3">{t('drop.membership')}</th><th className="sticky right-0 bg-zinc-900 px-5 py-3 text-right">{t('admin.action')}</th></tr></thead>
