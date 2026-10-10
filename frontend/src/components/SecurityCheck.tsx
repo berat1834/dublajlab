@@ -1,16 +1,18 @@
 import { useLanguage } from '../LanguageContext'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ShieldCheck, LoaderCircle, AlertTriangle } from 'lucide-react'
 
 export function SecurityCheck({ onComplete }: { onComplete: () => void }) {
   const { t } = useLanguage()
   const [phase, setPhase] = useState(0)
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
 
   useEffect(() => {
     const timer1 = setTimeout(() => setPhase(1), 800)
     const timer2 = setTimeout(() => setPhase(2), 1600)
     const timer3 = setTimeout(() => setPhase(3), 2200)
-    const timer4 = setTimeout(() => onComplete(), 2800)
+    const timer4 = setTimeout(() => onCompleteRef.current(), 2800)
 
     return () => {
       clearTimeout(timer1)
@@ -18,7 +20,7 @@ export function SecurityCheck({ onComplete }: { onComplete: () => void }) {
       clearTimeout(timer3)
       clearTimeout(timer4)
     }
-  }, [onComplete])
+  }, [])
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050505]">
