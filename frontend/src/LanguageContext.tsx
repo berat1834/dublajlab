@@ -753,6 +753,34 @@ const translations: Record<string, Record<Language, string>> = {
   'scene.step_result': { TR: 'Sonuç', EN: 'Result' },
   'library.file_expired_desc': { TR: 'Dosya sunucudan silinmiş (Süre aşımı)', EN: 'File deleted from server (Expired)' },
   'library.status_expired': { TR: 'Süresi Dolmuş', EN: 'Expired' },
+
+  // Fixed & injected keys
+  'account.public_profile': { TR: 'Herkese açık profilim', EN: 'My public profile' },
+  'account.cancel': { TR: 'Vazgeç', EN: 'Cancel' },
+  'admin.action': { TR: 'İşlem', EN: 'Action' },
+  'library.status_completed': { TR: 'Tamamlandı', EN: 'Completed' },
+  'library.status_processing': { TR: 'İşleniyor', EN: 'Processing' },
+  'library.status_failed': { TR: 'Başarısız', EN: 'Failed' },
+  'library.download': { TR: 'İndir', EN: 'Download' },
+  'nav.library': { TR: 'Kataloğum', EN: 'My Library' },
+  'template.ofis-surprizi.title': { TR: 'Ofiste Beklenmedik An', EN: 'Unexpected Office Moment' },
+  'template.ofis-surprizi.desc': { TR: 'Kısa ve tempolu bir ofis sahnesi için üç repliklik örnek zaman çizelgesi.', EN: 'A three-line sample timeline for a short, fast-paced office scene.' },
+  'template.mini-uzay.title': { TR: 'Mini Uzay Görevi', EN: 'Mini Space Mission' },
+  'template.mini-uzay.desc': { TR: 'İki karakterlik kısa bir uzay macerası için örnek replikler.', EN: 'Sample lines for a short, two-character space adventure.' },
+  'template.komik-tepki.title': { TR: 'Komik Tepki', EN: 'Funny Reaction' },
+  'template.komik-tepki.desc': { TR: 'Şaşırtıcı bir ana verilen hızlı tepkileri seslendirmek için kısa bir sahne taslağı.', EN: 'A short scene draft to dub quick reactions to a surprising moment.' },
+  'template.dramatic-karar.title': { TR: 'Dramatik Karar', EN: 'Dramatic Decision' },
+  'template.dramatic-karar.desc': { TR: 'Duygulu tonlama ve kısa duraklamalarla çalışmak için iki repliklik sahne taslağı.', EN: 'A two-line scene draft for working on emotional intonation and short pauses.' },
+  'template.urun-tanitimi.title': { TR: 'Ürün Tanıtımı', EN: 'Product Pitch' },
+  'template.urun-tanitimi.desc': { TR: 'Kendi ürününüzü veya portföy projenizi anlatabileceğiniz nötr bir demo akışı.', EN: 'A neutral demo flow where you can pitch your own product or portfolio project.' },
+  'category.Komedi': { TR: 'Komedi', EN: 'Comedy' },
+  'category.Bilim Kurgu': { TR: 'Bilim Kurgu', EN: 'Sci-Fi' },
+  'category.Dram': { TR: 'Dram', EN: 'Drama' },
+  'category.Tanıtım': { TR: 'Tanıtım', EN: 'Promo' },
+
+  // Showcase mock keys
+  'dubs.demo_dub_title': { TR: 'Demo Dublaj #{i}', EN: 'Demo Dub #{i}' },
+  'dubs.player_prefix': { TR: 'Oyuncu', EN: 'Player' },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

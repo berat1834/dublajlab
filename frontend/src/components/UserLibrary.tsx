@@ -142,19 +142,19 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                   {project.status === 'completed' && (
                     <span className="flex items-center gap-1.5 text-lime-400">
                       <CheckCircle2 className="w-4 h-4" />
-                      Tamamlandı
+                      {t('library.status_completed')}
                     </span>
                   )}
                   {project.status === 'processing' && (
                     <span className="flex items-center gap-1.5 text-blue-400 animate-pulse">
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      İşleniyor
+                      {t('library.status_processing')}
                     </span>
                   )}
                   {project.status === 'failed' && (
                     <span className="flex items-center gap-1.5 text-red-400">
                       <AlertCircle className="w-4 h-4" />
-                      Başarısız
+                      {t('library.status_failed')}
                     </span>
                   )}
                 </div>
@@ -179,13 +179,13 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-lime-400 text-black font-medium rounded-xl hover:bg-lime-500 transition-colors"
                       >
                         <Download className="w-4 h-4" />
-                        İndir
+                        {t('library.download')}
                       </a>
                     </>
                   ) : (
-                    <div className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-zinc-400 font-medium rounded-xl cursor-not-allowed" title="{t('library.file_expired_desc')}">
+                    <div className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-zinc-400 font-medium rounded-xl cursor-not-allowed" title={t('library.file_expired_desc')}>
                       <AlertCircle className="w-4 h-4" />
-                      Süresi Dolmuş
+                      {t('library.status_expired')}
                     </div>
                   )
                 )}

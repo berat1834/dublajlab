@@ -129,7 +129,7 @@ export function TemplateGallery({
                 filter === cat ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 hover:bg-white/10'
               }`}
             >
-              {cat || t('templates.all')}
+              {cat ? (t('category.' + cat) === 'category.' + cat ? cat : t('category.' + cat)) : t('templates.all')}
             </button>
           ))}
         </div>
@@ -163,6 +163,12 @@ export function TemplateGallery({
           const isSelected = selectedId === template.id
           const isSelecting = selectingId === template.id
           const diff = difficulty(template)
+          const titleKey = `template.${template.id}.title`
+          const titleText = t(titleKey) === titleKey ? template.title : t(titleKey)
+          const descKey = `template.${template.id}.desc`
+          const descText = t(descKey) === descKey ? template.description : t(descKey)
+          const catKey = `category.${template.category}`
+          const catText = t(catKey) === catKey ? template.category : t(catKey)
           return (
             <article
               key={template.id}
@@ -181,7 +187,7 @@ export function TemplateGallery({
                 {/* Category badge */}
                 <div className="absolute left-2 top-2 z-10 flex flex-col gap-1 items-start">
                   <span className="rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                    {template.category}
+                    {catText}
                   </span>
                   {template.is_demo && (
                     <span className="max-w-fit rounded-full bg-violet-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-glow-sm">
@@ -192,8 +198,8 @@ export function TemplateGallery({
               </div>
 
               <div className="p-3.5">
-                <h3 className="line-clamp-2 break-words font-bold leading-5 text-white">{template.title}</h3>
-                <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-zinc-400">{template.description}</p>
+                <h3 className="line-clamp-2 break-words font-bold leading-5 text-white">{titleText}</h3>
+                <p className="mt-1 line-clamp-2 break-words text-xs leading-5 text-zinc-400">{descText}</p>
 
                 <div className="mt-3 flex flex-wrap gap-1.5 text-[10px]">
                   <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.05] px-2 py-1 font-medium text-zinc-400">
