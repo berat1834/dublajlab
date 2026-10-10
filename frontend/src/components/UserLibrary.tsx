@@ -101,7 +101,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
             <p className="text-sm text-zinc-400 mt-2">{t('promo.vip_desc')}</p>
           </div>
           <button onClick={() => setActiveTab('membership')} className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
-            VIP Ol
+            {t('nav.vip_join')}
           </button>
         </div>
       </div>
@@ -176,7 +176,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                       <a
                         href={absoluteApiUrl(relatedExport.download_url)}
                         download
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-lime-400 text-black font-medium rounded-xl hover:bg-lime-500 transition-colors"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-lime text-ink font-extrabold rounded-xl hover:brightness-110 transition-colors"
                       >
                         <Download className="w-4 h-4" />
                         {t('library.download')}
@@ -211,7 +211,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
           <p className="text-sm text-zinc-400 mt-2">{t('promo.vip_desc')}</p>
         </div>
         <button onClick={() => setActiveTab('membership')} className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 text-black text-sm font-bold hover:brightness-110 transition shrink-0">
-          VIP Ol
+          {t('nav.vip_join')}
         </button>
       </div>
     </div>
