@@ -104,7 +104,7 @@ const translations: Record<string, Record<Language, string>> = {
   'studio.hero.accent': { TR: 'dublaj videoları', EN: 'dubbed videos' },
   'studio.hero.line2': { TR: 'oluştur', EN: 'with your voice' },
   'studio.hero.description': { TR: 'Hazır sahne seç ya da kendi videonu yükle, repliği oku, altyazılı MP4 olarak indir.', EN: 'Choose a ready-made scene or upload your own video, read the lines, and download a subtitled MP4.' },
-  'studio.cta.start': { TR: 'Hemen Dublaj Yap', EN: 'Start Dubbing' },
+  'studio.cta.start': { TR: 'Video Yükle ve Dublaj Başlat', EN: 'Upload and Start Dubbing' },
   'studio.cta.templates': { TR: 'Hazır Sahneleri Keşfet', EN: 'Explore Ready Scenes' },
   'studio.trust.own_video': { TR: 'Kendi videonu kullan', EN: 'Use your own video' },
   'studio.trust.no_copyright': { TR: 'Telifli içerik yükleme', EN: 'Do not upload copyrighted content' },

@@ -23,7 +23,7 @@ describe('LanguageProvider', () => {
       createElement(LanguageProvider, null, createElement(TranslationProbe)),
     )
 
-    expect(markup).toContain('EN:Start Dubbing:Login')
+    expect(markup).toContain('EN:Upload and Start Dubbing:Login')
   })
 })
 
