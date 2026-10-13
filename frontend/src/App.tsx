@@ -599,6 +599,15 @@ function App() {
     setSourceMode(nextMode)
   }
 
+  const scrollToSourcePanel = () => {
+    const panel = document.getElementById('studio-source-panel')
+    if (panel) {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    window.scrollBy({ top: 420, behavior: 'smooth' })
+  }
+
   const busy = stage === 'uploading' || stage === 'processing'
   const templatePreviewUrl = selectedTemplate?.video_url
     ? templateAssetUrl(selectedTemplate.video_url)
@@ -655,7 +664,7 @@ function App() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => { changeSourceMode('upload'); window.scrollBy({ top: 400, behavior: 'smooth' }); }}
+                  onClick={() => { changeSourceMode('upload'); requestAnimationFrame(scrollToSourcePanel) }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] sm:w-auto"
                 >
                   <Play className="h-4 w-4" /> {t('studio.cta.start')}
@@ -795,7 +804,7 @@ function App() {
         {/* ═══════════════════════════ MAIN TWO-COLUMN LAYOUT ═══════════════════════════ */}
         <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] 3xl:gap-8">
           {/* ── LEFT: Source panel ── */}
-          <section className="glass-panel h-fit rounded-2xl border border-white/10 p-4 shadow-card sm:p-5 lg:sticky lg:top-5">
+          <section id="studio-source-panel" className="glass-panel h-fit rounded-2xl border border-white/10 p-4 shadow-card sm:p-5 lg:sticky lg:top-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">
