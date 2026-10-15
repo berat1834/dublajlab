@@ -95,6 +95,12 @@ const translations: Record<string, Record<Language, string>> = {
   'auth.signup_link': { TR: 'Kayıt ol', EN: 'Sign up' },
   'auth.login_link': { TR: 'Giriş yap', EN: 'Log in' },
   'auth.register_success': { TR: 'Kayıt başarılı! Lütfen giriş yapın.', EN: 'Registration successful! Please log in.' },
+  'auth.verification_sent': { TR: 'Doğrulama bağlantısını e-posta adresine gönderdik. Giriş yapmadan önce bağlantıyı aç.', EN: 'We sent a verification link to your email. Open it before logging in.' },
+  'auth.verification_success': { TR: 'E-posta adresin doğrulandı. Şimdi giriş yapabilirsin.', EN: 'Your email has been verified. You can now log in.' },
+  'auth.verification_invalid': { TR: 'Doğrulama bağlantısı geçersiz. Yeni bir bağlantı isteyebilirsin.', EN: 'The verification link is invalid. You can request a new one.' },
+  'auth.verification_expired': { TR: 'Doğrulama bağlantısının süresi dolmuş. Yeni bir bağlantı iste.', EN: 'The verification link has expired. Request a new one.' },
+  'auth.verification_resend': { TR: 'Doğrulama bağlantısını yeniden gönder', EN: 'Resend verification link' },
+  'auth.verification_resend_done': { TR: 'Adres kayıtlı ve doğrulanmamışsa yeni bağlantı gönderildi.', EN: 'If the address is registered and unverified, a new link has been sent.' },
   'auth.login_success': { TR: 'Giriş başarılı! Stüdyoya yönlendiriliyorsunuz.', EN: 'Login successful! Taking you to the studio.' },
   'auth.generic_error': { TR: 'Bir hata oluştu.', EN: 'Something went wrong.' },
 

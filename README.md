@@ -18,6 +18,20 @@ DublajLab, kısa sahneleri veya kendi videolarınızı kendi mikrofonunuzla sesl
 > Durum: Public Beta. Ürün temel özellikleriyle test edilebilir ve stabil durumdadır.
  Production aşamasında HTTPS kullanımı **zorunludur**. Mümkünse HttpOnly çerezlere (cookies) geçilmesi tavsiye edilir.
 
+## E-posta doğrulaması
+
+Parola ile açılan yeni hesaplar production ortamında tek kullanımlık ve süreli bir
+e-posta bağlantısıyla doğrulanır. Yalnız e-posta biçiminin veya `gmail.com` gibi
+alan adının geçerli olması posta kutusunun kullanıcıya ait olduğunu kanıtlamaz.
+Doğrulanmamış hesaplar parola ile giriş yapamaz. Google ve Discord kayıtlarında
+ise yalnız sağlayıcının doğruladığı e-posta kabul edilir.
+
+Canlı ortamda `EMAIL_VERIFICATION_REQUIRED=true`, `FRONTEND_URL` ve genel SMTP
+değişkenleri (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
+`SMTP_FROM_EMAIL`, `SMTP_USE_TLS`) Railway dashboard üzerinden tanımlanmalıdır.
+SMTP gönderimi hazır değilse kayıt endpoint'i güvenli biçimde `503` döner; kullanıcıya
+yanıltıcı bir “kayıt başarılı” mesajı gösterilmez. Secret değerleri repoya yazılmaz.
+
 ## Yönetim ve moderasyon
 
 `ADMIN_EMAILS` içinde tanımlanan yöneticiler için kullanıcı/VIP yönetimi, içerik raporları,

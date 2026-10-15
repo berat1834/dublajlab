@@ -48,6 +48,17 @@ JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=4320
 MAINTENANCE_TOKEN=<provider-dashboard-only-long-random-token>
 
+# Yeni parola hesapları için e-posta sahipliği doğrulaması
+FRONTEND_URL=https://www.dublajlab.com.tr
+EMAIL_VERIFICATION_REQUIRED=true
+EMAIL_VERIFICATION_TTL_MINUTES=60
+SMTP_HOST=<smtp-provider-host>
+SMTP_PORT=587
+SMTP_USERNAME=<provider-dashboard-only-username>
+SMTP_PASSWORD=<provider-dashboard-only-password>
+SMTP_FROM_EMAIL=<verified-sender@dublajlab.com.tr>
+SMTP_USE_TLS=true
+
 # Railway runtime ve medya
 RAILWAY_DOCKERFILE_PATH=backend/Dockerfile
 MEDIA_ROOT=/app/media
@@ -79,6 +90,12 @@ SHOPIER_CANCEL_URL=https://www.dublajlab.com.tr/membership
 ```
 
 **Güvenlik Uyarısı:** `APP_ENV=production` iken `JWT_SECRET` varsayılan kalırsa uygulama `ValueError` fırlatacak ve güvenlik sebebiyle başlatılamayacaktır.
+
+`APP_ENV=production` e-posta doğrulamasını varsayılan olarak zorunlu yapar. SMTP
+bilgileri eksikse yeni parola kaydı fail-closed davranıp `503` döner. Deploy öncesinde
+gönderici domain SPF/DKIM kayıtları SMTP sağlayıcısında doğrulanmalı; gerçek adresle
+kayıt, bağlantı açma, süresi dolmuş bağlantı ve yeniden gönderme smoke testleri
+tamamlanmalıdır. Mevcut hesaplar migration sırasında doğrulanmış kabul edilir.
 
 `APP_ENV=production` ile `LIPSYNC_PROVIDER=local` kombinasyonu, flag yanlışlıkla
 açılsa dahi backend tarafından reddedilir. Production Wav2Lip local open-source

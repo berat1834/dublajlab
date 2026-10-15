@@ -305,6 +305,15 @@ export async function register(email: string, password: string, display_name: st
   return parseResponse<User>(response)
 }
 
+export async function resendVerification(email: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+  return parseResponse<{ message: string }>(response)
+}
+
 export async function getMe(): Promise<User> {
   const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
     method: 'GET',

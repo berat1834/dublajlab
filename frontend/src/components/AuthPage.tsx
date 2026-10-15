@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ArrowRight, Github, Mail, Mic2, PlayCircle } from 'lucide-react'
+import { ArrowRight, Github, Mail, MailCheck, Mic2, PlayCircle, RefreshCw } from 'lucide-react'
 import type { Tab, User } from '../types'
-import { login, register, getMe } from '../lib/api'
+import { login, register, getMe, resendVerification } from '../lib/api'
 import { useLanguage } from '../LanguageContext'
 import { useEffect } from 'react'
 
@@ -17,6 +17,10 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [verificationNotice, setVerificationNotice] = useState<
+    'sent' | 'success' | 'invalid' | 'expired' | null
+  >(null)
+  const [resending, setResending] = useState(false)
   const { t } = useLanguage()
 
   // Kullanıcı zaten login ise yönlendir
@@ -26,13 +30,26 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
     }
   }, [setActiveTab])
 
+  useEffect(() => {
+    const result = new URLSearchParams(window.location.search).get('email_verification')
+    if (result === 'success' || result === 'invalid' || result === 'expired') {
+      setVerificationNotice(result)
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
       if (mode === 'register') {
-        await register(email, password, name || t('auth.default_name'))
-        onToast(t('auth.register_success'))
+        const registeredUser = await register(email, password, name || t('auth.default_name'))
+        if (registeredUser.email_verification_required) {
+          setVerificationNotice('sent')
+          onToast(t('auth.verification_sent'))
+        } else {
+          onToast(t('auth.register_success'))
+        }
         setActiveTab('login')
       } else {
         const res = await login(email, password)
@@ -49,6 +66,20 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
       onToast(msg)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    if (!email.trim()) return
+    setResending(true)
+    try {
+      await resendVerification(email)
+      setVerificationNotice('sent')
+      onToast(t('auth.verification_resend_done'))
+    } catch (err: unknown) {
+      onToast(err instanceof Error ? err.message : t('auth.generic_error'))
+    } finally {
+      setResending(false)
     }
   }
 
@@ -106,6 +137,33 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
               ? t('auth.login.desc') 
               : t('auth.register.desc')}
           </p>
+
+          {verificationNotice && (
+            <div className={`mb-5 rounded-xl border p-4 text-sm leading-6 ${verificationNotice === 'success' || verificationNotice === 'sent' ? 'border-lime/25 bg-lime/10 text-lime' : 'border-amber-300/25 bg-amber-300/10 text-amber-100'}`}>
+              <div className="flex items-start gap-3">
+                <MailCheck className="mt-0.5 h-5 w-5 shrink-0" />
+                <div>
+                  <p>
+                    {verificationNotice === 'sent' && t('auth.verification_sent')}
+                    {verificationNotice === 'success' && t('auth.verification_success')}
+                    {verificationNotice === 'invalid' && t('auth.verification_invalid')}
+                    {verificationNotice === 'expired' && t('auth.verification_expired')}
+                  </p>
+                  {(verificationNotice === 'invalid' || verificationNotice === 'expired') && (
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={!email.trim() || resending}
+                      className="mt-2 inline-flex items-center gap-1.5 font-bold text-white underline decoration-white/30 underline-offset-4 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${resending ? 'animate-spin' : ''}`} />
+                      {t('auth.verification_resend')}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (

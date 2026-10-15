@@ -175,6 +175,30 @@ def app_environment() -> str:
     return os.getenv("APP_ENV", "development").strip().lower()
 
 
+def email_verification_required() -> bool:
+    """Require ownership verification by default in production."""
+
+    return _boolean_setting(
+        "EMAIL_VERIFICATION_REQUIRED",
+        app_environment() == "production",
+    )
+
+
+def email_verification_ttl_minutes() -> int:
+    return _positive_int_setting("EMAIL_VERIFICATION_TTL_MINUTES", 60)
+
+
+def frontend_url() -> str:
+    configured = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+    if configured and not (
+        app_environment() == "production" and "vercel.app" in configured
+    ):
+        return configured
+    if app_environment() == "production":
+        return "https://www.dublajlab.com.tr"
+    return "http://localhost:5173"
+
+
 def lip_sync_availability() -> tuple[bool, str | None]:
     """Return whether lip-sync may be exposed by this runtime."""
 
