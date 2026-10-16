@@ -52,6 +52,10 @@ MAINTENANCE_TOKEN=<provider-dashboard-only-long-random-token>
 FRONTEND_URL=https://www.dublajlab.com.tr
 EMAIL_VERIFICATION_REQUIRED=true
 EMAIL_VERIFICATION_TTL_MINUTES=60
+EMAIL_DELIVERY_PROVIDER=resend
+RESEND_API_KEY=<provider-dashboard-only-resend-api-key>
+RESEND_FROM_EMAIL=DublajLab <noreply@send.dublajlab.com.tr>
+RESEND_REPLY_TO=hesap@dublajlab.com.tr
 SMTP_HOST=<smtp-provider-host>
 SMTP_PORT=587
 SMTP_USERNAME=<provider-dashboard-only-username>
@@ -101,6 +105,13 @@ SMTP sağlayıcısı port 465/implicit SSL istiyorsa `SMTP_PORT=465`,
 `SMTP_USE_TLS=false` ve `SMTP_USE_SSL=true` kullanılır. Port 587/STARTTLS
 için `SMTP_USE_TLS=true`, `SMTP_USE_SSL=false` kalır. TLS ve SSL bayrakları
 aynı anda açılmamalıdır.
+
+Railway Trial, Free ve Hobby planları outbound SMTP'yi engellediği için production
+public beta varsayımı `EMAIL_DELIVERY_PROVIDER=resend` olmalıdır. Resend tarafında
+`send.dublajlab.com.tr` gibi e-posta alım DNS kayıtlarından ayrı bir gönderim alt
+domaini doğrulanır; provider'ın verdiği DNS kayıtları aynen eklenir. API anahtarı
+yalnız Railway Variables içinde tutulur. SMTP ancak Railway Pro veya SMTP egress
+izni bulunan başka bir runtime'da seçilmelidir.
 
 `APP_ENV=production` ile `LIPSYNC_PROVIDER=local` kombinasyonu, flag yanlışlıkla
 açılsa dahi backend tarafından reddedilir. Production Wav2Lip local open-source

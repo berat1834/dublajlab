@@ -35,6 +35,12 @@ tanımlanmalıdır. Port 587/STARTTLS için `SMTP_USE_TLS=true` ve
 SMTP gönderimi hazır değilse kayıt endpoint'i güvenli biçimde `503` döner; kullanıcıya
 yanıltıcı bir “kayıt başarılı” mesajı gösterilmez. Secret değerleri repoya yazılmaz.
 
+Railway Trial, Free ve Hobby planlarında outbound SMTP kapalıdır. Bu planlarda
+`EMAIL_DELIVERY_PROVIDER=resend`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` ve isteğe
+bağlı `RESEND_REPLY_TO` kullanılır. Resend gönderici domaini doğrulanmadan
+production kayıt akışı açılmamalıdır. SMTP provider geriye uyumluluk ve SMTP
+erişimi olan ortamlarda kullanılmak üzere korunur.
+
 ## Yönetim ve moderasyon
 
 `ADMIN_EMAILS` içinde tanımlanan yöneticiler için kullanıcı/VIP yönetimi, içerik raporları,
