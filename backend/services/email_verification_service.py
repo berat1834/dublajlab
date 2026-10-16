@@ -28,6 +28,7 @@ class SmtpSettings:
     password: str
     from_email: str
     use_tls: bool
+    use_ssl: bool
 
 
 def create_verification_token() -> tuple[str, str, datetime]:
@@ -73,7 +74,16 @@ def smtp_settings() -> SmtpSettings:
     use_tls = os.getenv("SMTP_USE_TLS", "true").strip().lower() in {
         "1", "true", "yes", "on"
     }
-    return SmtpSettings(host, port, username, password, from_email, use_tls)
+    use_ssl = os.getenv("SMTP_USE_SSL", "false").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    if use_tls and use_ssl:
+        raise EmailDeliveryConfigurationError(
+            "SMTP_USE_TLS ve SMTP_USE_SSL aynı anda etkinleştirilemez."
+        )
+    return SmtpSettings(
+        host, port, username, password, from_email, use_tls, use_ssl
+    )
 
 
 def send_verification_email(
@@ -104,7 +114,12 @@ def send_verification_email(
     )
 
     context = ssl.create_default_context()
-    with smtplib.SMTP(settings.host, settings.port, timeout=15) as client:
+    smtp_client = smtplib.SMTP_SSL if settings.use_ssl else smtplib.SMTP
+    client_kwargs = {"timeout": 15}
+    if settings.use_ssl:
+        client_kwargs["context"] = context
+
+    with smtp_client(settings.host, settings.port, **client_kwargs) as client:
         client.ehlo()
         if settings.use_tls:
             client.starttls(context=context)

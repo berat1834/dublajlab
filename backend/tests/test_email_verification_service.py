@@ -7,6 +7,7 @@ from backend.services.email_verification_service import (
     EmailDeliveryConfigurationError,
     create_verification_token,
     hash_verification_token,
+    send_verification_email,
     smtp_settings,
 )
 
@@ -38,6 +39,69 @@ def test_missing_smtp_configuration_fails_safely(monkeypatch):
     with pytest.raises(EmailDeliveryConfigurationError) as error:
         smtp_settings()
     assert "henüz yapılandırılmamış" in str(error.value)
+
+
+def test_smtp_ssl_uses_implicit_tls_connection(monkeypatch):
+    for name, value in {
+        "SMTP_HOST": "mail.example.test",
+        "SMTP_PORT": "465",
+        "SMTP_USERNAME": "sender@example.test",
+        "SMTP_PASSWORD": "not-a-real-secret",
+        "SMTP_FROM_EMAIL": "sender@example.test",
+        "SMTP_USE_TLS": "false",
+        "SMTP_USE_SSL": "true",
+    }.items():
+        monkeypatch.setenv(name, value)
+
+    calls = []
+
+    class FakeSmtpSsl:
+        def __init__(self, host, port, **kwargs):
+            calls.append(("connect", host, port, kwargs))
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_args):
+            return None
+
+        def ehlo(self):
+            calls.append(("ehlo",))
+
+        def starttls(self, **_kwargs):
+            raise AssertionError("Implicit SSL bağlantısında STARTTLS kullanılmamalı")
+
+        def login(self, username, password):
+            calls.append(("login", username, password))
+
+        def send_message(self, message):
+            calls.append(("send", message["To"]))
+
+    monkeypatch.setattr("smtplib.SMTP_SSL", FakeSmtpSsl)
+    send_verification_email(
+        recipient="user@example.test",
+        display_name="Test User",
+        verification_url="https://example.test/verify?token=test",
+    )
+
+    assert calls[0][0:3] == ("connect", "mail.example.test", 465)
+    assert calls[-1] == ("send", "user@example.test")
+
+
+def test_smtp_tls_and_ssl_cannot_be_enabled_together(monkeypatch):
+    for name, value in {
+        "SMTP_HOST": "mail.example.test",
+        "SMTP_USERNAME": "sender@example.test",
+        "SMTP_PASSWORD": "not-a-real-secret",
+        "SMTP_FROM_EMAIL": "sender@example.test",
+        "SMTP_USE_TLS": "true",
+        "SMTP_USE_SSL": "true",
+    }.items():
+        monkeypatch.setenv(name, value)
+
+    with pytest.raises(EmailDeliveryConfigurationError) as error:
+        smtp_settings()
+    assert "aynı anda" in str(error.value)
 
 
 def test_production_frontend_url_ignores_stale_vercel_origin(monkeypatch):

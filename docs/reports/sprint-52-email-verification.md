@@ -21,13 +21,16 @@ güvenilir biçimde kanıtlamaz.
 ## Ortam değişkenleri
 
 `EMAIL_VERIFICATION_REQUIRED`, `EMAIL_VERIFICATION_TTL_MINUTES`, `SMTP_HOST`,
-`SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_USE_TLS`
+`SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_USE_TLS`,
+`SMTP_USE_SSL`
 ve `FRONTEND_URL`. Secret değerler yalnız Railway/provider dashboard'da tutulur.
+SMTP servisi hem 587/STARTTLS hem de 465/implicit SSL bağlantısını destekler;
+iki güvenlik modu aynı anda etkinleştirilemez.
 
 ## Doğrulama
 
-- Backend: 152 passed, 1 skipped.
-- Auth/e-posta doğrulama hedefli testler: 15 passed.
+- Backend: 154 passed, 1 skipped.
+- Auth/e-posta doğrulama hedefli testler: 17 passed.
 - Fresh SQLite Alembic upgrade → downgrade → upgrade: geçti.
 - Frontend Vitest: 15/15 geçti.
 - Frontend ESLint ve production build: geçti.

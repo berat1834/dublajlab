@@ -58,6 +58,7 @@ SMTP_USERNAME=<provider-dashboard-only-username>
 SMTP_PASSWORD=<provider-dashboard-only-password>
 SMTP_FROM_EMAIL=<verified-sender@dublajlab.com.tr>
 SMTP_USE_TLS=true
+SMTP_USE_SSL=false
 
 # Railway runtime ve medya
 RAILWAY_DOCKERFILE_PATH=backend/Dockerfile
@@ -96,6 +97,10 @@ bilgileri eksikse yeni parola kaydı fail-closed davranıp `503` döner. Deploy 
 gönderici domain SPF/DKIM kayıtları SMTP sağlayıcısında doğrulanmalı; gerçek adresle
 kayıt, bağlantı açma, süresi dolmuş bağlantı ve yeniden gönderme smoke testleri
 tamamlanmalıdır. Mevcut hesaplar migration sırasında doğrulanmış kabul edilir.
+SMTP sağlayıcısı port 465/implicit SSL istiyorsa `SMTP_PORT=465`,
+`SMTP_USE_TLS=false` ve `SMTP_USE_SSL=true` kullanılır. Port 587/STARTTLS
+için `SMTP_USE_TLS=true`, `SMTP_USE_SSL=false` kalır. TLS ve SSL bayrakları
+aynı anda açılmamalıdır.
 
 `APP_ENV=production` ile `LIPSYNC_PROVIDER=local` kombinasyonu, flag yanlışlıkla
 açılsa dahi backend tarafından reddedilir. Production Wav2Lip local open-source

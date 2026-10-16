@@ -28,7 +28,10 @@ ise yalnız sağlayıcının doğruladığı e-posta kabul edilir.
 
 Canlı ortamda `EMAIL_VERIFICATION_REQUIRED=true`, `FRONTEND_URL` ve genel SMTP
 değişkenleri (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
-`SMTP_FROM_EMAIL`, `SMTP_USE_TLS`) Railway dashboard üzerinden tanımlanmalıdır.
+`SMTP_FROM_EMAIL`, `SMTP_USE_TLS`, `SMTP_USE_SSL`) Railway dashboard üzerinden
+tanımlanmalıdır. Port 587/STARTTLS için `SMTP_USE_TLS=true` ve
+`SMTP_USE_SSL=false`; port 465/implicit SSL için `SMTP_USE_TLS=false` ve
+`SMTP_USE_SSL=true` kullanılır. İki seçenek aynı anda etkinleştirilmez.
 SMTP gönderimi hazır değilse kayıt endpoint'i güvenli biçimde `503` döner; kullanıcıya
 yanıltıcı bir “kayıt başarılı” mesajı gösterilmez. Secret değerleri repoya yazılmaz.
 
