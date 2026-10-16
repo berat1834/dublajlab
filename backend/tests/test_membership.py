@@ -40,7 +40,7 @@ def test_new_user_is_free() -> None:
         "/api/auth/register",
         json={
             "email": client_user_email,
-            "password": "testpassword",
+            "password": "Sunset-River-2026",
             "display_name": "Free Member",
         },
     )

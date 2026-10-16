@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { ArrowRight, Github, Mail, MailCheck, Mic2, PlayCircle, RefreshCw } from 'lucide-react'
+import { ArrowRight, Check, Eye, EyeOff, Github, Mail, MailCheck, Mic2, PlayCircle, RefreshCw, X } from 'lucide-react'
 import type { Tab, User } from '../types'
 import { login, register, getMe, resendVerification } from '../lib/api'
 import { useLanguage } from '../LanguageContext'
 import { useEffect } from 'react'
+import { evaluatePassword } from '../lib/passwordPolicy'
 
 interface AuthPageProps {
   mode: 'login' | 'register'
@@ -15,6 +16,8 @@ interface AuthPageProps {
 export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPageProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [verificationNotice, setVerificationNotice] = useState<
@@ -22,6 +25,8 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
   >(null)
   const [resending, setResending] = useState(false)
   const { t } = useLanguage()
+  const passwordEvaluation = evaluatePassword(password, email, name)
+  const passwordsMatch = password.length > 0 && password === passwordConfirmation
 
   // Kullanıcı zaten login ise yönlendir
   useEffect(() => {
@@ -43,6 +48,14 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
     setLoading(true)
     try {
       if (mode === 'register') {
+        if (!passwordEvaluation.isValid) {
+          onToast(t('auth.password.invalid'))
+          return
+        }
+        if (!passwordsMatch) {
+          onToast(t('auth.password.mismatch'))
+          return
+        }
         const registeredUser = await register(email, password, name || t('auth.default_name'))
         if (registeredUser.email_verification_required) {
           setVerificationNotice('sent')
@@ -174,6 +187,8 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="dublaj_master"
+                  autoComplete="username"
+                  required
                   className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
                 />
               </div>
@@ -186,24 +201,99 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ornek@mail.com"
+                autoComplete="email"
+                required
                 className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
               />
             </div>
 
             <div>
               <label className="block text-xs font-bold text-zinc-400 mb-1.5">{t('auth.password')}</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••"
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                  required
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? t('auth.password.hide') : t('auth.password.show')}
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-zinc-500 transition hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
+
+            {mode === 'register' && (
+              <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                <div className="flex gap-1.5" aria-label={t('auth.password.strength')}>
+                  {[1, 2, 3].map((level) => (
+                    <span
+                      key={level}
+                      className={`h-1.5 flex-1 rounded-full transition-colors ${
+                        passwordEvaluation.score >= level
+                          ? passwordEvaluation.score === 1
+                            ? 'bg-red-400'
+                            : passwordEvaluation.score === 2
+                              ? 'bg-amber-300'
+                              : 'bg-lime'
+                          : 'bg-white/10'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs font-bold text-zinc-300">
+                  {t('auth.password.strength')}: {t(`auth.password.strength.${passwordEvaluation.score}`)}
+                </p>
+                <ul className="space-y-1.5 text-xs text-zinc-400">
+                  {[
+                    [passwordEvaluation.longEnough, t('auth.password.rule.length')],
+                    [passwordEvaluation.notCommon, t('auth.password.rule.common')],
+                    [passwordEvaluation.excludesIdentity, t('auth.password.rule.identity')],
+                  ].map(([valid, label]) => (
+                    <li key={String(label)} className="flex items-center gap-2">
+                      {valid ? <Check className="h-3.5 w-3.5 text-lime" /> : <X className="h-3.5 w-3.5 text-zinc-600" />}
+                      <span className={valid ? 'text-zinc-300' : undefined}>{label}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[11px] leading-5 text-zinc-500">
+                  {t('auth.password.suggestion')}
+                </p>
+
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-zinc-400">
+                    {t('auth.password.confirm')}
+                  </label>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={passwordConfirmation}
+                    onChange={(e) => setPasswordConfirmation(e.target.value)}
+                    autoComplete="new-password"
+                    required
+                    placeholder="••••••••••"
+                    className={`w-full rounded-xl border bg-white/5 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-1 transition ${
+                      passwordConfirmation && !passwordsMatch
+                        ? 'border-red-400/60 focus:border-red-400 focus:ring-red-400'
+                        : 'border-white/10 focus:border-lime focus:ring-lime'
+                    }`}
+                  />
+                  {passwordConfirmation && !passwordsMatch && (
+                    <p className="mt-1.5 text-xs text-red-300">{t('auth.password.mismatch')}</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || (mode === 'register' && (!passwordEvaluation.isValid || !passwordsMatch))}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-4 py-3.5 text-sm font-black text-ink hover:bg-lime/90 transition shadow-glow disabled:opacity-50"
             >
               {loading ? t('auth.waiting') : (mode === 'login' ? t('auth.login.action') : t('auth.register.action'))} <ArrowRight className="h-4 w-4" />

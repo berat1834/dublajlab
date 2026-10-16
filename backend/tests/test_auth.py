@@ -3,11 +3,12 @@ from backend.main import app
 from backend.routers import auth_router
 
 client = TestClient(app)
+STRONG_PASSWORD = "Sunset-River-2026"
 
 def test_register_user():
     response = client.post(
         "/api/auth/register",
-        json={"email": "test@dublajlab.com", "password": "testpassword", "display_name": "Test User"}
+        json={"email": "test@dublajlab.com", "password": STRONG_PASSWORD, "display_name": "Test User"}
     )
     assert response.status_code == 200
     data = response.json()
@@ -15,14 +16,42 @@ def test_register_user():
     assert "id" in data
     assert data["display_name"] == "Test User"
 
+
+def test_register_rejects_short_password_with_clear_message():
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "short-password@dublajlab.com",
+            "password": "short123",
+            "display_name": "Short Password",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Parola en az 10 karakter olmalıdır."
+
+
+def test_register_rejects_common_password_with_clear_message():
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "email": "common-password@dublajlab.com",
+            "password": "Password123",
+            "display_name": "Common Password",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "çok yaygın" in response.json()["detail"]
+
 def test_register_duplicate_email():
     client.post(
         "/api/auth/register",
-        json={"email": "dup@dublajlab.com", "password": "testpassword", "display_name": "Test User"}
+        json={"email": "dup@dublajlab.com", "password": STRONG_PASSWORD, "display_name": "Test User"}
     )
     response = client.post(
         "/api/auth/register",
-        json={"email": "dup@dublajlab.com", "password": "testpassword", "display_name": "Test User 2"}
+        json={"email": "dup@dublajlab.com", "password": STRONG_PASSWORD, "display_name": "Test User 2"}
     )
     assert response.status_code == 400
     assert response.json()["detail"] == "Bu e-posta adresi zaten kullanımda."
@@ -30,11 +59,11 @@ def test_register_duplicate_email():
 def test_login_success():
     client.post(
         "/api/auth/register",
-        json={"email": "login@dublajlab.com", "password": "testpassword", "display_name": "Test User"}
+        json={"email": "login@dublajlab.com", "password": STRONG_PASSWORD, "display_name": "Test User"}
     )
     response = client.post(
         "/api/auth/login",
-        json={"email": "login@dublajlab.com", "password": "testpassword"}
+        json={"email": "login@dublajlab.com", "password": STRONG_PASSWORD}
     )
     assert response.status_code == 200
     assert "access_token" in response.json()
@@ -42,7 +71,7 @@ def test_login_success():
 def test_login_fail_wrong_password():
     client.post(
         "/api/auth/register",
-        json={"email": "fail@dublajlab.com", "password": "testpassword", "display_name": "Test User"}
+        json={"email": "fail@dublajlab.com", "password": STRONG_PASSWORD, "display_name": "Test User"}
     )
     response = client.post(
         "/api/auth/login",
@@ -62,11 +91,11 @@ def test_me_invalid_token():
 def test_me_success():
     client.post(
         "/api/auth/register",
-        json={"email": "metest@dublajlab.com", "password": "testpassword", "display_name": "Test User"}
+        json={"email": "metest@dublajlab.com", "password": STRONG_PASSWORD, "display_name": "Test User"}
     )
     login_response = client.post(
         "/api/auth/login",
-        json={"email": "metest@dublajlab.com", "password": "testpassword"}
+        json={"email": "metest@dublajlab.com", "password": STRONG_PASSWORD}
     )
     token = login_response.json()["access_token"]
     me_response = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
@@ -86,7 +115,7 @@ def test_password_registration_requires_email_verification(monkeypatch):
         "/api/auth/register",
         json={
             "email": "verify@dublajlab.com",
-            "password": "testpassword",
+            "password": STRONG_PASSWORD,
             "display_name": "Verify User",
         },
     )
@@ -98,7 +127,7 @@ def test_password_registration_requires_email_verification(monkeypatch):
 
     blocked_login = client.post(
         "/api/auth/login",
-        json={"email": "verify@dublajlab.com", "password": "testpassword"},
+        json={"email": "verify@dublajlab.com", "password": STRONG_PASSWORD},
     )
     assert blocked_login.status_code == 403
     assert "doğrulamanız gerekiyor" in blocked_login.json()["detail"]
@@ -112,7 +141,7 @@ def test_password_registration_requires_email_verification(monkeypatch):
 
     login_response = client.post(
         "/api/auth/login",
-        json={"email": "verify@dublajlab.com", "password": "testpassword"},
+        json={"email": "verify@dublajlab.com", "password": STRONG_PASSWORD},
     )
     assert login_response.status_code == 200
 
@@ -136,7 +165,7 @@ def test_registration_fails_closed_when_verification_mail_cannot_be_sent(monkeyp
         "/api/auth/register",
         json={
             "email": "delivery-failure@dublajlab.com",
-            "password": "testpassword",
+            "password": STRONG_PASSWORD,
             "display_name": "Delivery Failure",
         },
     )

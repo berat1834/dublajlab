@@ -1,6 +1,6 @@
 # DublajLab Project Report
 
-## Current Status (Public Beta + Portfolio Ready - Sprint 53)
+## Current Status (Public Beta + Portfolio Ready - Sprint 54)
 
 - **Sprint 51 canlı denetim düzeltmeleri:** Hesap/profil, OAuth state, auth rate limit,
   template 404, i18n, stabil SPA URL'leri, güvenlik header'ları, ödeme fail-closed davranışı,
@@ -12,6 +12,9 @@
 - **Sprint 53 Resend teslimatı:** Railway Trial/Free/Hobby SMTP engeli nedeniyle
   doğrulama e-postaları için HTTPS tabanlı Resend provider desteği eklendi; SMTP
   desteği egress izni olan ortamlar için korunuyor.
+- **Sprint 54 parola güvenliği:** Yeni parola kayıtları minimum 10 karakter,
+  yaygın parola ve kimlik bilgisi kontrollerinden geçiyor; kayıt ekranında TR/EN
+  güç göstergesi, tekrar alanı ve göster/gizle kontrolü bulunuyor.
 
 - **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
   - ✅ **Canlı URL (Canonical)**: Özel alan adı **`https://www.dublajlab.com.tr`** açılıyor ve canonical/SEO metadata bu adresi kullanıyor. Vercel deployment altyapısı özel alan adının arkasında çalışmaya devam ediyor.
@@ -89,6 +92,7 @@
 | 51 | Canlı site denetimi düzeltmeleri ve admin hardening | [sprint-51-live-audit-remediation.md](docs/reports/sprint-51-live-audit-remediation.md) |
 | 52 | Parola kayıtları için e-posta sahipliği doğrulaması | [sprint-52-email-verification.md](docs/reports/sprint-52-email-verification.md) |
 | 53 | Railway uyumlu HTTPS/Resend e-posta teslimatı | [sprint-53-resend-email-delivery.md](docs/reports/sprint-53-resend-email-delivery.md) |
+| 54 | Parola politikası ve canlı güç göstergesi | [sprint-54-password-strength.md](docs/reports/sprint-54-password-strength.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
@@ -99,8 +103,11 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   ESLint, production build ve `npm audit` (0 vulnerability) geçti.
 - Sprint 53: Resend HTTPS payload, eksik config ve bilinmeyen provider fail-closed
   testleri eklendi; backend 157 passed/1 skipped, auth/e-posta hedefli 20/20,
-  frontend Vitest 15/15, lint/build ve audit geçti. Production teslimat smoke testi
-  provider domain/API key kurulumunu bekliyor.
+  frontend Vitest 15/15 ve lint/build geçti. `send.dublajlab.com.tr` doğrulandı;
+  canlı kayıt, ProMail teslimatı, doğrulama bağlantısı ve giriş akışı geçti.
+- Sprint 54: parola policy/auth hedefli 18/18, tam backend paketi ve frontend
+  Vitest 19/19, ESLint ile production build geçti. `npm audit`, Tailwind 3 build
+  zincirindeki daha önce kaydedilmiş 7 transitive bulguyu raporlamaya devam ediyor.
 
 - Sprint 51: backend 141 test toplandı; 140 geçti, credential gerektiren R2 staging testi skip edildi.
 - Sprint 51: frontend Vitest 15/15, ESLint, TypeScript/Vite production build geçti;
@@ -127,9 +134,9 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 
 ## Known Risks
 
-- Canlı e-posta doğrulaması için Resend'de doğrulanmış bir gönderici alt domain
-  ve Railway'de API anahtarı gerekir; gerçek teslimat/bounce smoke'u bu kurulum
-  tamamlanmadan yapılamaz. Railway Trial/Free/Hobby planları outbound SMTP'yi engeller.
+- Canlı e-posta doğrulaması Resend HTTPS API üzerinden çalışır; API anahtarı yalnızca
+  Railway secret değişkeninde tutulmalıdır. Railway Trial/Free/Hobby planları outbound
+  SMTP'yi engellediği için SMTP değişkenleri production gönderim yolu değildir.
 
 - JWT tarayıcıda `localStorage` içinde tutuluyor; HttpOnly cookie tabanlı oturum ayrı güvenlik çalışması gerektirir.
 - Login brute-force limiti tek process belleğindedir; çoklu replica için Redis'e taşınmalıdır.

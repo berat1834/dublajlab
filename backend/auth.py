@@ -9,7 +9,9 @@ SECRET_KEY = config.get_jwt_secret()
 ALGORITHM = config.get_jwt_algorithm()
 ACCESS_TOKEN_EXPIRE_MINUTES = config.get_jwt_expire_minutes()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# bcrypt_sha256 removes bcrypt's 72-byte input limit for new passwords while
+# keeping existing bcrypt hashes verifiable during the gradual migration.
+pwd_context = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)

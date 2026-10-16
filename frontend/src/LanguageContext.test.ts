@@ -26,4 +26,10 @@ describe('English product navigation and core screens', () => {
     ]
     for (const key of keys) expect(translate(key, 'EN')).not.toBe(key)
   })
+
+  it('translates password-strength guidance', () => {
+    expect(translate('auth.password.rule.length', 'TR')).toBe('En az 10 karakter')
+    expect(translate('auth.password.strength.3', 'EN')).toBe('Strong')
+    expect(translate('auth.password.mismatch', 'EN')).toBe('Passwords do not match.')
+  })
 })
