@@ -25,6 +25,8 @@ class UserResponse(BaseModel):
     has_active_vip: bool = False
     has_password: bool = False
     mfa_enabled: bool = False
+    email_verified: bool = False
+    email_verification_required: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -39,6 +41,12 @@ class AccountDeleteRequest(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class EmailVerificationResendRequest(BaseModel):
+    email: EmailStr
+
+class MessageResponse(BaseModel):
+    message: str
 
 class MFASetupStartRequest(BaseModel):
     password: str = Field(min_length=1, max_length=128)

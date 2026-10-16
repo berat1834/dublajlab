@@ -196,6 +196,12 @@ async def google_callback(request: Request, code: str, state: str | None = None,
         user_data = user_res.json()
         
     email = user_data.get("email")
+    if not email or not user_data.get("verified_email"):
+        raise HTTPException(
+            status_code=400,
+            detail="Google hesabının doğrulanmış bir e-posta adresi olmalı.",
+        )
+    email = email.lower()
     google_id = user_data.get("id")
     name = user_data.get("name") or email.split("@")[0]
     
@@ -206,13 +212,17 @@ async def google_callback(request: Request, code: str, state: str | None = None,
         user = models_db.User(
             email=email,
             display_name=name,
-            google_id=google_id
+            google_id=google_id,
+            email_verified=True,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-    elif not user.google_id:
+    elif not user.google_id or not user.email_verified:
         user.google_id = google_id
+        user.email_verified = True
+        user.email_verification_token_hash = None
+        user.email_verification_expires_at = None
         db.commit()
 
     grant_configured_admin_role(user, db)
@@ -279,8 +289,12 @@ async def discord_callback(request: Request, code: str, state: str | None = None
     discord_id = user_data.get("id")
     name = user_data.get("global_name") or user_data.get("username")
     
-    if not email:
-        raise HTTPException(status_code=400, detail="Discord hesabı e-posta adresi içermiyor.")
+    if not email or not user_data.get("verified"):
+        raise HTTPException(
+            status_code=400,
+            detail="Discord hesabının doğrulanmış bir e-posta adresi olmalı.",
+        )
+    email = email.lower()
         
     # Process user
     user = db.query(models_db.User).filter((models_db.User.email == email) | (models_db.User.discord_id == discord_id)).first()
@@ -289,13 +303,17 @@ async def discord_callback(request: Request, code: str, state: str | None = None
         user = models_db.User(
             email=email,
             display_name=name,
-            discord_id=discord_id
+            discord_id=discord_id,
+            email_verified=True,
         )
         db.add(user)
         db.commit()
         db.refresh(user)
-    elif not user.discord_id:
+    elif not user.discord_id or not user.email_verified:
         user.discord_id = discord_id
+        user.email_verified = True
+        user.email_verification_token_hash = None
+        user.email_verification_expires_at = None
         db.commit()
 
     grant_configured_admin_role(user, db)

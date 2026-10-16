@@ -1,11 +1,14 @@
 # DublajLab Project Report
 
-## Current Status (Public Beta + Portfolio Ready - Sprint 51)
+## Current Status (Public Beta + Portfolio Ready - Sprint 52)
 
 - **Sprint 51 canlı denetim düzeltmeleri:** Hesap/profil, OAuth state, auth rate limit,
   template 404, i18n, stabil SPA URL'leri, güvenlik header'ları, ödeme fail-closed davranışı,
   gerçek boş feed durumu ve admin kullanıcı/VIP/yorum/audit araçları tamamlandı.
 - Fresh Alembic migration zinciri ve container startup migration'ı doğrulandı.
+- **Sprint 52 e-posta doğrulaması:** Yeni parola hesapları production'da süreli,
+  tek kullanımlık bağlantıyla doğrulanır; doğrulanmamış hesap giriş yapamaz ve SMTP
+  hazır değilse kayıt sahte başarı yerine güvenli `503` döner.
 
 - **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
   - ✅ **Canlı URL (Canonical)**: Özel alan adı **`https://www.dublajlab.com.tr`** açılıyor ve canonical/SEO metadata bu adresi kullanıyor. Vercel deployment altyapısı özel alan adının arkasında çalışmaya devam ediyor.
@@ -81,10 +84,15 @@
 | 43 | Cloudflare R2 / S3 Media Storage Migration Plan + Abstraction | [sprint-43-object-storage-abstraction.md](docs/reports/sprint-43-object-storage-abstraction.md) |
 | 44 | R2 production enable hazırlığı ve migration smoke | [sprint-44-r2-production-smoke.md](docs/reports/sprint-44-r2-production-smoke.md) |
 | 51 | Canlı site denetimi düzeltmeleri ve admin hardening | [sprint-51-live-audit-remediation.md](docs/reports/sprint-51-live-audit-remediation.md) |
+| 52 | Parola kayıtları için e-posta sahipliği doğrulaması | [sprint-52-email-verification.md](docs/reports/sprint-52-email-verification.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
 ## Latest Validation
+
+- Sprint 52: backend 152 passed, 1 staging R2 testi skip; auth/e-posta hedefli 15/15 geçti.
+- Sprint 52: fresh SQLite migration upgrade/downgrade/upgrade, frontend Vitest 15/15,
+  ESLint, production build ve `npm audit` (0 vulnerability) geçti.
 
 - Sprint 51: backend 141 test toplandı; 140 geçti, credential gerektiren R2 staging testi skip edildi.
 - Sprint 51: frontend Vitest 15/15, ESLint, TypeScript/Vite production build geçti;
@@ -110,6 +118,9 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Sprint 44 canlı erişim kontrolü: `https://www.dublajlab.com.tr` ile Railway `health`, `ffmpeg`, `demo-policy` ve `templates` endpointleri HTTP 200 döndürdü. Bu kontrol R2 obje yazma smoke'u yerine geçmez.
 
 ## Known Risks
+
+- Canlı e-posta doğrulaması için doğrulanmış bir gönderici domain ve Railway'de SMTP
+  secret'ları gerekir; gerçek teslimat/bounce smoke'u provider bilgileri girilmeden yapılamaz.
 
 - JWT tarayıcıda `localStorage` içinde tutuluyor; HttpOnly cookie tabanlı oturum ayrı güvenlik çalışması gerektirir.
 - Login brute-force limiti tek process belleğindedir; çoklu replica için Redis'e taşınmalıdır.

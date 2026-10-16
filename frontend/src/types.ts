@@ -84,6 +84,8 @@ export interface User {
   mfa_enabled: boolean
   has_password?: boolean
   discord_linked?: boolean
+  email_verified?: boolean
+  email_verification_required?: boolean
 }
 
 export interface AuthResponse {

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
 
@@ -22,6 +23,12 @@ from backend.services.admin_mfa_service import (
 )
 from backend.services.auth_rate_limit_service import auth_attempt_limiter
 from backend.services.rate_limit_service import resolve_client_ip
+from backend.services.email_verification_service import (
+    EmailDeliveryConfigurationError,
+    create_verification_token,
+    hash_verification_token,
+    send_verification_email,
+)
 from backend import config
 
 router = APIRouter()
@@ -61,27 +68,109 @@ def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
         return None
     return None
 
+def _send_account_verification(
+    *, request: Request, user: models_db.User, db: Session
+) -> None:
+    raw_token, token_hash, expires_at = create_verification_token()
+    user.email_verification_token_hash = token_hash
+    user.email_verification_expires_at = expires_at
+    verification_url = f'{request.url_for("verify_email")}?token={raw_token}'
+    try:
+        send_verification_email(
+            recipient=user.email,
+            display_name=user.display_name,
+            verification_url=verification_url,
+        )
+    except (EmailDeliveryConfigurationError, OSError) as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Doğrulama e-postası şu anda gönderilemiyor. "
+                "Lütfen daha sonra tekrar deneyin."
+            ),
+        ) from exc
+
+
 @router.post("/register", response_model=schemas.UserResponse)
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def register(request: Request, user: schemas.UserCreate, db: Session = Depends(get_db)):
     email_lower = user.email.lower()
     db_user = db.query(models_db.User).filter(models_db.User.email == email_lower).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Bu e-posta adresi zaten kullanımda.")
     
     hashed_password = auth.get_password_hash(user.password)
+    verification_required = config.email_verification_required()
     new_user = models_db.User(
         email=email_lower,
         password_hash=hashed_password,
-        display_name=user.display_name
+        display_name=user.display_name,
+        email_verified=not verification_required,
     )
     db.add(new_user)
+    db.flush()
+    if verification_required:
+        _send_account_verification(request=request, user=new_user, db=db)
     db.commit()
     db.refresh(new_user)
     response = schemas.UserResponse.model_validate(new_user)
     return response.model_copy(update={
         "has_active_vip": has_active_vip(new_user),
         "has_password": bool(new_user.password_hash),
+        "email_verification_required": verification_required,
     })
+
+
+@router.get("/verify-email", name="verify_email")
+def verify_email(token: str, db: Session = Depends(get_db)):
+    token_hash = hash_verification_token(token)
+    user = (
+        db.query(models_db.User)
+        .filter(models_db.User.email_verification_token_hash == token_hash)
+        .first()
+    )
+    if user is None or user.email_verification_expires_at is None:
+        return RedirectResponse(
+            f"{config.frontend_url()}/giris?email_verification=invalid",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    expires_at = user.email_verification_expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at <= datetime.now(timezone.utc):
+        return RedirectResponse(
+            f"{config.frontend_url()}/giris?email_verification=expired",
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+    user.email_verified = True
+    user.email_verification_token_hash = None
+    user.email_verification_expires_at = None
+    db.commit()
+    return RedirectResponse(
+        f"{config.frontend_url()}/giris?email_verification=success",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/resend-verification", response_model=schemas.MessageResponse)
+def resend_verification(
+    request: Request,
+    payload: schemas.EmailVerificationResendRequest,
+    db: Session = Depends(get_db),
+):
+    generic_message = (
+        "Adres kayıtlı ve henüz doğrulanmamışsa yeni bağlantı gönderildi."
+    )
+    user = (
+        db.query(models_db.User)
+        .filter(models_db.User.email == payload.email.lower())
+        .first()
+    )
+    if user is None or user.email_verified or not user.password_hash:
+        return schemas.MessageResponse(message=generic_message)
+    _send_account_verification(request=request, user=user, db=db)
+    db.commit()
+    return schemas.MessageResponse(message=generic_message)
 
 @router.post("/login", response_model=schemas.Token)
 def login(request: Request, user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
@@ -102,6 +191,15 @@ def login(request: Request, user_credentials: schemas.UserLogin, db: Session = D
 
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Bu hesap devre dışı bırakılmış.")
+
+    if config.email_verification_required() and not user.email_verified:
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "E-posta adresinizi doğrulamanız gerekiyor. "
+                "Gelen kutunuzdaki DublajLab bağlantısını açın."
+            ),
+        )
 
     auth_attempt_limiter.clear(limiter_key)
         
