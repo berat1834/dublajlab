@@ -6,7 +6,9 @@ from backend import config
 from backend.services.email_verification_service import (
     EmailDeliveryConfigurationError,
     create_verification_token,
+    email_delivery_provider,
     hash_verification_token,
+    resend_settings,
     send_verification_email,
     smtp_settings,
 )
@@ -34,6 +36,7 @@ def test_verification_token_is_hashed_and_expires(monkeypatch):
 
 
 def test_missing_smtp_configuration_fails_safely(monkeypatch):
+    monkeypatch.setenv("EMAIL_DELIVERY_PROVIDER", "smtp")
     for name in ("SMTP_HOST", "SMTP_USERNAME", "SMTP_PASSWORD", "SMTP_FROM_EMAIL"):
         monkeypatch.delenv(name, raising=False)
     with pytest.raises(EmailDeliveryConfigurationError) as error:
@@ -50,6 +53,7 @@ def test_smtp_ssl_uses_implicit_tls_connection(monkeypatch):
         "SMTP_FROM_EMAIL": "sender@example.test",
         "SMTP_USE_TLS": "false",
         "SMTP_USE_SSL": "true",
+        "EMAIL_DELIVERY_PROVIDER": "smtp",
     }.items():
         monkeypatch.setenv(name, value)
 
@@ -96,12 +100,60 @@ def test_smtp_tls_and_ssl_cannot_be_enabled_together(monkeypatch):
         "SMTP_FROM_EMAIL": "sender@example.test",
         "SMTP_USE_TLS": "true",
         "SMTP_USE_SSL": "true",
+        "EMAIL_DELIVERY_PROVIDER": "smtp",
     }.items():
         monkeypatch.setenv(name, value)
 
     with pytest.raises(EmailDeliveryConfigurationError) as error:
         smtp_settings()
     assert "aynı anda" in str(error.value)
+
+
+def test_resend_provider_posts_verification_email_over_https(monkeypatch):
+    monkeypatch.setenv("EMAIL_DELIVERY_PROVIDER", "resend")
+    monkeypatch.setenv("RESEND_API_KEY", "re_test_not_a_real_secret")
+    monkeypatch.setenv(
+        "RESEND_FROM_EMAIL", "DublajLab <noreply@send.example.test>"
+    )
+    monkeypatch.setenv("RESEND_REPLY_TO", "support@example.test")
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            captured["status_checked"] = True
+
+    def fake_post(url, **kwargs):
+        captured["url"] = url
+        captured.update(kwargs)
+        return FakeResponse()
+
+    monkeypatch.setattr("httpx.post", fake_post)
+    send_verification_email(
+        recipient="user@example.test",
+        display_name="Test User",
+        verification_url="https://example.test/verify?token=test",
+    )
+
+    assert captured["url"] == "https://api.resend.com/emails"
+    assert captured["headers"]["Authorization"] == "Bearer re_test_not_a_real_secret"
+    assert captured["json"]["to"] == ["user@example.test"]
+    assert captured["json"]["reply_to"] == "support@example.test"
+    assert "https://example.test/verify?token=test" in captured["json"]["text"]
+    assert captured["status_checked"] is True
+
+
+def test_resend_provider_requires_api_key_and_sender(monkeypatch):
+    monkeypatch.setenv("EMAIL_DELIVERY_PROVIDER", "resend")
+    monkeypatch.delenv("RESEND_API_KEY", raising=False)
+    monkeypatch.delenv("RESEND_FROM_EMAIL", raising=False)
+    with pytest.raises(EmailDeliveryConfigurationError):
+        resend_settings()
+
+
+def test_unknown_email_delivery_provider_fails_closed(monkeypatch):
+    monkeypatch.setenv("EMAIL_DELIVERY_PROVIDER", "unknown")
+    with pytest.raises(EmailDeliveryConfigurationError):
+        email_delivery_provider()
 
 
 def test_production_frontend_url_ignores_stale_vercel_origin(monkeypatch):

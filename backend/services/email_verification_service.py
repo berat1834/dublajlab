@@ -10,10 +10,13 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 
+import httpx
+
 from backend import config
 
 
 VERIFICATION_SUBJECT = "DublajLab e-posta doğrulama"
+RESEND_EMAILS_URL = "https://api.resend.com/emails"
 
 
 class EmailDeliveryConfigurationError(RuntimeError):
@@ -31,6 +34,13 @@ class SmtpSettings:
     use_ssl: bool
 
 
+@dataclass(frozen=True)
+class ResendSettings:
+    api_key: str
+    from_email: str
+    reply_to: str | None
+
+
 def create_verification_token() -> tuple[str, str, datetime]:
     raw_token = secrets.token_urlsafe(32)
     return (
@@ -43,6 +53,15 @@ def create_verification_token() -> tuple[str, str, datetime]:
 
 def hash_verification_token(raw_token: str) -> str:
     return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+
+
+def email_delivery_provider() -> str:
+    provider = os.getenv("EMAIL_DELIVERY_PROVIDER", "smtp").strip().lower()
+    if provider not in {"smtp", "resend"}:
+        raise EmailDeliveryConfigurationError(
+            "E-posta doğrulama servisi yapılandırması geçersiz."
+        )
+    return provider
 
 
 def smtp_settings() -> SmtpSettings:
@@ -72,10 +91,16 @@ def smtp_settings() -> SmtpSettings:
             "E-posta doğrulama servisi yapılandırması geçersiz."
         ) from exc
     use_tls = os.getenv("SMTP_USE_TLS", "true").strip().lower() in {
-        "1", "true", "yes", "on"
+        "1",
+        "true",
+        "yes",
+        "on",
     }
     use_ssl = os.getenv("SMTP_USE_SSL", "false").strip().lower() in {
-        "1", "true", "yes", "on"
+        "1",
+        "true",
+        "yes",
+        "on",
     }
     if use_tls and use_ssl:
         raise EmailDeliveryConfigurationError(
@@ -86,32 +111,69 @@ def smtp_settings() -> SmtpSettings:
     )
 
 
+def resend_settings() -> ResendSettings:
+    api_key = os.getenv("RESEND_API_KEY", "").strip()
+    from_email = os.getenv("RESEND_FROM_EMAIL", "").strip()
+    reply_to = os.getenv("RESEND_REPLY_TO", "").strip() or None
+    if not api_key or not from_email:
+        raise EmailDeliveryConfigurationError(
+            "E-posta doğrulama servisi henüz yapılandırılmamış. "
+            "Lütfen daha sonra tekrar deneyin."
+        )
+    return ResendSettings(api_key, from_email, reply_to)
+
+
 def send_verification_email(
     *, recipient: str, display_name: str, verification_url: str
 ) -> None:
-    settings = smtp_settings()
     safe_name = html.escape(display_name)
     safe_url = html.escape(verification_url, quote=True)
-    message = EmailMessage()
-    message["Subject"] = VERIFICATION_SUBJECT
-    message["From"] = settings.from_email
-    message["To"] = recipient
-    message.set_content(
+    text_content = (
         f"Merhaba {display_name},\n\n"
         "DublajLab hesabınızı doğrulamak için aşağıdaki bağlantıyı açın:\n"
         f"{verification_url}\n\n"
         "Bu bağlantı süreli ve tek kullanımlıktır. Bu kaydı siz yapmadıysanız "
         "iletiyi yok sayabilirsiniz."
     )
-    message.add_alternative(
+    html_content = (
         "<html><body>"
         f"<p>Merhaba {safe_name},</p>"
         "<p>DublajLab hesabınızı doğrulamak için aşağıdaki düğmeyi kullanın.</p>"
         f'<p><a href="{safe_url}">E-posta adresimi doğrula</a></p>'
-        "<p>Bu bağlantı süreli ve tek kullanımlıdır.</p>"
-        "</body></html>",
-        subtype="html",
+        "<p>Bu bağlantı süreli ve tek kullanımlıktır.</p>"
+        "</body></html>"
     )
+
+    if email_delivery_provider() == "resend":
+        settings = resend_settings()
+        payload = {
+            "from": settings.from_email,
+            "to": [recipient],
+            "subject": VERIFICATION_SUBJECT,
+            "text": text_content,
+            "html": html_content,
+        }
+        if settings.reply_to:
+            payload["reply_to"] = settings.reply_to
+        response = httpx.post(
+            RESEND_EMAILS_URL,
+            headers={
+                "Authorization": f"Bearer {settings.api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=15,
+        )
+        response.raise_for_status()
+        return
+
+    settings = smtp_settings()
+    message = EmailMessage()
+    message["Subject"] = VERIFICATION_SUBJECT
+    message["From"] = settings.from_email
+    message["To"] = recipient
+    message.set_content(text_content)
+    message.add_alternative(html_content, subtype="html")
 
     context = ssl.create_default_context()
     smtp_client = smtplib.SMTP_SSL if settings.use_ssl else smtplib.SMTP
