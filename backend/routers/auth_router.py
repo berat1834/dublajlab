@@ -29,6 +29,10 @@ from backend.services.email_verification_service import (
     hash_verification_token,
     send_verification_email,
 )
+from backend.services.password_policy_service import (
+    PasswordPolicyError,
+    validate_new_password,
+)
 from backend import config
 
 router = APIRouter()
@@ -95,6 +99,15 @@ def _send_account_verification(
 @router.post("/register", response_model=schemas.UserResponse)
 def register(request: Request, user: schemas.UserCreate, db: Session = Depends(get_db)):
     email_lower = user.email.lower()
+    try:
+        validate_new_password(
+            user.password,
+            email=email_lower,
+            display_name=user.display_name,
+        )
+    except PasswordPolicyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     db_user = db.query(models_db.User).filter(models_db.User.email == email_lower).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Bu e-posta adresi zaten kullanımda.")
