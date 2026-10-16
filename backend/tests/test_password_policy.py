@@ -67,4 +67,3 @@ def test_existing_bcrypt_hashes_remain_verifiable():
     legacy_hash = legacy_context.hash("Legacy-Password-2026")
 
     assert auth.verify_password("Legacy-Password-2026", legacy_hash) is True
-

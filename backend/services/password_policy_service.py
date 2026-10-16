@@ -56,4 +56,3 @@ def validate_new_password(password: str, *, email: str, display_name: str) -> No
         raise PasswordPolicyError(
             "Parola e-posta adresinizi veya kullanıcı adınızı içermemelidir."
         )
-
