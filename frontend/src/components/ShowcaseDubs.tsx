@@ -3,10 +3,10 @@ import { Play, CheckCircle2, MessageSquare, Download, Flag } from 'lucide-react'
 import { getPublicDubs, toggleLikePublicDub, recordViewPublicDub, type PublicDub, absoluteApiUrl } from '../lib/api'
 import { ReportModal } from './ReportModal'
 import { PublicDubComments } from './PublicDubComments'
-import type { Tab } from '../types'
+import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
 
-export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string) => void; setActiveTab: (tab: Tab) => void }) {
+export function ShowcaseDubs({ currentUser, onToast, setActiveTab }: { currentUser: User | null; onToast: (msg: string) => void; setActiveTab: (tab: Tab) => void }) {
   const { language, t } = useLanguage()
   const [dubs, setDubs] = useState<PublicDub[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,7 +29,7 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
   }, [])
 
   const handleLikeToggle = async (dub: PublicDub) => {
-    if (!localStorage.getItem('token')) {
+    if (!currentUser) {
       onToast(t('dubs.like_login'))
       return
     }
@@ -76,6 +76,7 @@ export function ShowcaseDubs({ onToast, setActiveTab }: { onToast: (msg: string)
           projectId={commentingProjectId}
           onClose={() => setCommentingProjectId(null)}
           onToast={onToast}
+          isLoggedIn={Boolean(currentUser)}
           onLogin={() => { setCommentingProjectId(null); setActiveTab('login') }}
         />
       )}

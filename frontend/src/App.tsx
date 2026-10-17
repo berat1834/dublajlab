@@ -62,6 +62,7 @@ import {
   uploadVideo,
   waitForJobCompletion,
   getMe,
+  getMeFromSessionCookie,
   clearAdminMfaSession,
 } from './lib/api'
 import { shouldShowLipSync } from './lib/lipSync'
@@ -288,9 +289,17 @@ function App() {
       window.history.replaceState({}, document.title, '/')
     }
 
-    if (localStorage.getItem('token')) {
-      getMe().then(user => setCurrentUser(user)).catch(() => localStorage.removeItem('token'))
-    }
+    getMeFromSessionCookie()
+      .then(user => {
+        localStorage.removeItem('token')
+        setCurrentUser(user)
+      })
+      .catch(() => {
+        if (!localStorage.getItem('token')) return
+        getMe()
+          .then(user => setCurrentUser(user))
+          .catch(() => localStorage.removeItem('token'))
+      })
   }, [])
 
   useEffect(() => {
@@ -1246,7 +1255,7 @@ function App() {
               <TemplateGallery onSelect={handleTabTemplateSelect} />
             </div>
           ) : activeTab === 'dubs' ? (
-            <ShowcaseDubs onToast={showToast} setActiveTab={setActiveTab} />
+            <ShowcaseDubs currentUser={currentUser} onToast={showToast} setActiveTab={setActiveTab} />
           ) : activeTab === 'library' ? (
             currentUser ? <UserLibrary onToast={showToast} setActiveTab={setActiveTab} /> : <div className="text-center text-white py-12">{t('studio.auth_required')}</div>
           ) : activeTab === 'admin' ? (

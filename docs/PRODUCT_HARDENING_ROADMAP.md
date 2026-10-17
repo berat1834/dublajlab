@@ -13,7 +13,7 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
    - Yeni parola politikası, eski oturumları geçersiz kılma ve Alembic migration.
    - Hedefli 41/41 test, tam backend paketi, migration zinciri, main CI,
      Railway/Vercel deploy ve canlı endpoint kontrolleri geçti.
-2. **Oturum güvenliği — sırada; altyapı önkoşulu var**
+2. **Oturum güvenliği — geçiş katmanı tamamlandı; canlı aktivasyon bekliyor**
    - JWT'yi `localStorage` yerine HttpOnly, Secure, SameSite çereze taşı.
    - Önerilen yol: Railway servisini `api.dublajlab.com.tr` altında yayınla;
      Hosting.com.tr DNS, Vercel API adresi ve Google/Discord yetkili callback
@@ -21,6 +21,11 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
    - Alternatif: Vercel üzerinden backend-for-frontend proxy ve OAuth için kısa
      ömürlü, tek kullanımlık oturum değişim kodu uygula.
    - CSRF koruması, token yenileme/rotasyon ve kontrollü çıkış ekle.
+   - 17 Ekim 2026: HttpOnly/Secure/SameSite çerez, Origin tabanlı CSRF,
+     kontrollü logout, frontend credentials ve Bearer'dan geri uyumlu geçiş
+     kodlandı (Sprint 56). Bayraklar özel API domaini hazır olana kadar kapalıdır.
+   - Kalan: `api.dublajlab.com.tr`, Google/Discord callback güncellemesi, iki
+     aşamalı canlı aktivasyon ve ardından yenileme/rotasyon tasarımı.
 3. **Production secret temizliği**
    - Resend aktifken kullanılmayan `SMTP_*` değişkenlerini Railway'den kaldır.
    - Anahtar rotasyonu ve minimum yetki kontrolünü kaydet.

@@ -141,3 +141,22 @@ def test_oauth_token_redirect_uses_url_fragment(monkeypatch):
     assert response.headers["location"] == (
         "https://www.dublajlab.com.tr/oauth-callback#token=secret-token"
     )
+
+
+def test_oauth_cookie_only_redirect_never_exposes_token(monkeypatch):
+    monkeypatch.setenv("AUTH_COOKIE_ONLY", "true")
+    monkeypatch.setattr(
+        oauth_router.config,
+        "allowed_origins",
+        lambda: ["https://www.dublajlab.com.tr"],
+    )
+
+    response = oauth_router._frontend_redirect(
+        "https://www.dublajlab.com.tr", "secret-token"
+    )
+
+    assert response.headers["location"] == (
+        "https://www.dublajlab.com.tr/oauth-callback"
+    )
+    assert "secret-token" not in response.headers["location"]
+    assert "dublajlab_session=" in response.headers["set-cookie"]

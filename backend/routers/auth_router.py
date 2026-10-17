@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
@@ -39,6 +39,12 @@ from backend.services.password_policy_service import (
     PasswordPolicyError,
     validate_new_password,
 )
+from backend.services.session_service import (
+    clear_session_cookie,
+    cookie_only_enabled,
+    resolve_session_token,
+    set_session_cookie,
+)
 from backend import config
 import httpx
 import logging
@@ -47,11 +53,12 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login", auto_error=False)
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    request: Request,
+    bearer_token: str | None = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
     credentials_exception = HTTPException(
@@ -59,6 +66,9 @@ def get_current_user(
         detail="Bölgeye giriş yapılamadı, kimlik doğrulama başarısız.",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    token = resolve_session_token(request, bearer_token)
+    if not token:
+        raise credentials_exception
     try:
         payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
         user_id: str = payload.get("sub")
@@ -76,9 +86,14 @@ def get_current_user(
 
 def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
     auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
+    bearer_token = (
+        auth_header.split(" ", 1)[1]
+        if auth_header and auth_header.startswith("Bearer ")
+        else None
+    )
+    token = resolve_session_token(request, bearer_token)
+    if not token:
         return None
-    token = auth_header.split(" ")[1]
     try:
         payload = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM])
         user_id: str = payload.get("sub")
@@ -388,6 +403,7 @@ def reset_password(
 @router.post("/login", response_model=schemas.Token)
 def login(
     request: Request,
+    response: Response,
     user_credentials: schemas.UserLogin,
     db: Session = Depends(get_db),
 ):
@@ -426,7 +442,19 @@ def login(
     access_token = auth.create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    set_session_cookie(response, access_token)
+    return {
+        "access_token": None if cookie_only_enabled() else access_token,
+        "token_type": "bearer",
+    }
+
+
+@router.post("/logout", response_model=schemas.MessageResponse)
+def logout(request: Request, response: Response):
+    # Validate the request source whenever a session cookie accompanies logout.
+    resolve_session_token(request, None)
+    clear_session_cookie(response)
+    return schemas.MessageResponse(message="Oturum kapatıldı.")
 
 @router.get("/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: models_db.User = Depends(get_current_user)):

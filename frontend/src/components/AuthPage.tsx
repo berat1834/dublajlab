@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Github, Mail, MailCheck, Mic2, PlayCircle, RefreshCw, X } from 'lucide-react'
 import type { Tab, User } from '../types'
-import { login, register, getMe, resendVerification, forgotPassword, resetPassword } from '../lib/api'
+import { login, register, getMe, getMeFromSessionCookie, resendVerification, forgotPassword, resetPassword } from '../lib/api'
 import { useLanguage } from '../LanguageContext'
 import { evaluatePassword } from '../lib/passwordPolicy'
 
@@ -114,10 +114,19 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
         setActiveTab('login')
       } else {
         const res = await login(email, password)
-        localStorage.setItem('token', res.access_token)
+        // Prefer the HttpOnly session cookie. During the custom-domain rollout,
+        // retain the returned bearer token only if the cookie is not usable yet.
+        let authenticatedUser: User | null = null
+        try {
+          authenticatedUser = await getMeFromSessionCookie()
+          localStorage.removeItem('token')
+        } catch (cookieError) {
+          if (!res.access_token) throw cookieError
+          localStorage.setItem('token', res.access_token)
+          authenticatedUser = await getMe()
+        }
         if (setCurrentUser) {
-          const user = await getMe()
-          setCurrentUser(user)
+          setCurrentUser(authenticatedUser)
         }
         onToast(t('auth.login_success'))
         setActiveTab('play')

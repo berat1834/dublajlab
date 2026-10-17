@@ -6,18 +6,15 @@ from backend.database import get_db
 import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.services.file_storage import FileStorageService
-from backend.routers.auth_router import get_current_user
+from backend.routers.auth_router import get_current_user, get_current_user_optional
 from backend.services.storage_provider import get_storage_provider
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 storage = FileStorageService()
 
 def get_optional_user(request: Request, db: Session = Depends(get_db)):
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return None
     try:
-        return get_current_user(db=db, token=auth_header.split(" ", 1)[1])
+        return get_current_user_optional(request=request, db=db)
     except HTTPException:
         return None
 

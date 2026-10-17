@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, Diamond } from 'lucide-react'
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
-import { clearAdminMfaSession } from '../lib/api'
+import { clearAdminMfaSession, logout } from '../lib/api'
 
 interface PlatformNavbarProps {
   activeTab: Tab
@@ -40,8 +40,12 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
     }
   }, [dropdownOpen])
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch {
+      localStorage.removeItem('token')
+    }
     clearAdminMfaSession()
     if (setCurrentUser) setCurrentUser(null)
     setActiveTab('play')
@@ -139,7 +143,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                       </div>
 
                       <div className="border-t border-white/10 pt-2">
-                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition flex items-center justify-between">
+                        <button onClick={() => void handleLogout()} className="w-full text-left px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-white/5 transition flex items-center justify-between">
                           {t('drop.logout')} <LogOut className="h-4 w-4" />
                         </button>
                       </div>
@@ -192,7 +196,7 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
                 <div className="flex items-center gap-2 py-2 text-white">
                   <UserIcon className="h-4 w-4 text-lime-400" /> {currentUser.display_name}
                 </div>
-                <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-left text-zinc-400">{t('drop.logout')}</button>
+                <button onClick={() => { void handleLogout(); setMobileMenuOpen(false); }} className="text-left text-zinc-400">{t('drop.logout')}</button>
               </>
             ) : (
               <>

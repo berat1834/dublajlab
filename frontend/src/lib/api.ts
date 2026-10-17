@@ -16,6 +16,12 @@ export const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 ).replace(/\/$/, '')
 
+// Session cookies live on the API host. `include` is required when production
+// uses the same-site api.dublajlab.com.tr subdomain.
+function fetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {
+  return globalThis.fetch(input, { ...init, credentials: 'include' })
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
   if (response.ok) {
     return response.json() as Promise<T>
@@ -263,6 +269,23 @@ export async function login(email: string, password: string): Promise<AuthRespon
   return result
 }
 
+export async function logout(): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+    method: 'POST',
+  })
+  await parseResponse<{ message: string }>(response)
+  clearAdminMfaSession()
+  localStorage.removeItem('token')
+}
+
+export async function createCheckout(): Promise<{ checkout_url: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/payments/checkout?plan=monthly`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<{ checkout_url: string }>(response)
+}
+
 export async function startAdminMfaSetup(password: string): Promise<{ secret: string; otpauth_uri: string }> {
   const response = await fetch(`${API_BASE_URL}/api/auth/mfa/setup`, {
     method: 'POST',
@@ -336,6 +359,13 @@ export async function getMe(): Promise<User> {
   const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
     method: 'GET',
     headers: getAuthHeaders(),
+  })
+  return parseResponse<User>(response)
+}
+
+export async function getMeFromSessionCookie(): Promise<User> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+    method: 'GET',
   })
   return parseResponse<User>(response)
 }
