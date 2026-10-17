@@ -41,8 +41,22 @@ birlikte hazırlandıktan sonra açılmalıdır.
   çerezle `/me` erişimini, kötü Origin reddini, logout'u ve OAuth URL'sinde token
   bulunmamasını kapsıyor.
 
+## Merge ve canlı doğrulama
+
+- PR #18 tüm backend, frontend ve Vercel kontrolleri geçtikten sonra main'e
+  birleştirildi (`566fe01`).
+- Main CI `39023638768` geçti: frontend 18 saniye, backend 1 dakika 25 saniye.
+- Railway production `POST /api/auth/logout` endpoint'i HTTP 200 döndürdü ve
+  temizleme çerezi `HttpOnly; Secure; SameSite=lax` niteliklerini taşıdı.
+- Production CORS preflight, canonical frontend için
+  `access-control-allow-credentials: true` ve doğru allow-origin döndürdü.
+- Vercel production bundle'ında `credentials: include` ve `/api/auth/logout`
+  kodu doğrulandı.
+- Bilinmeyen hesapla yapılan login smoke isteği HTTP 400 ile güvenli biçimde
+  reddedildi.
+
 ## Canlı aktivasyon önkoşulu
 
-Bu sprint kodu güvenli şekilde dağıtılabilir fakat bayraklar kapalı kalmalıdır.
-Canlı aktivasyon, Railway ve DNS panellerine erişim olmadan yapılmamıştır. Tam sıra
+Bu sprint kodu canlıya dağıtıldı fakat bayraklar kapalı kalmalıdır. Canlı cookie-only
+aktivasyonu, Railway ve DNS panellerine erişim olmadan yapılmamıştır. Tam sıra
 `DEPLOYMENT_PLAN.md` içindeki “Oturum çerezi aktivasyonu” bölümündedir.
