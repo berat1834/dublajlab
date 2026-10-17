@@ -26,7 +26,9 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
   >(null)
   const [resending, setResending] = useState(false)
   const { language, t } = useLanguage()
-  const discordAuthEnabled = import.meta.env.VITE_DISCORD_AUTH_ENABLED !== 'false'
+  const discordAuthEnabled = import.meta.env.VITE_DISCORD_AUTH_ENABLED
+    ? import.meta.env.VITE_DISCORD_AUTH_ENABLED === 'true'
+    : import.meta.env.DEV
   const passwordEvaluation = evaluatePassword(password, email, name)
   const passwordsMatch = password.length > 0 && password === passwordConfirmation
 

@@ -21,7 +21,9 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
   const [deleteUsername, setDeleteUsername] = useState('')
   const [deletePassword, setDeletePassword] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
-  const discordAuthEnabled = import.meta.env.VITE_DISCORD_AUTH_ENABLED !== 'false'
+  const discordAuthEnabled = import.meta.env.VITE_DISCORD_AUTH_ENABLED
+    ? import.meta.env.VITE_DISCORD_AUTH_ENABLED === 'true'
+    : import.meta.env.DEV
 
   const handleSaveProfile = async () => {
     setIsSaving(true)
