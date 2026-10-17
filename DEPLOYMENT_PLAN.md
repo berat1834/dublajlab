@@ -161,6 +161,34 @@ aynı origin ile eşleşmelidir.
 `VITE_SHOPIER_VIP_URL` ve `VITE_VIP_PRICE_LABEL` da build-time değerleridir.
 Gerçek ödeme doğrulama işlemi `/api/payments/webhook` rotasına düşen Shopier bildirimindeki HMAC-SHA256 imza onayı ile backend'de otomatik yapılır ve kullanıcı anında VIP erişimine kavuşur. Frontend doğrudan yönlendirmeyi veya manuel onayı kullanmaz.
 
+### Oturum çerezi aktivasyonu
+
+JWT'yi tarayıcı JavaScript alanından çıkarmak için aşağıdaki sıra tek bakım
+penceresinde uygulanır. Sıra değiştirilmez; aksi halde Google/Discord girişi
+bozulabilir.
+
+1. Railway backend servisine `api.dublajlab.com.tr` custom domain'i eklenir ve
+   Railway'in verdiği CNAME hedefi not edilir.
+2. Hosting.com.tr DNS'te `api` adlı CNAME kaydı bu hedefe yönlendirilir. HTTPS
+   sertifikası Railway'de hazır olmadan sonraki adıma geçilmez.
+3. OAuth sağlayıcı callback allowlist'lerine şunlar eklenir:
+   - `https://api.dublajlab.com.tr/api/auth/google/callback`
+   - `https://api.dublajlab.com.tr/api/auth/discord/callback`
+4. Vercel production `VITE_API_BASE_URL` değeri
+   `https://api.dublajlab.com.tr` yapılır ve frontend yeniden dağıtılır.
+5. Parola, Google ve Discord girişleri Bearer uyumluluğu açıkken denenir. Ardından
+   Railway'de `AUTH_SESSION_COOKIE_ENABLED=true` yapılır.
+6. Giriş, sayfa yenileme, profil güncelleme, ödeme başlatma ve logout smoke
+   testleri geçerse `AUTH_COOKIE_ONLY=true` yapılır. Bu aşamada yeni oturumlarda
+   API yanıtı veya OAuth URL'si üzerinden JWT verilmez.
+7. Tarayıcı Application/Storage görünümünde çerezin `HttpOnly`, `Secure` ve
+   `SameSite=Lax` olduğu; URL ve `localStorage` içinde JWT kalmadığı doğrulanır.
+
+Rollback için önce `AUTH_COOKIE_ONLY=false`, gerekirse
+`AUTH_SESSION_COOKIE_ENABLED=false` yapılır; Vercel API adresi eski Railway
+domainine döndürülür. Eski OAuth callback'leri başarılı smoke tamamlanana kadar
+allowlist'ten silinmez.
+
 ## 5. Upload Güvenliği ve Medya Doğrulaması (Production Upload Validation)
 
 Kullanıcıların canlı ortama (Railway) dosya yüklediği `POST /api/video/upload` rotası, backend'i zararlı içeriklerden ve bozuk dosyalardan korumak için sıkı denetimlerden geçer:

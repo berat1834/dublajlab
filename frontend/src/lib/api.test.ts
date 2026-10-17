@@ -43,6 +43,7 @@ describe('lip-sync API payloads', () => {
     })
 
     const init = fetchMock.mock.calls[0][1] as RequestInit
+    expect(init.credentials).toBe('include')
     expect(init.headers).toMatchObject({ Authorization: 'Bearer vip-token' })
     expect(JSON.parse(String(init.body))).toMatchObject({ apply_lip_sync: true })
   })

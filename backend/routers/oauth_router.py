@@ -17,6 +17,7 @@ import backend.models_db as models_db
 import backend.auth as auth
 import backend.config as config
 from backend.services.admin_role_service import grant_configured_admin_role
+from backend.services.session_service import cookie_only_enabled, set_session_cookie
 
 router = APIRouter()
 logger = logging.getLogger("dublajlab")
@@ -118,7 +119,13 @@ def _decode_state(state: str | None) -> tuple[str | None, str]:
 
 def _frontend_redirect(origin: str | None, token: str) -> RedirectResponse:
     frontend_url = origin or get_frontend_url()
-    response = RedirectResponse(f"{frontend_url}/oauth-callback#token={token}")
+    location = (
+        f"{frontend_url}/oauth-callback"
+        if cookie_only_enabled()
+        else f"{frontend_url}/oauth-callback#token={token}"
+    )
+    response = RedirectResponse(location)
+    set_session_cookie(response, token)
     response.delete_cookie(OAUTH_STATE_COOKIE, path="/api/auth")
     return response
 

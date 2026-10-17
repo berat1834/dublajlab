@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, Crown, LockKeyhole, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react'
-import { getMe } from '../lib/api'
+import { createCheckout, getMe } from '../lib/api'
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
 
@@ -38,24 +38,7 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/payments/checkout?plan=monthly`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        if (response.status === 503) {
-          onToast(t('membership.payment_unavailable'));
-        } else {
-          onToast(t('membership.payment_error'));
-        }
-        return;
-      }
-
-      const data = await response.json();
+      const data = await createCheckout()
 
       const checkoutUrl = typeof data.checkout_url === 'string' ? data.checkout_url : ''
       if (!checkoutUrl) {

@@ -39,7 +39,7 @@ class AccountDeleteRequest(BaseModel):
     password: Optional[str] = Field(default=None, max_length=128)
 
 class Token(BaseModel):
-    access_token: str
+    access_token: Optional[str] = None
     token_type: str
 
 class EmailVerificationResendRequest(BaseModel):

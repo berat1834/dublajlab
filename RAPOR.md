@@ -147,7 +147,9 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
   Railway secret değişkeninde tutulmalıdır. Railway Trial/Free/Hobby planları outbound
   SMTP'yi engellediği için SMTP değişkenleri production gönderim yolu değildir.
 
-- JWT tarayıcıda `localStorage` içinde tutuluyor; HttpOnly cookie tabanlı oturum ayrı güvenlik çalışması gerektirir.
+- HttpOnly oturum çerezi ve CSRF geçiş katmanı Sprint 56'da hazırlandı. Canlıda
+  `localStorage` yedeğinin tamamen kapanması için `api.dublajlab.com.tr` ve OAuth
+  callback geçişi tamamlanıp `AUTH_COOKIE_ONLY=true` yapılmalıdır.
 - Login brute-force limiti tek process belleğindedir; çoklu replica için Redis'e taşınmalıdır.
 - Admin rolü env listesinden çıkarıldığında önceden atanmış rol otomatik geri alınmaz.
 
@@ -202,3 +204,7 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - **Sprint 50: Portfolio Launch Package**: Proje vitrini tamamen yenilendi. README.md ürün odaklı yazıldı, LinkedIn gönderi taslakları, CV şablonları, Github Release notları hazırlandı ve portfolio asset limitleri belirlendi. Ayrıntılar: [sprint-50-portfolio-launch-package.md](docs/reports/sprint-50-portfolio-launch-package.md).
 - **Sprint 51: Legal & Corporate Footer Pages**: Footer menüsündeki "Hakkımızda", "Gizlilik", "Kullanım Koşulları", "İade ve İptal", "Mesafeli Satış" vb. kurumsal bağlantılar için "Public Beta Taslağı" niteliğinde şeffaf modal içerikleri eklendi. Tüm toast mesajları kaldırılarak gerçek sayfa deneyimi sunuldu. Ayrıntılar: [sprint-51-legal-corporate-footer-pages.md](docs/reports/sprint-51-legal-corporate-footer-pages.md).
 - **Sprint 51.5: Live Footer Legal Links + Full i18n Fix**: Canlı ortamda (Vercel) legal linklerin işlevselliği senkronize edildi. LegalCorporateModal içerisindeki tüm Türkçe metinler LanguageContext'e alınarak TR/EN değişimine %100 uyumlu hale getirildi. Ayrıntılar: [sprint-515-live-footer-legal-i18n-fix.md](docs/reports/sprint-515-live-footer-legal-i18n-fix.md).
+- **Sprint 56: Güvenli Oturum Çerezi Geçiş Katmanı**: HttpOnly/Secure/SameSite
+  oturum çerezi, Origin tabanlı CSRF, logout ve Bearer'dan kesintisiz geçiş
+  katmanı eklendi. Canlı aktivasyon özel API domaini ve OAuth callback değişimini
+  bekliyor. Ayrıntılar: [sprint-56-session-cookie-transition.md](docs/reports/sprint-56-session-cookie-transition.md).

@@ -8,15 +8,15 @@ interface PublicDubCommentsProps {
   onToast: (msg: string) => void
   onClose: () => void
   onLogin: () => void
+  isLoggedIn: boolean
 }
 
-export function PublicDubComments({ projectId, onToast, onClose, onLogin }: PublicDubCommentsProps) {
+export function PublicDubComments({ projectId, onToast, onClose, onLogin, isLoggedIn }: PublicDubCommentsProps) {
   const { language, t } = useLanguage()
   const [comments, setComments] = useState<CommentResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const isLoggedIn = !!localStorage.getItem('token')
 
   useEffect(() => {
     const fetchComments = async () => {
