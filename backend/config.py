@@ -184,6 +184,12 @@ def email_verification_required() -> bool:
     )
 
 
+def discord_oauth_enabled() -> bool:
+    """Allow Discord OAuth to be paused without removing its credentials."""
+
+    return _boolean_setting("DISCORD_OAUTH_ENABLED", True)
+
+
 def email_verification_ttl_minutes() -> int:
     return _positive_int_setting("EMAIL_VERIFICATION_TTL_MINUTES", 60)
 

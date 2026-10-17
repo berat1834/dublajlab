@@ -160,3 +160,13 @@ def test_oauth_cookie_only_redirect_never_exposes_token(monkeypatch):
     )
     assert "secret-token" not in response.headers["location"]
     assert "dublajlab_session=" in response.headers["set-cookie"]
+
+
+@pytest.mark.asyncio
+async def test_discord_oauth_can_be_paused(monkeypatch):
+    monkeypatch.setenv("DISCORD_OAUTH_ENABLED", "false")
+
+    with pytest.raises(HTTPException) as exc_info:
+        await oauth_router.discord_login(None)
+
+    assert exc_info.value.status_code == 503

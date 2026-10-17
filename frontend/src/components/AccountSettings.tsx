@@ -21,6 +21,7 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
   const [deleteUsername, setDeleteUsername] = useState('')
   const [deletePassword, setDeletePassword] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
+  const discordAuthEnabled = import.meta.env.VITE_DISCORD_AUTH_ENABLED !== 'false'
 
   const handleSaveProfile = async () => {
     setIsSaving(true)
@@ -222,8 +223,8 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
                 <MessageSquare className="h-4 w-4 text-[#5865F2]" /> {currentUser.display_name} {t('account.connected')}
               </div>
             ) : (
-              <button onClick={handleDiscordConnect} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2">
-                <MessageSquare className="h-4 w-4" /> {t('account.connect_discord')}
+              <button disabled={!discordAuthEnabled} title={!discordAuthEnabled ? t('auth.discord_unavailable') : undefined} onClick={handleDiscordConnect} className="w-full py-3 rounded-xl bg-[#5865F2] text-white text-sm font-bold hover:bg-[#4752C4] transition flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#5865F2]">
+                <MessageSquare className="h-4 w-4" /> {discordAuthEnabled ? t('account.connect_discord') : t('auth.discord_unavailable')}
               </button>
             )}
           </div>

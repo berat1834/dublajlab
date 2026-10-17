@@ -86,6 +86,7 @@ const translations: Record<string, Record<Language, string>> = {
   'auth.username': { TR: 'Kullanıcı Adı', EN: 'Username' },
   'auth.email': { TR: 'E-posta Adresi', EN: 'Email Address' },
   'auth.password': { TR: 'Şifre', EN: 'Password' },
+  'auth.discord_unavailable': { TR: 'Discord girişi geçici olarak kapalı', EN: 'Discord login is temporarily unavailable' },
   'auth.password.show': { TR: 'Parolayı göster', EN: 'Show password' },
   'auth.password.hide': { TR: 'Parolayı gizle', EN: 'Hide password' },
   'auth.password.confirm': { TR: 'Parolayı Tekrarla', EN: 'Confirm Password' },

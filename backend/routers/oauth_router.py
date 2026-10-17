@@ -244,6 +244,8 @@ async def google_callback(request: Request, code: str, state: str | None = None,
 
 @router.get("/discord/login")
 async def discord_login(request: Request, return_to: str | None = None):
+    if not config.discord_oauth_enabled():
+        raise HTTPException(status_code=503, detail="Discord ile giriş geçici olarak kullanılamıyor.")
     if not DISCORD_CLIENT_ID:
         raise HTTPException(status_code=500, detail="Discord OAuth yapılandırılmamış.")
     
@@ -263,6 +265,8 @@ async def discord_login(request: Request, return_to: str | None = None):
 
 @router.get("/discord/callback")
 async def discord_callback(request: Request, code: str, state: str | None = None, db: Session = Depends(get_db)):
+    if not config.discord_oauth_enabled():
+        raise HTTPException(status_code=503, detail="Discord ile giriş geçici olarak kullanılamıyor.")
     if not DISCORD_CLIENT_ID or not DISCORD_CLIENT_SECRET:
         raise HTTPException(status_code=500, detail="Discord OAuth yapılandırılmamış.")
         
