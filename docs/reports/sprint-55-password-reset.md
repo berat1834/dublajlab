@@ -34,4 +34,8 @@ backend-for-frontend proxy kararı uygulanmalıdır.
 - Fresh SQLite Alembic `upgrade -> downgrade -> upgrade` zinciri geçti.
 - Frontend Vitest: 21/21 geçti; ESLint ve TypeScript/Vite production build geçti.
 - Docker Compose config doğrulaması geçti.
-- Production deploy sonrasında canlı Resend sıfırlama akışı ayrıca doğrulanacaktır.
+- PR #16 main'e birleştirildi; main CI, Vercel ve Railway deploy'ları geçti.
+- Canlı OpenAPI'de iki yeni rota görüldü, bilinmeyen hesap için İngilizce genel
+  yanıt doğrulandı ve `/sifremi-unuttum` canonical URL'de `200` döndü.
+- Mevcut bir hesaba gerçek sıfırlama e-postası gönderip parola değiştirme adımı,
+  kullanıcı parolasını değiştireceği için kullanıcı kontrollü son kabul testidir.

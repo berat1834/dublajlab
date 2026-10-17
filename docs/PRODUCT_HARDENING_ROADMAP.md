@@ -6,16 +6,20 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
 
 ## Sıralı işler
 
-1. **Parola sıfırlama — devam ediyor**
+1. **Parola sıfırlama — tamamlandı (17 Ekim 2026, PR #16)**
    - Tek kullanımlık, hash'lenmiş ve 30 dakika geçerli token.
    - Hesap varlığını açıklamayan yanıt ve istek hız sınırı.
    - TR/EN arayüz ile seçilen dilde Resend e-postası.
    - Yeni parola politikası, eski oturumları geçersiz kılma ve Alembic migration.
-   - Tam test, CI, production deploy ve canlı e-posta denemesiyle kapanacak.
-2. **Oturum güvenliği — sırada**
+   - Hedefli 41/41 test, tam backend paketi, migration zinciri, main CI,
+     Railway/Vercel deploy ve canlı endpoint kontrolleri geçti.
+2. **Oturum güvenliği — sırada; altyapı önkoşulu var**
    - JWT'yi `localStorage` yerine HttpOnly, Secure, SameSite çereze taşı.
-   - Bunun için API'yi `api.dublajlab.com.tr` gibi aynı site altında yayınla veya
-     Vercel üzerinden güvenli bir backend-for-frontend proxy kullan.
+   - Önerilen yol: Railway servisini `api.dublajlab.com.tr` altında yayınla;
+     Hosting.com.tr DNS, Vercel API adresi ve Google/Discord yetkili callback
+     adreslerini birlikte güncelle.
+   - Alternatif: Vercel üzerinden backend-for-frontend proxy ve OAuth için kısa
+     ömürlü, tek kullanımlık oturum değişim kodu uygula.
    - CSRF koruması, token yenileme/rotasyon ve kontrollü çıkış ekle.
 3. **Production secret temizliği**
    - Resend aktifken kullanılmayan `SMTP_*` değişkenlerini Railway'den kaldır.
@@ -23,6 +27,8 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
 4. **İzleme ve alarm**
    - Uygulama hata takibi, uptime kontrolü, Railway kaynak alarmı.
    - Resend bounce/complaint webhook'u ve görünür teslimat metriği.
+   - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümlerini,
+     sağlayıcıların Node 24 uyumlu yeni major sürümleriyle güncelle.
 5. **Yedekleme ve geri yükleme tatbikatı**
    - PostgreSQL yedeğinin gerçekten geri yüklenebildiğini doğrula.
    - R2/S3 production yükleme-indirme-silme smoke testini tekrarla.

@@ -115,6 +115,8 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Sprint 55: parola sıfırlama/auth/e-posta hedefli 41/41 ve tam backend paketi
   geçti; R2 staging testi skip edildi. Fresh migration upgrade/downgrade/upgrade,
   frontend Vitest 21/21, ESLint, production build ve Docker Compose config geçti.
+  PR #16 sonrası main CI, Vercel/Railway deploy, canlı OpenAPI ve canonical frontend
+  route kontrolleri de başarılı oldu.
 
 - Sprint 51: backend 141 test toplandı; 140 geçti, credential gerektiren R2 staging testi skip edildi.
 - Sprint 51: frontend Vitest 15/15, ESLint, TypeScript/Vite production build geçti;
