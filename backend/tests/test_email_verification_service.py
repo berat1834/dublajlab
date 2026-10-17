@@ -9,6 +9,7 @@ from backend.services.email_verification_service import (
     email_delivery_provider,
     hash_verification_token,
     resend_settings,
+    send_password_reset_email,
     send_verification_email,
     smtp_settings,
 )
@@ -148,6 +149,29 @@ def test_resend_provider_requires_api_key_and_sender(monkeypatch):
     monkeypatch.delenv("RESEND_FROM_EMAIL", raising=False)
     with pytest.raises(EmailDeliveryConfigurationError):
         resend_settings()
+
+
+def test_password_reset_email_can_be_sent_in_english(monkeypatch):
+    captured = {}
+
+    def fake_deliver(**kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr(
+        "backend.services.email_verification_service._deliver_email", fake_deliver
+    )
+
+    send_password_reset_email(
+        recipient="user@example.test",
+        display_name="Test User",
+        reset_url="https://example.test/parola-sifirla#reset_token=test",
+        ttl_minutes=30,
+        language="EN",
+    )
+
+    assert captured["subject"] == "DublajLab password reset"
+    assert "expires in 30 minutes" in captured["text_content"]
+    assert "Choose a new password" in captured["html_content"]
 
 
 def test_unknown_email_delivery_provider_fails_closed(monkeypatch):

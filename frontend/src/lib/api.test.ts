@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { absoluteApiUrl, processRecordings, processVideo } from './api'
+import { absoluteApiUrl, processRecordings, processVideo, forgotPassword, resetPassword } from './api'
 
 const queuedJob = {
   job_id: 'job-1',
@@ -63,6 +63,46 @@ describe('lip-sync API payloads', () => {
     const formData = init.body as FormData
     expect(init.headers).toMatchObject({ Authorization: 'Bearer vip-token' })
     expect(formData.get('apply_lip_sync')).toBe('true')
+  })
+})
+
+describe('password reset API', () => {
+  it('posts email to forgot-password endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Bağlantı gönderildi.' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const res = await forgotPassword('test@example.com', 'EN')
+    expect(res.message).toBe('Bağlantı gönderildi.')
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/auth/forgot-password'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'test@example.com', language: 'EN' }),
+      }),
+    )
+  })
+
+  it('posts token and new password to reset-password endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Parola güncellendi.' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const res = await resetPassword('test-token-123', 'NewPass12345!', 'EN')
+    expect(res.message).toBe('Parola güncellendi.')
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/auth/reset-password'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ token: 'test-token-123', new_password: 'NewPass12345!', language: 'EN' }),
+      }),
+    )
   })
 })
 

@@ -116,6 +116,18 @@ const translations: Record<string, Record<Language, string>> = {
   'auth.verification_resend': { TR: 'Doğrulama bağlantısını yeniden gönder', EN: 'Resend verification link' },
   'auth.verification_resend_done': { TR: 'Adres kayıtlı ve doğrulanmamışsa yeni bağlantı gönderildi.', EN: 'If the address is registered and unverified, a new link has been sent.' },
   'auth.login_success': { TR: 'Giriş başarılı! Stüdyoya yönlendiriliyorsunuz.', EN: 'Login successful! Taking you to the studio.' },
+  'auth.forgot_link': { TR: 'Şifremi unuttum', EN: 'Forgot password?' },
+  'auth.forgot.title': { TR: 'Parolanızı mı unuttunuz?', EN: 'Forgot your password?' },
+  'auth.forgot.desc': { TR: 'E-posta adresinizi girin; tek kullanımlık ve 30 dakika süreli parola sıfırlama bağlantısı gönderelim.', EN: 'Enter your email address and we will send you a one-time 30-minute password reset link.' },
+  'auth.forgot.action': { TR: 'Sıfırlama Bağlantısı Gönder', EN: 'Send Reset Link' },
+  'auth.forgot.sent': { TR: 'Bu e-posta adresi kayıtlıysa parola sıfırlama bağlantısı gönderildi. Lütfen gelen kutunuzu ve spam klasörünüzü kontrol edin.', EN: 'If this email address is registered, a password reset link has been sent. Please check your inbox and spam folder.' },
+  'auth.forgot.back_to_login': { TR: 'Giriş ekranına dön', EN: 'Back to log in' },
+  'auth.reset.title': { TR: 'Yeni Parola Belirle', EN: 'Set New Password' },
+  'auth.reset.password_label': { TR: 'Yeni Parola', EN: 'New Password' },
+  'auth.reset.desc': { TR: 'DublajLab hesabınız için yeni ve güvenli bir parola oluşturun.', EN: 'Create a new and secure password for your DublajLab account.' },
+  'auth.reset.action': { TR: 'Yeni Parolayı Kaydet', EN: 'Save New Password' },
+  'auth.reset.success': { TR: 'Parolanız güncellendi! Yeni parolanızla giriş yapabilirsiniz.', EN: 'Password updated successfully! You can now log in with your new password.' },
+  'auth.reset.missing_token': { TR: 'Parola sıfırlama bağlantısı bulunamadı veya geçersiz. Lütfen yeni bir bağlantı isteyin.', EN: 'Password reset link is missing or invalid. Please request a new link.' },
   'auth.generic_error': { TR: 'Bir hata oluştu.', EN: 'Something went wrong.' },
 
   // Studio

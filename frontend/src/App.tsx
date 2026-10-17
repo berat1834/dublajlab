@@ -1275,7 +1275,7 @@ function App() {
             <UserFavorites setActiveTab={setActiveTab} />
           ) : activeTab === 'user_credits' ? (
             <UserCredits setActiveTab={setActiveTab} />
-          ) : activeTab === 'login' || activeTab === 'register' ? (
+          ) : activeTab === 'login' || activeTab === 'register' || activeTab === 'forgot_password' || activeTab === 'reset_password' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (
             <DailyDub setActiveTab={setActiveTab} />

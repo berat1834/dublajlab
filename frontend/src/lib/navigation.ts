@@ -7,6 +7,8 @@ const TAB_PATHS: Partial<Record<Tab, string>> = {
   daily: '/gunun-dublaji',
   login: '/giris',
   register: '/kayit',
+  forgot_password: '/sifremi-unuttum',
+  reset_password: '/parola-sifirla',
   library: '/kutuphanem',
   admin: '/admin/moderasyon',
   admin_ops: '/admin/sistem',

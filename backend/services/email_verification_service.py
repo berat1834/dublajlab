@@ -16,6 +16,7 @@ from backend import config
 
 
 VERIFICATION_SUBJECT = "DublajLab e-posta doğrulama"
+PASSWORD_RESET_SUBJECT = "DublajLab parola sıfırlama"
 RESEND_EMAILS_URL = "https://api.resend.com/emails"
 
 
@@ -123,6 +124,74 @@ def resend_settings() -> ResendSettings:
     return ResendSettings(api_key, from_email, reply_to)
 
 
+def ensure_email_delivery_configured() -> None:
+    """Fail fast (independent of any account) when no mail provider is usable."""
+
+    if email_delivery_provider() == "resend":
+        resend_settings()
+    else:
+        smtp_settings()
+
+
+def create_password_reset_token() -> tuple[str, str, datetime]:
+    raw_token = secrets.token_urlsafe(32)
+    return (
+        raw_token,
+        hash_verification_token(raw_token),
+        datetime.now(timezone.utc)
+        + timedelta(minutes=config.password_reset_ttl_minutes()),
+    )
+
+
+def _deliver_email(
+    *, recipient: str, subject: str, text_content: str, html_content: str
+) -> None:
+    if email_delivery_provider() == "resend":
+        settings = resend_settings()
+        payload = {
+            "from": settings.from_email,
+            "to": [recipient],
+            "subject": subject,
+            "text": text_content,
+            "html": html_content,
+        }
+        if settings.reply_to:
+            payload["reply_to"] = settings.reply_to
+        response = httpx.post(
+            RESEND_EMAILS_URL,
+            headers={
+                "Authorization": f"Bearer {settings.api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=15,
+        )
+        response.raise_for_status()
+        return
+
+    settings = smtp_settings()
+    message = EmailMessage()
+    message["Subject"] = subject
+    message["From"] = settings.from_email
+    message["To"] = recipient
+    message.set_content(text_content)
+    message.add_alternative(html_content, subtype="html")
+
+    context = ssl.create_default_context()
+    smtp_client = smtplib.SMTP_SSL if settings.use_ssl else smtplib.SMTP
+    client_kwargs = {"timeout": 15}
+    if settings.use_ssl:
+        client_kwargs["context"] = context
+
+    with smtp_client(settings.host, settings.port, **client_kwargs) as client:
+        client.ehlo()
+        if settings.use_tls:
+            client.starttls(context=context)
+            client.ehlo()
+        client.login(settings.username, settings.password)
+        client.send_message(message)
+
+
 def send_verification_email(
     *, recipient: str, display_name: str, verification_url: str
 ) -> None:
@@ -143,48 +212,70 @@ def send_verification_email(
         "<p>Bu bağlantı süreli ve tek kullanımlıktır.</p>"
         "</body></html>"
     )
+    _deliver_email(
+        recipient=recipient,
+        subject=VERIFICATION_SUBJECT,
+        text_content=text_content,
+        html_content=html_content,
+    )
 
-    if email_delivery_provider() == "resend":
-        settings = resend_settings()
-        payload = {
-            "from": settings.from_email,
-            "to": [recipient],
-            "subject": VERIFICATION_SUBJECT,
-            "text": text_content,
-            "html": html_content,
-        }
-        if settings.reply_to:
-            payload["reply_to"] = settings.reply_to
-        response = httpx.post(
-            RESEND_EMAILS_URL,
-            headers={
-                "Authorization": f"Bearer {settings.api_key}",
-                "Content-Type": "application/json",
-            },
-            json=payload,
-            timeout=15,
+
+def send_password_reset_email(
+    *,
+    recipient: str,
+    display_name: str,
+    reset_url: str,
+    ttl_minutes: int,
+    language: str = "TR",
+) -> None:
+    safe_name = html.escape(display_name)
+    safe_url = html.escape(reset_url, quote=True)
+    if language == "EN":
+        subject = "DublajLab password reset"
+        text_content = (
+            f"Hello {display_name},\n\n"
+            "We received a request to reset the password for your DublajLab account. "
+            "Open the link below to choose a new password:\n"
+            f"{reset_url}\n\n"
+            f"This link expires in {ttl_minutes} minutes and can only be used once. "
+            "If you did not request this, ignore this email; your current password "
+            "will not change."
         )
-        response.raise_for_status()
-        return
-
-    settings = smtp_settings()
-    message = EmailMessage()
-    message["Subject"] = VERIFICATION_SUBJECT
-    message["From"] = settings.from_email
-    message["To"] = recipient
-    message.set_content(text_content)
-    message.add_alternative(html_content, subtype="html")
-
-    context = ssl.create_default_context()
-    smtp_client = smtplib.SMTP_SSL if settings.use_ssl else smtplib.SMTP
-    client_kwargs = {"timeout": 15}
-    if settings.use_ssl:
-        client_kwargs["context"] = context
-
-    with smtp_client(settings.host, settings.port, **client_kwargs) as client:
-        client.ehlo()
-        if settings.use_tls:
-            client.starttls(context=context)
-            client.ehlo()
-        client.login(settings.username, settings.password)
-        client.send_message(message)
+        html_content = (
+            "<html><body>"
+            f"<p>Hello {safe_name},</p>"
+            "<p>We received a request to reset the password for your DublajLab account.</p>"
+            f'<p><a href="{safe_url}">Choose a new password</a></p>'
+            f"<p>This link expires in {ttl_minutes} minutes and can only be used once.</p>"
+            "<p>If you did not request this, ignore this email; your current password "
+            "will not change.</p>"
+            "</body></html>"
+        )
+    else:
+        subject = PASSWORD_RESET_SUBJECT
+        text_content = (
+            f"Merhaba {display_name},\n\n"
+            "DublajLab hesabınız için parola sıfırlama talebi aldık. Yeni parola "
+            "belirlemek için aşağıdaki bağlantıyı açın:\n"
+            f"{reset_url}\n\n"
+            f"Bu bağlantı {ttl_minutes} dakika geçerlidir ve yalnızca bir kez "
+            "kullanılabilir. Talebi siz yapmadıysanız bu iletiyi yok sayın; "
+            "mevcut parolanız değişmez."
+        )
+        html_content = (
+            "<html><body>"
+            f"<p>Merhaba {safe_name},</p>"
+            "<p>DublajLab hesabınız için parola sıfırlama talebi aldık.</p>"
+            f'<p><a href="{safe_url}">Yeni parola belirle</a></p>'
+            f"<p>Bu bağlantı {ttl_minutes} dakika geçerlidir ve yalnızca bir kez "
+            "kullanılabilir.</p>"
+            "<p>Talebi siz yapmadıysanız bu iletiyi yok sayın; mevcut parolanız "
+            "değişmez.</p>"
+            "</body></html>"
+        )
+    _deliver_email(
+        recipient=recipient,
+        subject=subject,
+        text_content=text_content,
+        html_content=html_content,
+    )

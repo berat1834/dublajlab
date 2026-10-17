@@ -21,10 +21,25 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
+    issued_at = datetime.now(timezone.utc)
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = issued_at + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
+        expire = issued_at + timedelta(minutes=15)
+    # `iat` lets the API reject sessions created before a password change.
+    to_encode.update({"exp": expire, "iat": issued_at.timestamp()})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+
+def token_predates_password_change(payload: dict, password_changed_at) -> bool:
+    """Return True when the token was issued before the latest password change."""
+
+    if password_changed_at is None:
+        return False
+    if password_changed_at.tzinfo is None:
+        password_changed_at = password_changed_at.replace(tzinfo=timezone.utc)
+    issued_at = payload.get("iat")
+    if not isinstance(issued_at, (int, float)):
+        return True
+    return float(issued_at) < password_changed_at.timestamp()
