@@ -1,6 +1,6 @@
 # DublajLab Project Report
 
-## Current Status (Public Beta + Portfolio Ready - Sprint 54)
+## Current Status (Public Beta + Portfolio Ready - Sprint 55)
 
 - **Sprint 51 canlı denetim düzeltmeleri:** Hesap/profil, OAuth state, auth rate limit,
   template 404, i18n, stabil SPA URL'leri, güvenlik header'ları, ödeme fail-closed davranışı,
@@ -15,6 +15,9 @@
 - **Sprint 54 parola güvenliği:** Yeni parola kayıtları minimum 10 karakter,
   yaygın parola ve kimlik bilgisi kontrollerinden geçiyor; kayıt ekranında TR/EN
   güç göstergesi, tekrar alanı ve göster/gizle kontrolü bulunuyor.
+- **Sprint 55 parola sıfırlama:** Süreli ve tek kullanımlık Resend bağlantısı,
+  hesap keşfini engelleyen yanıtlar, hız sınırı, TR/EN e-posta/arayüz ve parola
+  değişince eski oturumları geçersiz kılma tamamlandı.
 
 - **Vercel Deployment Audit & Smoke Test Sonuçları (Sprint 24 Final)**:
   - ✅ **Canlı URL (Canonical)**: Özel alan adı **`https://www.dublajlab.com.tr`** açılıyor ve canonical/SEO metadata bu adresi kullanıyor. Vercel deployment altyapısı özel alan adının arkasında çalışmaya devam ediyor.
@@ -93,6 +96,7 @@
 | 52 | Parola kayıtları için e-posta sahipliği doğrulaması | [sprint-52-email-verification.md](docs/reports/sprint-52-email-verification.md) |
 | 53 | Railway uyumlu HTTPS/Resend e-posta teslimatı | [sprint-53-resend-email-delivery.md](docs/reports/sprint-53-resend-email-delivery.md) |
 | 54 | Parola politikası ve canlı güç göstergesi | [sprint-54-password-strength.md](docs/reports/sprint-54-password-strength.md) |
+| 55 | Güvenli, iki dilli parola sıfırlama akışı | [sprint-55-password-reset.md](docs/reports/sprint-55-password-reset.md) |
 
 Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesine bakın.
 
@@ -108,6 +112,9 @@ Deployment ayrıntıları için [DEPLOYMENT_PLAN.md](DEPLOYMENT_PLAN.md) belgesi
 - Sprint 54: parola policy/auth hedefli 18/18, tam backend paketi ve frontend
   Vitest 19/19, ESLint ile production build geçti. `npm audit`, Tailwind 3 build
   zincirindeki daha önce kaydedilmiş 7 transitive bulguyu raporlamaya devam ediyor.
+- Sprint 55: parola sıfırlama/auth/e-posta hedefli 41/41 ve tam backend paketi
+  geçti; R2 staging testi skip edildi. Fresh migration upgrade/downgrade/upgrade,
+  frontend Vitest 21/21, ESLint, production build ve Docker Compose config geçti.
 
 - Sprint 51: backend 141 test toplandı; 140 geçti, credential gerektiren R2 staging testi skip edildi.
 - Sprint 51: frontend Vitest 15/15, ESLint, TypeScript/Vite production build geçti;

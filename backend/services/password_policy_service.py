@@ -25,6 +25,10 @@ COMMON_PASSWORDS = {
 class PasswordPolicyError(ValueError):
     """Raised when a newly selected password does not meet the account policy."""
 
+    def __init__(self, message: str, *, code: str) -> None:
+        super().__init__(message)
+        self.code = code
+
 
 def _identity_terms(email: str, display_name: str) -> set[str]:
     email_local = email.split("@", 1)[0].casefold()
@@ -39,20 +43,24 @@ def _identity_terms(email: str, display_name: str) -> set[str]:
 def validate_new_password(password: str, *, email: str, display_name: str) -> None:
     if len(password) < MIN_PASSWORD_LENGTH:
         raise PasswordPolicyError(
-            f"Parola en az {MIN_PASSWORD_LENGTH} karakter olmalıdır."
+            f"Parola en az {MIN_PASSWORD_LENGTH} karakter olmalıdır.",
+            code="too_short",
         )
     if len(password) > MAX_PASSWORD_LENGTH:
         raise PasswordPolicyError(
-            f"Parola en fazla {MAX_PASSWORD_LENGTH} karakter olabilir."
+            f"Parola en fazla {MAX_PASSWORD_LENGTH} karakter olabilir.",
+            code="too_long",
         )
 
     normalized = password.casefold().strip()
     if normalized in COMMON_PASSWORDS:
         raise PasswordPolicyError(
-            "Bu parola çok yaygın veya kolay tahmin edilebilir. Lütfen daha güçlü bir parola seçin."
+            "Bu parola çok yaygın veya kolay tahmin edilebilir. Lütfen daha güçlü bir parola seçin.",
+            code="common",
         )
 
     if any(term in normalized for term in _identity_terms(email, display_name)):
         raise PasswordPolicyError(
-            "Parola e-posta adresinizi veya kullanıcı adınızı içermemelidir."
+            "Parola e-posta adresinizi veya kullanıcı adınızı içermemelidir.",
+            code="contains_identity",
         )

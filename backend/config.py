@@ -188,6 +188,12 @@ def email_verification_ttl_minutes() -> int:
     return _positive_int_setting("EMAIL_VERIFICATION_TTL_MINUTES", 60)
 
 
+def password_reset_ttl_minutes() -> int:
+    """Reset links grant account access, so keep them shorter than verification links."""
+
+    return _positive_int_setting("PASSWORD_RESET_TTL_MINUTES", 30)
+
+
 def frontend_url() -> str:
     configured = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
     if configured and not (

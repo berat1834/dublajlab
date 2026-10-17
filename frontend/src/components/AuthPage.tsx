@@ -1,13 +1,12 @@
-import { useState } from 'react'
-import { ArrowRight, Check, Eye, EyeOff, Github, Mail, MailCheck, Mic2, PlayCircle, RefreshCw, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, Github, Mail, MailCheck, Mic2, PlayCircle, RefreshCw, X } from 'lucide-react'
 import type { Tab, User } from '../types'
-import { login, register, getMe, resendVerification } from '../lib/api'
+import { login, register, getMe, resendVerification, forgotPassword, resetPassword } from '../lib/api'
 import { useLanguage } from '../LanguageContext'
-import { useEffect } from 'react'
 import { evaluatePassword } from '../lib/passwordPolicy'
 
 interface AuthPageProps {
-  mode: 'login' | 'register'
+  mode: 'login' | 'register' | 'forgot_password' | 'reset_password'
   setActiveTab: (tab: Tab) => void
   onToast: (msg: string) => void
   setCurrentUser?: (user: User) => void
@@ -20,28 +19,56 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
   const [showPassword, setShowPassword] = useState(false)
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [forgotSent, setForgotSent] = useState(false)
+  const [resetToken, setResetToken] = useState<string | null>(null)
   const [verificationNotice, setVerificationNotice] = useState<
     'sent' | 'success' | 'invalid' | 'expired' | null
   >(null)
   const [resending, setResending] = useState(false)
-  const { t } = useLanguage()
+  const { language, t } = useLanguage()
   const passwordEvaluation = evaluatePassword(password, email, name)
   const passwordsMatch = password.length > 0 && password === passwordConfirmation
 
-  // Kullanıcı zaten login ise yönlendir
   useEffect(() => {
-    if (localStorage.getItem('token')) {
+    setPassword('')
+    setPasswordConfirmation('')
+    setShowPassword(false)
+    setForgotSent(false)
+    if (mode !== 'reset_password') setResetToken(null)
+  }, [mode])
+
+  // Kullanıcı giriş yapmış olsa da hesap ayarlarından parola sıfırlayabilmeli.
+  useEffect(() => {
+    if (
+      localStorage.getItem('token') &&
+      mode !== 'forgot_password' &&
+      mode !== 'reset_password'
+    ) {
       setActiveTab('play')
     }
-  }, [setActiveTab])
+  }, [setActiveTab, mode])
 
+  // Email verification ve reset token parametrelerini yakala
   useEffect(() => {
-    const result = new URLSearchParams(window.location.search).get('email_verification')
+    const queryParams = new URLSearchParams(window.location.search)
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+
+    const result = queryParams.get('email_verification')
     if (result === 'success' || result === 'invalid' || result === 'expired') {
       setVerificationNotice(result)
       window.history.replaceState({}, document.title, window.location.pathname)
     }
-  }, [])
+
+    const tokenFromUrl = hashParams.get('reset_token') || queryParams.get('reset_token') || queryParams.get('token')
+    if (mode === 'reset_password' && tokenFromUrl) {
+      setResetToken(tokenFromUrl)
+      // Hassas token yalnız component state içinde kalsın; adres çubuğu ve
+      // tarayıcı geçmişinden hemen temizlensin.
+      window.history.replaceState({}, document.title, window.location.pathname)
+    } else if (mode === 'reset_password') {
+      setResetToken(null)
+    }
+  }, [mode])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,6 +90,27 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
         } else {
           onToast(t('auth.register_success'))
         }
+        setActiveTab('login')
+      } else if (mode === 'forgot_password') {
+        const res = await forgotPassword(email, language)
+        setForgotSent(true)
+        onToast(res.message || t('auth.forgot.sent'))
+      } else if (mode === 'reset_password') {
+        if (!resetToken) {
+          onToast(t('auth.reset.missing_token'))
+          return
+        }
+        if (!passwordEvaluation.isValid) {
+          onToast(t('auth.password.invalid'))
+          return
+        }
+        if (!passwordsMatch) {
+          onToast(t('auth.password.mismatch'))
+          return
+        }
+        const res = await resetPassword(resetToken, password, language)
+        onToast(res.message || t('auth.reset.success'))
+        window.history.replaceState({}, document.title, window.location.pathname)
         setActiveTab('login')
       } else {
         const res = await login(email, password)
@@ -143,13 +191,39 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
       <div className="flex flex-col justify-center p-8 sm:p-12 lg:w-7/12 bg-black/40">
         <div className="max-w-md w-full mx-auto">
           <h2 className="text-2xl font-black text-white mb-2">
-            {mode === 'login' ? t('auth.login.title') : t('auth.register.title')}
+            {mode === 'login' && t('auth.login.title')}
+            {mode === 'register' && t('auth.register.title')}
+            {mode === 'forgot_password' && t('auth.forgot.title')}
+            {mode === 'reset_password' && t('auth.reset.title')}
           </h2>
           <p className="text-sm text-zinc-400 mb-8">
-            {mode === 'login' 
-              ? t('auth.login.desc') 
-              : t('auth.register.desc')}
+            {mode === 'login' && t('auth.login.desc')}
+            {mode === 'register' && t('auth.register.desc')}
+            {mode === 'forgot_password' && t('auth.forgot.desc')}
+            {mode === 'reset_password' && t('auth.reset.desc')}
           </p>
+
+          {forgotSent && mode === 'forgot_password' && (
+            <div className="mb-5 rounded-xl border border-lime/25 bg-lime/10 p-4 text-sm text-lime">
+              <div className="flex items-start gap-3">
+                <MailCheck className="mt-0.5 h-5 w-5 shrink-0" />
+                <p>{t('auth.forgot.sent')}</p>
+              </div>
+            </div>
+          )}
+
+          {mode === 'reset_password' && !resetToken && (
+            <div className="mb-6 rounded-xl border border-amber-300/25 bg-amber-300/10 p-4 text-sm text-amber-100">
+              <p>{t('auth.reset.missing_token')}</p>
+              <button
+                type="button"
+                onClick={() => setActiveTab('forgot_password')}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-lime underline underline-offset-4"
+              >
+                {t('auth.forgot.title')}
+              </button>
+            </div>
+          )}
 
           {verificationNotice && (
             <div className={`mb-5 rounded-xl border p-4 text-sm leading-6 ${verificationNotice === 'success' || verificationNotice === 'sent' ? 'border-lime/25 bg-lime/10 text-lime' : 'border-amber-300/25 bg-amber-300/10 text-amber-100'}`}>
@@ -194,43 +268,60 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
               </div>
             )}
             
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 mb-1.5">{t('auth.email')}</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ornek@mail.com"
-                autoComplete="email"
-                required
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-zinc-400 mb-1.5">{t('auth.password')}</label>
-              <div className="relative">
+            {mode !== 'reset_password' && (
+              <div>
+                <label className="block text-xs font-bold text-zinc-400 mb-1.5">{t('auth.email')}</label>
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••"
-                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="ornek@mail.com"
+                  autoComplete="email"
                   required
-                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? t('auth.password.hide') : t('auth.password.show')}
-                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-zinc-500 transition hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
-            </div>
+            )}
 
-            {mode === 'register' && (
+            {mode !== 'forgot_password' && (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-zinc-400">
+                    {mode === 'reset_password' ? t('auth.reset.password_label') : t('auth.password')}
+                  </label>
+                  {mode === 'login' && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('forgot_password')}
+                      className="text-xs font-medium text-lime/80 hover:text-lime hover:underline transition"
+                    >
+                      {t('auth.forgot_link')}
+                    </button>
+                  )}
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••"
+                    autoComplete={mode === 'register' || mode === 'reset_password' ? 'new-password' : 'current-password'}
+                    required
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 pr-12 text-sm text-white placeholder-zinc-600 focus:border-lime focus:outline-none focus:ring-1 focus:ring-lime transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? t('auth.password.hide') : t('auth.password.show')}
+                    className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-zinc-500 transition hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(mode === 'register' || mode === 'reset_password') && (
               <div className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
                 <div className="flex gap-1.5" aria-label={t('auth.password.strength')}>
                   {[1, 2, 3].map((level) => (
@@ -293,40 +384,71 @@ export function AuthPage({ mode, setActiveTab, onToast, setCurrentUser }: AuthPa
 
             <button
               type="submit"
-              disabled={loading || (mode === 'register' && (!passwordEvaluation.isValid || !passwordsMatch))}
+              disabled={
+                loading ||
+                (mode === 'forgot_password' && !email.trim()) ||
+                (mode === 'reset_password' && (!resetToken || !passwordEvaluation.isValid || !passwordsMatch)) ||
+                (mode === 'register' && (!passwordEvaluation.isValid || !passwordsMatch))
+              }
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-4 py-3.5 text-sm font-black text-ink hover:bg-lime/90 transition shadow-glow disabled:opacity-50"
             >
-              {loading ? t('auth.waiting') : (mode === 'login' ? t('auth.login.action') : t('auth.register.action'))} <ArrowRight className="h-4 w-4" />
+              {loading ? (
+                t('auth.waiting')
+              ) : mode === 'login' ? (
+                t('auth.login.action')
+              ) : mode === 'register' ? (
+                t('auth.register.action')
+              ) : mode === 'forgot_password' ? (
+                t('auth.forgot.action')
+              ) : (
+                t('auth.reset.action')
+              )} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
+          {(mode === 'forgot_password' || mode === 'reset_password') && (
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => setActiveTab('login')}
+                className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white transition"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> {t('auth.forgot.back_to_login')}
+              </button>
             </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-black/40 px-2 text-zinc-500 font-bold uppercase tracking-wider">{t('auth.or')}</span>
-            </div>
-          </div>
+          )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <button type="button" onClick={() => handleSocial('Google')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white hover:bg-white/10 transition">
-              <Mail className="h-4 w-4" /> Google
-            </button>
-            <button type="button" onClick={() => handleSocial('Discord')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#5865F2]/20 py-3 text-sm font-bold hover:bg-[#5865F2]/40 transition text-[#5865F2]">
-              <Github className="h-4 w-4" /> Discord
-            </button>
-          </div>
+          {(mode === 'login' || mode === 'register') && (
+            <>
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/10"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="bg-black/40 px-2 text-zinc-500 font-bold uppercase tracking-wider">{t('auth.or')}</span>
+                </div>
+              </div>
 
-          <p className="mt-8 text-center text-xs text-zinc-500">
-            {mode === 'login' ? `${t('auth.no_account')} ` : `${t('auth.have_account')} `}
-            <button 
-              onClick={() => setActiveTab(mode === 'login' ? 'register' : 'login')}
-              className="font-bold text-lime hover:underline"
-            >
-              {mode === 'login' ? t('auth.signup_link') : t('auth.login_link')}
-            </button>
-          </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => handleSocial('Google')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-white hover:bg-white/10 transition">
+                  <Mail className="h-4 w-4" /> Google
+                </button>
+                <button type="button" onClick={() => handleSocial('Discord')} className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-[#5865F2]/20 py-3 text-sm font-bold hover:bg-[#5865F2]/40 transition text-[#5865F2]">
+                  <Github className="h-4 w-4" /> Discord
+                </button>
+              </div>
+
+              <p className="mt-8 text-center text-xs text-zinc-500">
+                {mode === 'login' ? `${t('auth.no_account')} ` : `${t('auth.have_account')} `}
+                <button
+                  onClick={() => setActiveTab(mode === 'login' ? 'register' : 'login')}
+                  className="font-bold text-lime hover:underline"
+                >
+                  {mode === 'login' ? t('auth.signup_link') : t('auth.login_link')}
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, ConfigDict, Field
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -44,6 +44,15 @@ class Token(BaseModel):
 
 class EmailVerificationResendRequest(BaseModel):
     email: EmailStr
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+    language: Literal["TR", "EN"] = "TR"
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(min_length=20, max_length=256)
+    new_password: str = Field(min_length=1, max_length=128)
+    language: Literal["TR", "EN"] = "TR"
 
 class MessageResponse(BaseModel):
     message: str

@@ -10,9 +10,15 @@ from fastapi import HTTPException, status
 class AuthAttemptLimiter:
     """Small process-local failed-login limiter; production multi-worker limits need Redis."""
 
-    def __init__(self, max_attempts: int = 10, window_seconds: int = 900) -> None:
+    def __init__(
+        self,
+        max_attempts: int = 10,
+        window_seconds: int = 900,
+        detail: str = "Çok fazla başarısız giriş denemesi yapıldı. Lütfen daha sonra tekrar deneyin.",
+    ) -> None:
         self.max_attempts = max_attempts
         self.window_seconds = window_seconds
+        self.detail = detail
         self._attempts: dict[str, deque[float]] = defaultdict(deque)
         self._lock = RLock()
 
@@ -32,7 +38,7 @@ class AuthAttemptLimiter:
             retry_after = max(1, int(attempts[0] + self.window_seconds - now))
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Çok fazla başarısız giriş denemesi yapıldı. Lütfen daha sonra tekrar deneyin.",
+            detail=self.detail,
             headers={"Retry-After": str(retry_after)},
         )
 
@@ -51,3 +57,11 @@ class AuthAttemptLimiter:
 
 
 auth_attempt_limiter = AuthAttemptLimiter()
+
+# Every reset request counts (not only failures) so the endpoint cannot be used
+# to flood a victim's inbox or burn the Resend quota.
+password_reset_request_limiter = AuthAttemptLimiter(
+    max_attempts=5,
+    window_seconds=900,
+    detail="Çok fazla parola sıfırlama isteği gönderildi. Lütfen biraz sonra tekrar deneyin.",
+)

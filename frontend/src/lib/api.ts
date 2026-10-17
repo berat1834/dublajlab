@@ -314,6 +314,24 @@ export async function resendVerification(email: string): Promise<{ message: stri
   return parseResponse<{ message: string }>(response)
 }
 
+export async function forgotPassword(email: string, language: 'TR' | 'EN'): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, language }),
+  })
+  return parseResponse<{ message: string }>(response)
+}
+
+export async function resetPassword(token: string, new_password: string, language: 'TR' | 'EN'): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, new_password, language }),
+  })
+  return parseResponse<{ message: string }>(response)
+}
+
 export async function getMe(): Promise<User> {
   const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
     method: 'GET',
