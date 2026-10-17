@@ -21,9 +21,10 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
    - Alternatif: Vercel üzerinden backend-for-frontend proxy ve OAuth için kısa
      ömürlü, tek kullanımlık oturum değişim kodu uygula.
    - CSRF koruması, token yenileme/rotasyon ve kontrollü çıkış ekle.
-   - 17 Ekim 2026: HttpOnly/Secure/SameSite çerez, Origin tabanlı CSRF,
+   - 17 Ekim 2026, PR #18: HttpOnly/Secure/SameSite çerez, Origin tabanlı CSRF,
      kontrollü logout, frontend credentials ve Bearer'dan geri uyumlu geçiş
-     kodlandı (Sprint 56). Bayraklar özel API domaini hazır olana kadar kapalıdır.
+     kodlandı, CI ve bayraklar kapalı canlı smoke geçti (Sprint 56). Bayraklar
+     özel API domaini hazır olana kadar kapalıdır.
    - Kalan: `api.dublajlab.com.tr`, Google/Discord callback güncellemesi, iki
      aşamalı canlı aktivasyon ve ardından yenileme/rotasyon tasarımı.
 3. **Production secret temizliği**
