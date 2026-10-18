@@ -13,7 +13,7 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
    - Yeni parola politikası, eski oturumları geçersiz kılma ve Alembic migration.
    - Hedefli 41/41 test, tam backend paketi, migration zinciri, main CI,
      Railway/Vercel deploy ve canlı endpoint kontrolleri geçti.
-2. **Oturum güvenliği — geçiş katmanı tamamlandı; canlı aktivasyon bekliyor**
+2. **Oturum güvenliği — tamamlandı (18 Ekim 2026)**
    - JWT'yi `localStorage` yerine HttpOnly, Secure, SameSite çereze taşı.
    - Önerilen yol: Railway servisini `api.dublajlab.com.tr` altında yayınla;
      Hosting.com.tr DNS, Vercel API adresi ve Google/Discord yetkili callback
@@ -25,9 +25,17 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
      kontrollü logout, frontend credentials ve Bearer'dan geri uyumlu geçiş
      kodlandı, CI ve bayraklar kapalı canlı smoke geçti (Sprint 56). Bayraklar
      özel API domaini hazır olana kadar kapalıdır.
-   - Kalan: `api.dublajlab.com.tr`, Google/Discord callback güncellemesi, iki
-     aşamalı canlı aktivasyon ve ardından yenileme/rotasyon tasarımı.
-3. **Production secret temizliği**
+   - `api.dublajlab.com.tr` Railway'e bağlandı; DNS doğrulaması ve TLS geçti.
+   - Vercel `VITE_API_BASE_URL`, CSP ve Google OAuth callback adresi özel API
+     alan adına taşındı. Discord hesabındaki harici kısıt nedeniyle Discord OAuth
+     production'da kontrollü biçimde kapalı bırakıldı.
+   - `AUTH_SESSION_COOKIE_ENABLED=true` ve `AUTH_COOKIE_ONLY=true` canlıya alındı.
+     Parola girişi, Google OAuth, `/me`, sayfa yenileme ve logout akışlarında
+     HttpOnly cookie-only oturum canlıda doğrulandı; URL ve API yanıtında JWT yok.
+   - Yenileme/rotasyon ayrı bir savunma-derinliği iyileştirmesi olarak izlenecek;
+     mevcut kısa ömürlü JWT, parola değişiminde oturum iptali ve kontrollü logout
+     canlı geçiş için kabul edildi.
+3. **Production secret temizliği — sıradaki iş**
    - Resend aktifken kullanılmayan `SMTP_*` değişkenlerini Railway'den kaldır.
    - Anahtar rotasyonu ve minimum yetki kontrolünü kaydet.
 4. **İzleme ve alarm**

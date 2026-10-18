@@ -55,8 +55,18 @@ birlikte hazırlandıktan sonra açılmalıdır.
 - Bilinmeyen hesapla yapılan login smoke isteği HTTP 400 ile güvenli biçimde
   reddedildi.
 
-## Canlı aktivasyon önkoşulu
+## Canlı aktivasyon — tamamlandı (18 Ekim 2026)
 
-Bu sprint kodu canlıya dağıtıldı fakat bayraklar kapalı kalmalıdır. Canlı cookie-only
-aktivasyonu, Railway ve DNS panellerine erişim olmadan yapılmamıştır. Tam sıra
-`DEPLOYMENT_PLAN.md` içindeki “Oturum çerezi aktivasyonu” bölümündedir.
+- Railway servisine `api.dublajlab.com.tr` özel alan adı eklendi; CNAME/TXT
+  doğrulaması ve TLS başarıyla tamamlandı.
+- Vercel `VITE_API_BASE_URL=https://api.dublajlab.com.tr` production ve preview
+  ortamlarına uygulandı; CSP `connect-src` özel API alanını kapsayacak şekilde
+  düzeltildi.
+- Google OAuth yetkili callback listesine
+  `https://api.dublajlab.com.tr/api/auth/google/callback` eklendi.
+- Railway'de `AUTH_SESSION_COOKIE_ENABLED=true` ve `AUTH_COOKIE_ONLY=true`
+  etkinleştirildi.
+- Parola girişi, Google OAuth, `/me`, yenileme ve logout canlıda HTTP 200 ile
+  doğrulandı. OAuth dönüş URL'sinde ve login yanıtında JWT taşınmadığı görüldü.
+- Discord hesabındaki harici erişim kısıtı nedeniyle Discord OAuth production'da
+  ayrı özellik bayrağıyla kapalıdır; bu durum cookie-only aktivasyonunu engellemez.

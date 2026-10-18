@@ -37,5 +37,9 @@ backend-for-frontend proxy kararı uygulanmalıdır.
 - PR #16 main'e birleştirildi; main CI, Vercel ve Railway deploy'ları geçti.
 - Canlı OpenAPI'de iki yeni rota görüldü, bilinmeyen hesap için İngilizce genel
   yanıt doğrulandı ve `/sifremi-unuttum` canonical URL'de `200` döndü.
-- Mevcut bir hesaba gerçek sıfırlama e-postası gönderip parola değiştirme adımı,
-  kullanıcı parolasını değiştireceği için kullanıcı kontrollü son kabul testidir.
+- 18 Ekim 2026 kullanıcı kabul testi tamamlandı: gerçek sıfırlama e-postası önce
+  Outlook'a, alıcı Google kotası açıldıktan sonra Gmail'e teslim edildi; süreli ve
+  tek kullanımlık bağlantı ile parola başarıyla güncellendi.
+- Gmail'deki ilk gecikmenin uygulama veya Resend yapılandırmasından değil,
+  alıcının dolu posta kutusundan kaynaklandığı Resend'in
+  `452-4.2.2 The recipient's inbox is out of storage space` yanıtıyla doğrulandı.
