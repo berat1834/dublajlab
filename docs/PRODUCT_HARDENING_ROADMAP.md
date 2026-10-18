@@ -55,18 +55,17 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
      `{"status":"accepted"}` yanıtıyla production'da doğrulandı.
    - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümleri
      18 Ekim 2026'da resmi Node 24 tabanlı v7 major sürümlerine güncellendi.
-5. **Yedekleme ve geri yükleme tatbikatı — PostgreSQL tamamlandı (18 Ekim 2026)**
+5. **Yedekleme ve geri yükleme tatbikatı — tamamlandı (18 Ekim 2026)**
    - Production PostgreSQL custom-format yedeği sürüm uyumlu `pg_dump` ile
      alındı ve izole PostgreSQL 18 konteynerine başarıyla geri yüklendi.
    - 10 public tablo, Alembic head `a1b2c3d4e5f7` ve 6 kullanıcı kaydı
      doğrulandı. Geçici yedek, konteyner, SSH tüneli ve SSH anahtarları temizlendi.
    - Tekrarlanabilir tatbikat betiği ve Sprint 60 raporu repoya eklendi.
-   - R2/S3 production smoke testi 18 Ekim 2026'da tekrarlandı. Bucket healthcheck
-     başarılıydı ancak `PutObject` isteği `AccessDenied` aldı; mevcut R2 anahtarı
-     yazma yetkisine sahip değil veya `dublajlab-media` bucket kapsamı dışında.
-   - R2 anahtarını ilgili bucket için `Object Read & Write` yetkisiyle yenile,
-     Railway'deki `S3_ACCESS_KEY_ID` ve `S3_SECRET_ACCESS_KEY` değerlerini değiştir,
-     ardından yükleme-indirme-silme testini yeniden çalıştır.
+   - İlk R2 denemesinde `PutObject AccessDenied` bulunarak production anahtarı
+     yalnız `dublajlab-media` bucket'ı için `Object Read & Write` yetkisiyle yenilendi.
+   - Production R2 smoke testi yükleme, `HeadObject`, gerçek `GetObject` byte
+     karşılaştırması, URL üretimi, silme ve silme sonrası yokluk kontrolüyle geçti.
+     Test nesnesi temizlendi; canlı API health ve Redis bağlantısı sağlıklı kaldı.
 6. **Onboarding, mobil ve erişilebilirlik**
    - İlk kullanım yönlendirmesi, boş durumlar ve anlaşılır hata mesajları.
    - Klavye, odak, ekran okuyucu, kontrast ve küçük ekran QA.

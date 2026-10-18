@@ -55,10 +55,15 @@ staging bucket üzerinde opt-in smoke uygulamak.
 `RUN_R2_SMOKE=1` ve staging secret'ları process environment içinde mevcutken küçük
 bir `smoke-tests/<uuid>.mp4` nesnesiyle upload → exists → URL → delete akışını çalıştırır.
 
-## Staging smoke durumu
+## İlk staging smoke durumu (5 Ekim 2026)
 
 **Bekliyor — credential/bucket yok.** Bu nedenle R2 bucket içinde gerçek export
 objesi oluştuğu veya gerçek indirme URL'sinin çalıştığı iddia edilmemektedir.
+
+Bu tarihsel engel 18 Ekim 2026'da kapatıldı. Production anahtarı ilgili bucket
+için `Object Read & Write` yetkisiyle yenilendi; gerçek yükleme, indirme içeriği
+doğrulaması ve silme smoke testi geçti. Güncel kabul kanıtı için
+`docs/reports/sprint-61-r2-production-smoke.md` belgesine bakın.
 
 ### Canlı erişim kontrolü
 
