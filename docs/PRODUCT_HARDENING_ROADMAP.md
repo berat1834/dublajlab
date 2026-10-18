@@ -49,8 +49,8 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
      canlı `/api/health` artık `redis_configured:true` ve
      `redis_connected:true` döndürüyor.
    - Resend bounce/complaint webhook'u ve görünür teslimat metriği.
-   - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümlerini,
-     sağlayıcıların Node 24 uyumlu yeni major sürümleriyle güncelle.
+   - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümleri
+     18 Ekim 2026'da resmi Node 24 tabanlı v7 major sürümlerine güncellendi.
 5. **Yedekleme ve geri yükleme tatbikatı**
    - PostgreSQL yedeğinin gerçekten geri yüklenebildiğini doğrula.
    - R2/S3 production yükleme-indirme-silme smoke testini tekrarla.
