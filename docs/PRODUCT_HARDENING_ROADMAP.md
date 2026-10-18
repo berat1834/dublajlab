@@ -55,8 +55,12 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
      `{"status":"accepted"}` yanıtıyla production'da doğrulandı.
    - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümleri
      18 Ekim 2026'da resmi Node 24 tabanlı v7 major sürümlerine güncellendi.
-5. **Yedekleme ve geri yükleme tatbikatı**
-   - PostgreSQL yedeğinin gerçekten geri yüklenebildiğini doğrula.
+5. **Yedekleme ve geri yükleme tatbikatı — PostgreSQL tamamlandı (18 Ekim 2026)**
+   - Production PostgreSQL custom-format yedeği sürüm uyumlu `pg_dump` ile
+     alındı ve izole PostgreSQL 18 konteynerine başarıyla geri yüklendi.
+   - 10 public tablo, Alembic head `a1b2c3d4e5f7` ve 6 kullanıcı kaydı
+     doğrulandı. Geçici yedek, konteyner, SSH tüneli ve SSH anahtarları temizlendi.
+   - Tekrarlanabilir tatbikat betiği ve Sprint 60 raporu repoya eklendi.
    - R2/S3 production yükleme-indirme-silme smoke testini tekrarla.
 6. **Onboarding, mobil ve erişilebilirlik**
    - İlk kullanım yönlendirmesi, boş durumlar ve anlaşılır hata mesajları.
