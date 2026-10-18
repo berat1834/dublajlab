@@ -48,10 +48,11 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
    - 18 Ekim kontrolünde bulunan kopuk Railway Redis değişken referansı düzeltildi;
      canlı `/api/health` artık `redis_configured:true` ve
      `redis_connected:true` döndürüyor.
-   - Resend bounce/complaint webhook'u ve görünür teslimat metriği kodlandı
+   - Resend bounce/complaint webhook'u ve görünür teslimat metriği tamamlandı
      (18 Ekim 2026). İmzalı endpoint, tekrar olay koruması, veri minimizasyonu,
-     Alembic migration ve admin panelinde 24 saatlik metrikler hazır. Canlı
-     Resend endpoint kaydı ve Railway signing secret girişi bekleniyor.
+     Alembic migration ve admin panelinde 24 saatlik metrikler canlıya alındı.
+     Resend `email.delivered` olayları tek denemede HTTP 200 ve
+     `{"status":"accepted"}` yanıtıyla production'da doğrulandı.
    - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümleri
      18 Ekim 2026'da resmi Node 24 tabanlı v7 major sürümlerine güncellendi.
 5. **Yedekleme ve geri yükleme tatbikatı**

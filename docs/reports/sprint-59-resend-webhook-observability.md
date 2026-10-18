@@ -45,5 +45,14 @@ bounce/başarısız ve şikâyet sayaçları ile son olay zamanı eklendi.
 - Alembic migration zincirinin yeni head'i: `a1b2c3d4e5f7`.
 - `git diff --check`: geçti.
 
-Canlı endpoint ve secret henüz oluşturulmadığı için production webhook smoke testi
-bu sprintin deploy sonrası kabul adımıdır.
+## Production kabulü
+
+- Resend webhook endpoint'i `Enabled` durumunda.
+- Railway `RESEND_WEBHOOK_SECRET` yapılandırması yüklendi; imzasız istek doğru
+  biçimde HTTP 400 ile reddedildi.
+- Gerçek parola sıfırlama e-postası HTTP 200 ile oluşturuldu.
+- Resend'den gelen `email.delivered` olayları tek denemede HTTP 200 aldı.
+- Endpoint yanıtı `{"status":"accepted"}` olarak Resend panelinde görüldü.
+- Canlı API health ve Redis bağlantısı sağlıklı kaldı.
+
+Bu kanıtlarla production webhook smoke testi ve Sprint 59 kabulü tamamlandı.
