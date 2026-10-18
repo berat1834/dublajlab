@@ -35,11 +35,18 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
    - Yenileme/rotasyon ayrı bir savunma-derinliği iyileştirmesi olarak izlenecek;
      mevcut kısa ömürlü JWT, parola değişiminde oturum iptali ve kontrollü logout
      canlı geçiş için kabul edildi.
-3. **Production secret temizliği — sıradaki iş**
-   - Resend aktifken kullanılmayan `SMTP_*` değişkenlerini Railway'den kaldır.
-   - Anahtar rotasyonu ve minimum yetki kontrolünü kaydet.
+3. **Production secret temizliği — SMTP temizliği tamamlandı (18 Ekim 2026)**
+   - Resend aktifken kullanılmayan yedi `SMTP_*` değişkeni Railway production
+     ortamından kaldırıldı; `EMAIL_DELIVERY_PROVIDER=resend` ve gerekli
+     `RESEND_*` değişkenleri korundu.
+   - Deploy sonrası özel API health endpoint'i HTTP 200 döndü. İzlenen dosyalarda
+     gerçek `.env`, özel anahtar veya bilinen secret biçimi bulunmadı.
+   - Kalan kontrollü iş: sağlayıcı anahtarlarını kesintisiz rotasyon planıyla
+     yenile ve her anahtarın minimum yetkili olduğunu panelden doğrula.
 4. **İzleme ve alarm**
    - Uygulama hata takibi, uptime kontrolü, Railway kaynak alarmı.
+   - Canlı `/api/health` 18 Ekim kontrolünde `redis_configured:false` ve
+     `redis_connected:false` döndü; Railway Redis bağlantısını yeniden kur.
    - Resend bounce/complaint webhook'u ve görünür teslimat metriği.
    - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümlerini,
      sağlayıcıların Node 24 uyumlu yeni major sürümleriyle güncelle.
