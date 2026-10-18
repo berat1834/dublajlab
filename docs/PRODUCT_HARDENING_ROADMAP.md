@@ -45,8 +45,9 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
      yenile ve her anahtarın minimum yetkili olduğunu panelden doğrula.
 4. **İzleme ve alarm**
    - Uygulama hata takibi, uptime kontrolü, Railway kaynak alarmı.
-   - Canlı `/api/health` 18 Ekim kontrolünde `redis_configured:false` ve
-     `redis_connected:false` döndü; Railway Redis bağlantısını yeniden kur.
+   - 18 Ekim kontrolünde bulunan kopuk Railway Redis değişken referansı düzeltildi;
+     canlı `/api/health` artık `redis_configured:true` ve
+     `redis_connected:true` döndürüyor.
    - Resend bounce/complaint webhook'u ve görünür teslimat metriği.
    - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümlerini,
      sağlayıcıların Node 24 uyumlu yeni major sürümleriyle güncelle.

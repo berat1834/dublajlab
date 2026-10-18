@@ -34,13 +34,18 @@ Değerler rapora veya repository'ye yazılmadı.
 - Git tarafından izlenen yalnızca örnek `.env` dosyaları bulundu; gerçek `.env`,
   PEM/private key veya bilinen gerçek secret biçimi saptanmadı.
 
-## İzleme bulgusu
+## İzleme bulgusu ve çözümü
 
 Aynı health kontrolü `redis_configured:false` ve `redis_connected:false` döndürdü.
 Railway arayüzünde `REDIS_URL` adı görünse de çalışan konteyner bu değeri almıyor.
 Rate limit ve job state bu durumda bellek fallback'i kullanır ve deploy/restart
-sırasında kaybolabilir. Redis servis bağlantısı ayrı, öncelikli operasyon işi olarak
-açık tutulmalıdır.
+sırasında kaybolabilir.
+
+Mevcut ve çevrimiçi Railway Redis servisinin `REDIS_URL` değeri backend'e Railway
+variable reference olarak yeniden bağlandı. Backend deploy edildikten sonra canlı
+health endpoint'i HTTP 200 ile birlikte `redis_configured:true` ve
+`redis_connected:true` döndürdü. Böylece rate limit ve job state yeniden kalıcı
+Redis katmanını kullanmaya başladı.
 
 ## Kalan secret hygiene işi
 
