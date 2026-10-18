@@ -137,3 +137,16 @@ class AdminAuditLog(Base):
     target_id = Column(String(100), nullable=False)
     details = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class EmailDeliveryEvent(Base):
+    __tablename__ = "email_delivery_events"
+
+    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    webhook_id = Column(String(100), unique=True, index=True, nullable=False)
+    event_type = Column(String(50), index=True, nullable=False)
+    email_id = Column(String(100), index=True, nullable=True)
+    recipient_domain = Column(String(255), nullable=True)
+    failure_reason = Column(String(500), nullable=True)
+    occurred_at = Column(DateTime(timezone=True), index=True, nullable=False)
+    received_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

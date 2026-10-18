@@ -611,6 +611,7 @@ export interface AdminOpsMetrics {
   lipsync_enabled: boolean;
   lipsync_provider: string;
   shopier_enabled: boolean;
+  resend_webhook_configured: boolean;
 
   total_users: number;
   active_vip_users: number;
@@ -623,6 +624,13 @@ export interface AdminOpsMetrics {
   failed_payments: number;
   comments_count: number;
   reports_count: number;
+  email_events_24h: number;
+  email_delivered_24h: number;
+  email_delayed_24h: number;
+  email_bounced_24h: number;
+  email_complained_24h: number;
+  email_failed_24h: number;
+  email_last_event_at: string | null;
 
   recent_failed_jobs: Array<{
     id: string;

@@ -265,6 +265,19 @@ async def get_ops_metrics(
     comments_count = db.query(func.count(models_db.DubbingComment.id)).scalar() or 0
     reports_count = db.query(func.count(models_db.ContentReport.id)).scalar() or 0
 
+    email_window_start = now - timedelta(hours=24)
+    email_event_counts = dict(
+        db.query(
+            models_db.EmailDeliveryEvent.event_type,
+            func.count(models_db.EmailDeliveryEvent.id),
+        ).filter(
+            models_db.EmailDeliveryEvent.occurred_at >= email_window_start
+        ).group_by(models_db.EmailDeliveryEvent.event_type).all()
+    )
+    email_last_event_at = db.query(
+        func.max(models_db.EmailDeliveryEvent.occurred_at)
+    ).scalar()
+
     # 3. Recent failed jobs (projects with status=failed)
     recent_failed = db.query(models_db.DubbingProject).filter(models_db.DubbingProject.status == "failed").order_by(models_db.DubbingProject.created_at.desc()).limit(10).all()
     recent_failed_list = [
@@ -293,6 +306,7 @@ async def get_ops_metrics(
         "lipsync_enabled": lip_sync_enabled,
         "lipsync_provider": lip_sync_provider,
         "shopier_enabled": is_shopier_enabled(),
+        "resend_webhook_configured": bool(os.getenv("RESEND_WEBHOOK_SECRET", "").strip()),
 
         "total_users": total_users,
         "active_vip_users": active_vip_users,
@@ -305,6 +319,13 @@ async def get_ops_metrics(
         "failed_payments": failed_payments,
         "comments_count": comments_count,
         "reports_count": reports_count,
+        "email_events_24h": sum(email_event_counts.values()),
+        "email_delivered_24h": email_event_counts.get("email.delivered", 0),
+        "email_delayed_24h": email_event_counts.get("email.delivery_delayed", 0),
+        "email_bounced_24h": email_event_counts.get("email.bounced", 0),
+        "email_complained_24h": email_event_counts.get("email.complained", 0),
+        "email_failed_24h": email_event_counts.get("email.failed", 0),
+        "email_last_event_at": email_last_event_at.isoformat() if email_last_event_at else None,
 
         "recent_failed_jobs": recent_failed_list
     }

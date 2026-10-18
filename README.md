@@ -37,7 +37,10 @@ yanıltıcı bir “kayıt başarılı” mesajı gösterilmez. Secret değerler
 
 Railway Trial, Free ve Hobby planlarında outbound SMTP kapalıdır. Bu planlarda
 `EMAIL_DELIVERY_PROVIDER=resend`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` ve isteğe
-bağlı `RESEND_REPLY_TO` kullanılır. Resend gönderici domaini doğrulanmadan
+bağlı `RESEND_REPLY_TO` kullanılır. Teslimat görünürlüğü için Resend'de
+`https://api.dublajlab.com.tr/api/webhooks/resend` endpoint'i oluşturulur ve
+endpoint signing secret değeri Railway'de `RESEND_WEBHOOK_SECRET` olarak saklanır.
+Resend gönderici domaini doğrulanmadan
 production kayıt akışı açılmamalıdır. SMTP provider geriye uyumluluk ve SMTP
 erişimi olan ortamlarda kullanılmak üzere korunur.
 

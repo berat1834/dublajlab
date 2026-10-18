@@ -2,7 +2,7 @@ import { useLanguage } from '../LanguageContext'
 import { useEffect, useRef, useState } from 'react'
 import { getAdminAuditLogs, getAdminOpsMetrics, getAdminUsers, updateUserMembership, type AdminAuditLog, type AdminOpsMetrics } from '../lib/api'
 import type { User } from '../types'
-import { Activity, Database, HardDrive, CheckCircle2, XCircle, Users, FileVideo, AlertCircle, RefreshCw, Search, Server } from 'lucide-react'
+import { Activity, Database, HardDrive, CheckCircle2, XCircle, Users, FileVideo, AlertCircle, RefreshCw, Search, Server, Mail } from 'lucide-react'
 
 interface AdminOpsPanelProps {
   onToast: (msg: string) => void
@@ -147,6 +147,10 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               <StatusIcon ok={metrics.shopier_enabled} />
             </div>
             <div className="flex justify-between items-center">
+              <span className="text-zinc-400">Resend Webhook</span>
+              <StatusIcon ok={metrics.resend_webhook_configured} />
+            </div>
+            <div className="flex justify-between items-center">
               <span className="text-zinc-400">Lip-Sync</span>
               <span className={`text-xs px-2 py-1 rounded-md font-bold ${metrics.lipsync_enabled ? 'bg-lime-500/10 text-lime-500' : 'bg-zinc-500/10 text-zinc-400'}`}>
                 {metrics.lipsync_provider.toUpperCase()}
@@ -232,6 +236,21 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               <span className="text-zinc-400">{t('admin.failed_pay')}</span>
               <span className="text-red-400 font-mono">{metrics.failed_payments}</span>
             </div>
+          </div>
+        </div>
+
+        {/* Email delivery */}
+        <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <Mail className="w-5 h-5 text-violet-400" /> E-posta (24 saat)
+          </h2>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between items-center"><span className="text-zinc-400">Toplam olay</span><span className="text-white font-mono">{metrics.email_events_24h}</span></div>
+            <div className="flex justify-between items-center"><span className="text-zinc-400">Teslim edildi</span><span className="text-lime-400 font-mono">{metrics.email_delivered_24h}</span></div>
+            <div className="flex justify-between items-center"><span className="text-zinc-400">Gecikmeli</span><span className="text-amber-400 font-mono">{metrics.email_delayed_24h}</span></div>
+            <div className="flex justify-between items-center"><span className="text-zinc-400">Bounce / başarısız</span><span className="text-red-400 font-mono">{metrics.email_bounced_24h + metrics.email_failed_24h}</span></div>
+            <div className="flex justify-between items-center"><span className="text-zinc-400">Şikâyet</span><span className="text-red-400 font-mono">{metrics.email_complained_24h}</span></div>
+            <div className="flex justify-between items-center"><span className="text-zinc-400">Son olay</span><span className="text-xs text-zinc-300">{metrics.email_last_event_at ? new Date(metrics.email_last_event_at).toLocaleString(locale) : '-'}</span></div>
           </div>
         </div>
       </div>
