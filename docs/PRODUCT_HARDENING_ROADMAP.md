@@ -61,7 +61,12 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
    - 10 public tablo, Alembic head `a1b2c3d4e5f7` ve 6 kullanıcı kaydı
      doğrulandı. Geçici yedek, konteyner, SSH tüneli ve SSH anahtarları temizlendi.
    - Tekrarlanabilir tatbikat betiği ve Sprint 60 raporu repoya eklendi.
-   - R2/S3 production yükleme-indirme-silme smoke testini tekrarla.
+   - R2/S3 production smoke testi 18 Ekim 2026'da tekrarlandı. Bucket healthcheck
+     başarılıydı ancak `PutObject` isteği `AccessDenied` aldı; mevcut R2 anahtarı
+     yazma yetkisine sahip değil veya `dublajlab-media` bucket kapsamı dışında.
+   - R2 anahtarını ilgili bucket için `Object Read & Write` yetkisiyle yenile,
+     Railway'deki `S3_ACCESS_KEY_ID` ve `S3_SECRET_ACCESS_KEY` değerlerini değiştir,
+     ardından yükleme-indirme-silme testini yeniden çalıştır.
 6. **Onboarding, mobil ve erişilebilirlik**
    - İlk kullanım yönlendirmesi, boş durumlar ve anlaşılır hata mesajları.
    - Klavye, odak, ekran okuyucu, kontrast ve küçük ekran QA.
