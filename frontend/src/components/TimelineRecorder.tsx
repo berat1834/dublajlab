@@ -15,6 +15,7 @@ import {
 import type { RefObject } from 'react'
 import type { TimelineLine } from '../types'
 import { useLanguage } from '../LanguageContext'
+import { createInitialTimelineLines, createNextTimelineLine } from '../lib/timelineDefaults'
 
 const TIMELINE_DURATION_EPSILON_SECONDS = 0.001
 
@@ -39,17 +40,6 @@ interface TimelineRecorderProps {
   ) => Promise<void>
 }
 
-function createInitialLines(duration: number, defaultLine: (number: number) => string): TimelineLine[] {
-  const count = duration >= 6 ? 3 : duration >= 2 ? 2 : 1
-  const slot = duration / count
-  return Array.from({ length: count }, (_, index) => ({
-    id: `line-${index + 1}`,
-    start: Number((index * slot).toFixed(2)),
-    end: Number(((index + 1) * slot).toFixed(2)),
-    text: defaultLine(index + 1),
-  }))
-}
-
 function supportedMimeType() {
   const options = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
   return options.find((type) => MediaRecorder.isTypeSupported(type)) || ''
@@ -69,7 +59,7 @@ export function TimelineRecorder({
   const [lines, setLines] = useState(() =>
     providedLines?.length
       ? providedLines.map((line) => ({ ...line }))
-      : createInitialLines(duration, (number) => t('timeline.default_line').replace('{number}', String(number))),
+      : createInitialTimelineLines(duration),
   )
   const [clips, setClips] = useState<Map<string, RecordedClip>>(new Map())
   const [activeLineId, setActiveLineId] = useState<string | null>(null)
@@ -240,16 +230,9 @@ export function TimelineRecorder({
       return
     }
     const lastEnd = lines[lines.length - 1]?.end ?? 0
-    const start = Math.min(lastEnd, Math.max(0, duration - 0.5))
-    const end = Math.min(duration, Math.max(start + 0.5, start + duration / 5))
     setLines((current) => [
       ...current,
-      {
-        id: `line-${crypto.randomUUID()}`,
-        start: Number(start.toFixed(2)),
-        end: Number(end.toFixed(2)),
-        text: t('timeline.new_line'),
-      },
+      createNextTimelineLine(duration, lastEnd, `line-${crypto.randomUUID()}`),
     ])
   }
 
@@ -379,6 +362,7 @@ export function TimelineRecorder({
               <textarea
                 aria-label={t('timeline.text_aria').replace('{number}', String(index + 1))}
                 value={line.text}
+                placeholder={t('timeline.default_line').replace('{number}', String(index + 1))}
                 maxLength={300}
                 rows={2}
                 disabled={disabled || Boolean(activeLineId)}
@@ -396,6 +380,7 @@ export function TimelineRecorder({
                     step="0.1"
                     value={line.start}
                     disabled={disabled || Boolean(activeLineId)}
+                    onFocus={(event) => event.currentTarget.select()}
                     onChange={(event) =>
                       updateLine(line.id, { start: Number(event.target.value) })
                     }
@@ -412,6 +397,7 @@ export function TimelineRecorder({
                     step="0.1"
                     value={line.end}
                     disabled={disabled || Boolean(activeLineId)}
+                    onFocus={(event) => event.currentTarget.select()}
                     onChange={(event) =>
                       updateLine(line.id, { end: Number(event.target.value) })
                     }
