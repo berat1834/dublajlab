@@ -53,6 +53,10 @@ karışmadan, test ve canlı doğrulaması tamamlandıktan sonra tek tek kapatı
      Alembic migration ve admin panelinde 24 saatlik metrikler canlıya alındı.
      Resend `email.delivered` olayları tek denemede HTTP 200 ve
      `{"status":"accepted"}` yanıtıyla production'da doğrulandı.
+   - 19 Ekim 2026'da `destek@dublajlab.com.tr` ProMail rumuzu
+     `hesap@dublajlab.com.tr` posta kutusuna yönlendirildi. Gerçek Resend iletisi
+     `email.delivered` olayıyla doğrulandı; production `RESEND_REPLY_TO` bu adrese
+     geçirildi ve deploy sonrası API health/Redis kontrolleri geçti.
    - GitHub Actions'ta Node 20 kullanan `checkout/setup-*` action sürümleri
      18 Ekim 2026'da resmi Node 24 tabanlı v7 major sürümlerine güncellendi.
 5. **Yedekleme ve geri yükleme tatbikatı — tamamlandı (18 Ekim 2026)**
