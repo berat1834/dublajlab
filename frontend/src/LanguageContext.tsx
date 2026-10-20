@@ -712,6 +712,7 @@ const translations: Record<string, Record<Language, string>> = {
   'preview.upload_own': { TR: 'Kendi videonu yükle', EN: 'Upload your own video' },
   'scene.load_error': { TR: 'Sahne detayları yüklenemedi.', EN: 'Scene details could not be loaded.' },
   'scene.loading': { TR: 'Yükleniyor...', EN: 'Loading...' },
+  'scene.video_error': { TR: 'Video önizlemesi yüklenemedi. Sayfayı yenileyip tekrar deneyin.', EN: 'The video preview could not be loaded. Refresh the page and try again.' },
   'scene.not_found': { TR: 'Sahne bulunamadı.', EN: 'Scene not found.' },
   'scene.back': { TR: 'Geri dön', EN: 'Go back' },
   'scene.breadcrumb': { TR: 'Ana sayfa / Sahneler', EN: 'Home / Scenes' },

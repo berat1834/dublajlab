@@ -22,9 +22,12 @@ sonrasında kapatılır.
      olduğunda üyelik otomatik tazelenir.
    - VIP olmayan oturumda genel uyarı yerine hangi hesabın VIP olmadığı açıkça
      gösterilir. Backend yetki kontrolü değişmeden korunur.
-3. **Katalog videolarını tarayıcıda oynatma — sıradaki (P0)**
+3. **Katalog videolarını tarayıcıda oynatma — tamamlandı (20 Ekim 2026, P0)**
    - Karar: İndirilebilen katalog videosu aynı zamanda uygulama içinde de
      oynatılabilmeli; indirme tek seçenek olması normal kabul edilmiyor.
+   - Katalog metadata'sındaki gerçek video adresleri bağlandı.
+   - Örnek videolar mobil uyumlu H.264 `yuv420p` ve fast-start biçimine çevrildi.
+   - Sahne detay oynatıcısına satır içi oynatma ve anlaşılır yükleme hatası eklendi.
    - R2/CORS, `Content-Type`, URL üretimi ve mobil video oynatıcı kontrol edilecek.
 4. **Uyarı bildirimleri — planlandı (P1)**
    - Mor kutular sabit, güvenli alanları hesaba katan, yüksek kontrastlı ve tüm

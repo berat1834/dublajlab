@@ -38,6 +38,7 @@ def test_template_list_endpoint() -> None:
     assert len(payload) >= 1
     assert payload[0]["license"]
     assert payload[0]["source"]
+    assert all(item["video_url"] for item in payload)
     assert 1 <= len(payload[0]["lines"]) <= 20
 
 
@@ -46,7 +47,7 @@ def test_template_detail_endpoint() -> None:
 
     assert response.status_code == 200
     assert response.json()["id"] == "ofis-surprizi"
-    assert response.json()["video_url"] is None
+    assert response.json()["video_url"] == "/templates/ofis-surprizi.mp4"
     assert response.json()["is_demo"] is True
 
 

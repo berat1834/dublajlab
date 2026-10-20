@@ -33,10 +33,12 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetail
   const [template, setTemplate] = useState<VideoTemplate | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [videoError, setVideoError] = useState(false)
 
   useEffect(() => {
     let active = true
     setLoading(true)
+    setVideoError(false)
     fetchTemplate(templateId)
       .then((data) => {
         if (active) {
@@ -74,9 +76,8 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetail
     )
   }
 
-  const hasVideoUrl = template.video_url && template.video_url.length > 0;
-  // If it's a relative url, we might need to absolute it, but let's just use it in <video> if it exists.
-  const videoSrc = hasVideoUrl && template.video_url?.startsWith('/') ? template.video_url : template.video_url
+  const hasVideoUrl = Boolean(template.video_url)
+  const videoSrc = template.video_url ?? undefined
 
   return (
     <div className="mx-auto max-w-5xl py-8 px-4">
@@ -87,20 +88,25 @@ export function SceneDetail({ templateId, onBack, onPlay, onToast }: SceneDetail
       <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
         {/* Left Side: Video Preview */}
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-black shadow-glow-lg aspect-video flex items-center justify-center relative">
-          {hasVideoUrl ? (
+          {hasVideoUrl && !videoError ? (
             <video 
-              src={videoSrc!} 
+              src={videoSrc}
               controls 
+              playsInline
+              preload="metadata"
+              onError={() => setVideoError(true)}
               className="w-full h-full object-contain bg-zinc-900" 
-              poster=""
             />
           ) : (
             <div className={`w-full h-full absolute inset-0 ${thumbClass(template.category)} opacity-60`} />
           )}
-          {!hasVideoUrl && (
+          {(!hasVideoUrl || videoError) && (
             <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-6 text-center">
               <Play className="h-16 w-16 text-white/50 mb-4 drop-shadow-xl" />
               <h2 className="text-2xl font-bold text-white drop-shadow-md">{template.title}</h2>
+              {videoError && (
+                <p className="mt-2 max-w-sm text-xs text-zinc-300">{t('scene.video_error')}</p>
+              )}
               <span className="mt-2 inline-block rounded-full bg-black/60 px-3 py-1 text-xs font-bold uppercase text-white backdrop-blur-md">
                 {template.category}
               </span>
