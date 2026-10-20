@@ -66,6 +66,7 @@ import {
   clearAdminMfaSession,
 } from './lib/api'
 import { shouldShowLipSync } from './lib/lipSync'
+import { refreshMembershipUser } from './lib/membershipAccess'
 import { pathForTab, routeFromPath } from './lib/navigation'
 import { localizeTemplate } from './lib/templateUtils'
 import { useLanguage } from './LanguageContext'
@@ -275,9 +276,29 @@ function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const hasVip = Boolean(currentUser?.has_active_vip)
 
+  const refreshCurrentMembership = useCallback(async () => {
+    const refreshedUser = await refreshMembershipUser(currentUser, getMeFromSessionCookie)
+    if (refreshedUser) setCurrentUser(refreshedUser)
+    return refreshedUser
+  }, [currentUser])
+
   useEffect(() => {
     if (!hasVip || !shouldShowLipSync(demoPolicy)) setApplyLipSync(false)
   }, [demoPolicy, hasVip])
+
+  useEffect(() => {
+    if (!currentUser) return
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refreshCurrentMembership()
+    }
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => {
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
+  }, [currentUser, refreshCurrentMembership])
 
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search)
@@ -565,6 +586,26 @@ function App() {
       if (isPollingAbort(processError)) return
       failProcessing(processError, retry)
     }
+  }
+
+  const selectAiVoiceMode = async () => {
+    if (!currentUser) {
+      showToast(t('studio.ai.login_vip'))
+      setActiveTab('membership')
+      return
+    }
+
+    const refreshedUser = await refreshCurrentMembership()
+    if (!refreshedUser?.has_active_vip) {
+      showToast(
+        t('studio.ai.vip_only_account').replace('{email}', refreshedUser?.email ?? currentUser.email),
+      )
+      setActiveTab('membership')
+      return
+    }
+
+    setMode('ai-voice')
+    clearFeedback()
   }
 
   const reset = () => {
@@ -972,15 +1013,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!hasVip) {
-                      showToast(currentUser ? t('studio.ai.vip_only') : t('studio.ai.login_vip'))
-                      setActiveTab('membership')
-                      return
-                    }
-                    setMode('ai-voice')
-                    clearFeedback()
-                  }}
+                  onClick={() => void selectAiVoiceMode()}
                   disabled={busy || Boolean(selectedTemplate && !upload)}
                   className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 transition ${mode === 'ai-voice' ? 'bg-violet text-white' : 'text-zinc-500 hover:text-white'}`}
                 >

@@ -196,6 +196,7 @@ const translations: Record<string, Record<Language, string>> = {
   'studio.template.seconds': { TR: 'sn', EN: 'sec' },
   'studio.template.lines': { TR: 'replik', EN: 'lines' },
   'studio.ai.vip_only': { TR: 'AI ses modu VIP üyelere özeldir.', EN: 'AI voice mode is available to VIP members only.' },
+  'studio.ai.vip_only_account': { TR: '{email} hesabında aktif VIP üyelik görünmüyor.', EN: 'No active VIP membership was found for {email}.' },
   'studio.ai.login_vip': { TR: 'AI ses modu için giriş yapıp VIP üyeliği etkinleştirin.', EN: 'Log in and activate VIP membership to use AI voice mode.' },
   'studio.lipsync.title': { TR: 'Dudak Senkronizasyonu (Deneysel)', EN: 'Lip Sync (Experimental)' },
   'studio.lipsync.description': { TR: 'Yüz hareketlerini dublaj sesine göre işler', EN: 'Matches facial movement to the dubbed audio' },

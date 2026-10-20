@@ -6,7 +6,7 @@ sonrasında kapatılır.
 
 ## Uygulama sırası
 
-1. **Altyazı zamanlaması ve replik başlangıç deneyimi — uygulanıyor (P0)**
+1. **Altyazı zamanlaması ve replik başlangıç deneyimi — tamamlandı (19 Ekim 2026, P0)**
    - Karar: Altyazı video boyunca değil, yalnızca ait olduğu repliğin başlangıç ve
      bitiş zamanı arasında görünür; replikler arasındaki boşlukta görünmez.
    - Başlangıçta videoyu boşluksuz bölen örnek replikler yerine tek, en fazla üç
@@ -15,10 +15,13 @@ sonrasında kapatılır.
      gösterilir.
    - Sayısal zaman alanına odaklanınca mevcut değer seçilir; `0` doğrudan yeni
      değerle değiştirilebilir.
-2. **VIP hesapta AI ses yetkisi — sıradaki (P0)**
-   - VIP kaynağı, `/me` yanıtı ve frontend yetki kontrolü birlikte incelenecek.
-   - VIP verilen hesapta AI ses seçilebilir olmalı; VIP olmayan hesapta açıklayıcı
-     yükseltme çağrısı gösterilmeli.
+2. **VIP hesapta AI ses yetkisi — tamamlandı (20 Ekim 2026, P0)**
+   - Production incelemesinde VIP yetkisinin doğru çalıştığı, ancak yetkinin açık
+     oturumdaki hesaptan farklı bir hesaba verildiği doğrulandı.
+   - AI ses seçilirken `/me` üyelik durumu yeniden alınır; sekme yeniden görünür
+     olduğunda üyelik otomatik tazelenir.
+   - VIP olmayan oturumda genel uyarı yerine hangi hesabın VIP olmadığı açıkça
+     gösterilir. Backend yetki kontrolü değişmeden korunur.
 3. **Katalog videolarını tarayıcıda oynatma — sıradaki (P0)**
    - Karar: İndirilebilen katalog videosu aynı zamanda uygulama içinde de
      oynatılabilmeli; indirme tek seçenek olması normal kabul edilmiyor.
