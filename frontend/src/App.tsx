@@ -22,9 +22,9 @@ import {
   Subtitles,
   Video,
   WandSparkles,
-  Info,
   Link
 } from 'lucide-react'
+import { AppToast, type ToastKind } from './components/AppToast'
 import { DemoTeaser } from './components/DemoTeaser'
 import { TimelineRecorder } from './components/TimelineRecorder'
 import { JobFailurePanel } from './components/JobFailurePanel'
@@ -84,6 +84,12 @@ import type {
 type Stage = 'idle' | 'uploading' | 'ready' | 'processing' | 'completed'
 type DubbingMode = 'my-voice' | 'ai-voice'
 type SourceMode = 'upload' | 'templates'
+
+interface ToastState {
+  id: number
+  message: string
+  kind: ToastKind
+}
 
 interface ErrorDetails {
   title: string
@@ -240,6 +246,7 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
   const activeJobControllerRef = useRef<AbortController | null>(null)
+  const toastTimerRef = useRef<number | null>(null)
   const [isSecuring, setIsSecuring] = useState(() => {
     if (sessionStorage.getItem('secured')) return false
     sessionStorage.setItem('secured', 'true')
@@ -270,7 +277,7 @@ function App() {
   const initialRoute = routeFromPath(window.location.pathname)
   const [activeTab, setActiveTab] = useState<Tab>(initialRoute.tab)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState('')
+  const [toast, setToast] = useState<ToastState | null>(null)
   const [showHowTo, setShowHowTo] = useState(false)
   const [detailTemplateId, setDetailTemplateId] = useState<string | null>(initialRoute.templateId)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -351,10 +358,24 @@ function App() {
     void handleTemplateSelect(templateId);
   }
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg)
-    setTimeout(() => setToastMessage(''), 3000)
-  }
+  const dismissToast = useCallback(() => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = null
+    setToast(null)
+  }, [])
+
+  const showToast = useCallback((message: string, kind: ToastKind = 'info') => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
+    setToast({ id: Date.now(), message, kind })
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null)
+      toastTimerRef.current = null
+    }, 5000)
+  }, [])
+
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
+  }, [])
 
   const localPreviewUrl = useMemo(
     () => (selectedFile ? URL.createObjectURL(selectedFile) : ''),
@@ -682,11 +703,14 @@ function App() {
       />
 
       {/* TOAST */}
-      {toastMessage && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 rounded-full border border-violet/30 bg-violet text-white px-4 py-2 text-sm font-medium shadow-glow animate-in fade-in slide-in-from-bottom-4">
-          <Info className="h-4 w-4" />
-          {toastMessage}
-        </div>
+      {toast && (
+        <AppToast
+          key={toast.id}
+          message={toast.message}
+          kind={toast.kind}
+          dismissLabel={t('toast.dismiss')}
+          onDismiss={dismissToast}
+        />
       )}
 
       <main className="flex-1 px-3 py-5 sm:px-6 sm:py-6 lg:py-10">

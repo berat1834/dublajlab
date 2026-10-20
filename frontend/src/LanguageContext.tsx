@@ -781,6 +781,7 @@ const translations: Record<string, Record<Language, string>> = {
   'footer.links.about': { TR: 'Hakkımızda', EN: 'About Us' },
   'footer.links.corporate': { TR: 'Kurumsal', EN: 'Corporate' },
   'toast.social_soon': { TR: 'DublajLab resmi sosyal medya hesabı yakında açılacak.', EN: 'DublajLab official social media account will be opened soon.' },
+  'toast.dismiss': { TR: 'Bildirimi kapat', EN: 'Dismiss notification' },
   'toast.suggest_soon': { TR: 'Sahne önerme özelliği yakında.', EN: 'Scene suggestion feature coming soon.' },
   'toast.contact_soon': { TR: 'İletişim paneli yakında.', EN: 'Contact panel coming soon.' },
   'social.soon': { TR: 'Resmi hesap yakında', EN: 'Official account soon' },

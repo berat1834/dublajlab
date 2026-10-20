@@ -28,12 +28,13 @@ sonrasında kapatılır.
    - Katalog metadata'sındaki gerçek video adresleri bağlandı.
    - Örnek videolar mobil uyumlu H.264 `yuv420p` ve fast-start biçimine çevrildi.
    - Sahne detay oynatıcısına satır içi oynatma ve anlaşılır yükleme hatası eklendi.
-   - R2/CORS, `Content-Type`, URL üretimi ve mobil video oynatıcı kontrol edilecek.
-4. **Uyarı bildirimleri — planlandı (P1)**
+   - Canlı API URL üretimi, `Content-Type`, byte-range desteği ve mobil video codec'i
+     doğrulandı.
+4. **Uyarı bildirimleri — tamamlandı (20 Ekim 2026, P1)**
    - Mor kutular sabit, güvenli alanları hesaba katan, yüksek kontrastlı ve tüm
-     cihazlarda görünür bir toast bileşenine dönüştürülecek.
+     cihazlarda görünür bir toast bileşenine dönüştürüldü.
    - Başarı, bilgi, uyarı ve hata türleri; kapatma düğmesi ve erişilebilir canlı
-     bölge desteği olacak.
+     bölge desteği eklendi; üst üste gelen zamanlayıcılar da temizleniyor.
 5. **Sıralama ve filtre kontrolleri — planlandı (P1)**
    - Basit yerel `select` yerine ikonlu, açıklayıcı ve mobilde rahat kullanılan
      kontrol tasarlanacak. Klavye ve odak durumları korunacak.
