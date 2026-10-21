@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  ArrowDownAZ,
   Clock3,
   FileQuestion,
   Flame,
@@ -7,10 +8,13 @@ import {
   Mic2,
   RefreshCw,
   Scale,
+  Search,
+  SlidersHorizontal,
 } from 'lucide-react'
 import { fetchTemplates } from '../lib/api'
 import type { VideoTemplate } from '../types'
 import { thumbClass, ThumbIcon, difficulty, localizeTemplate } from '../lib/templateUtils'
+import { filterAndSortTemplates, type TemplateSortOption } from '../lib/templateCatalog'
 import { useLanguage } from '../LanguageContext'
 
 interface TemplateGalleryProps {
@@ -29,7 +33,7 @@ export function TemplateGallery({
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortOption, setSortOption] = useState('popular')
+  const [sortOption, setSortOption] = useState<TemplateSortOption>('popular')
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -100,56 +104,88 @@ export function TemplateGallery({
     )
   }
 
-  const categories = ['', ...Array.from(new Set(templates.map(t => t.category)))]
-  
-  let filteredTemplates = filter === '' ? templates : templates.filter(t => t.category === filter)
-  if (searchQuery) {
-    const q = searchQuery.toLowerCase()
-    filteredTemplates = filteredTemplates.filter(t => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q))
-  }
-  
-  if (sortOption === 'shortest') {
-    filteredTemplates = filteredTemplates.sort((a, b) => a.duration_seconds - b.duration_seconds)
-  } else if (sortOption === 'az') {
-    filteredTemplates = filteredTemplates.sort((a, b) => a.title.localeCompare(b.title))
-  } else {
-    // Popüler (default for now, just keep original or by mock play count if we had it)
-    filteredTemplates = filteredTemplates.sort((a, b) => (b.play_count || 0) - (a.play_count || 0))
-  }
+  const categories = ['', ...Array.from(new Set(templates.map((template) => template.category)))]
+  const filteredTemplates = filterAndSortTemplates(
+    templates,
+    filter,
+    searchQuery,
+    sortOption,
+    language === 'TR' ? 'tr-TR' : 'en-US',
+  )
+  const sortOptions = [
+    { value: 'popular' as const, label: t('templates.popular'), Icon: Flame },
+    { value: 'shortest' as const, label: t('templates.shortest'), Icon: Clock3 },
+    { value: 'az' as const, label: 'A-Z', Icon: ArrowDownAZ },
+  ]
 
   return (
     <div>
-      <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setFilter(cat)}
-              className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
-                filter === cat ? 'bg-white text-black' : 'bg-white/5 text-zinc-400 hover:bg-white/10'
-              }`}
-            >
-              {cat ? (t('category.' + cat) === 'category.' + cat ? cat : t('category.' + cat)) : t('templates.all')}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-3">
+      <div className="mb-6 rounded-2xl border border-white/10 bg-surface/70 p-3 shadow-card sm:p-4">
+        <label className="relative block">
+          <span className="sr-only">{t('templates.search')}</span>
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" aria-hidden="true" />
           <input
-            type="text"
+            type="search"
             placeholder={t('templates.search')}
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-48 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:border-lime focus:outline-none transition"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="h-11 w-full rounded-xl border border-white/10 bg-black/35 pl-10 pr-4 text-sm text-white outline-none transition placeholder:text-zinc-500 hover:border-white/20 focus:border-lime/60 focus:ring-2 focus:ring-lime/15"
           />
-          <select 
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-xs text-white focus:outline-none"
-          >
-            <option value="popular">{t('templates.popular')}</option>
-            <option value="shortest">{t('templates.shortest')}</option>
-            <option value="az">A-Z</option>
-          </select>
+        </label>
+
+        <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="min-w-0">
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+              <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" /> {t('templates.filter_label')}
+            </div>
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label={t('templates.filter_label')}>
+              {categories.map((category) => {
+                const categoryKey = `category.${category}`
+                const categoryLabel = category
+                  ? (t(categoryKey) === categoryKey ? category : t(categoryKey))
+                  : t('templates.all')
+                return (
+                  <button
+                    type="button"
+                    key={category}
+                    onClick={() => setFilter(category)}
+                    aria-pressed={filter === category}
+                    className={`min-h-10 shrink-0 rounded-xl border px-3.5 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime/60 ${
+                      filter === category
+                        ? 'border-lime/40 bg-lime text-ink shadow-glow-sm'
+                        : 'border-white/10 bg-white/[0.04] text-zinc-300 hover:border-white/20 hover:bg-white/[0.08] hover:text-white'
+                    }`}
+                  >
+                    {categoryLabel}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+              {t('templates.sort_label')}
+            </div>
+            <div className="grid grid-cols-3 gap-1 rounded-xl border border-white/10 bg-black/30 p-1" role="group" aria-label={t('templates.sort_label')}>
+              {sortOptions.map(({ value, label, Icon }) => (
+                <button
+                  type="button"
+                  key={value}
+                  onClick={() => setSortOption(value)}
+                  aria-pressed={sortOption === value}
+                  className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 ${
+                    sortOption === value
+                      ? 'bg-white text-ink shadow-md'
+                      : 'text-zinc-400 hover:bg-white/[0.07] hover:text-white'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       

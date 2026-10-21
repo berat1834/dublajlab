@@ -247,6 +247,8 @@ const translations: Record<string, Record<Language, string>> = {
   'templates.empty_hint': { TR: 'Kendi videonu yükleyerek dublaj akışına devam edebilirsin.', EN: 'Upload your own video to continue the dubbing flow.' },
   'templates.all': { TR: 'Tümü', EN: 'All' },
   'templates.search': { TR: 'Sahne ara...', EN: 'Search scenes...' },
+  'templates.filter_label': { TR: 'Kategori', EN: 'Category' },
+  'templates.sort_label': { TR: 'Sırala', EN: 'Sort by' },
   'templates.popular': { TR: 'Popüler', EN: 'Popular' },
   'templates.shortest': { TR: 'En Kısa', EN: 'Shortest' },
   'templates.no_results': { TR: 'Bu kategoride sahne bulunamadı.', EN: 'No scenes were found in this category.' },

@@ -35,9 +35,12 @@ sonrasında kapatılır.
      cihazlarda görünür bir toast bileşenine dönüştürüldü.
    - Başarı, bilgi, uyarı ve hata türleri; kapatma düğmesi ve erişilebilir canlı
      bölge desteği eklendi; üst üste gelen zamanlayıcılar da temizleniyor.
-5. **Sıralama ve filtre kontrolleri — planlandı (P1)**
-   - Basit yerel `select` yerine ikonlu, açıklayıcı ve mobilde rahat kullanılan
-     kontrol tasarlanacak. Klavye ve odak durumları korunacak.
+5. **Sıralama ve filtre kontrolleri — tamamlandı (21 Ekim 2026, P1)**
+   - Basit yerel `select`, ikonlu ve açıklayıcı üçlü sıralama kontrolüyle değiştirildi.
+   - Arama, yatay kaydırılabilen kategori çipleri ve sıralama tek bir duyarlı panelde
+     toplandı; klavye odağı ve `aria-pressed` durumları eklendi.
+   - Filtreleme ve sıralama saf bir yardımcıya taşındı; API'den gelen dizi artık
+     yerinde değiştirilmez ve Türkçe arama yerel harf kurallarını kullanır.
 6. **Girişsiz dublaj politikası — karar verildi (P1)**
    - Karar: Kısıtlı ve geçici public demo girişsiz kalır; kalıcı proje, kütüphane,
      topluluk yayını, yüksek limitler ve VIP özellikleri giriş gerektirir.
