@@ -100,7 +100,7 @@ def test_public_demo_rejects_video_longer_than_demo_limit(
     video_path = tmp_path / "input.mp4"
     video_path.write_bytes(b"fake-video-ftyp-here")
 
-    async def fake_save_upload(_upload):
+    async def fake_save_upload(_upload, _max_file_size):
         return str(uuid4()), video_path, 5, "ornek.mp4"
 
     monkeypatch.setattr(video_router.ffmpeg_service, "ensure_available", lambda: None)
@@ -120,7 +120,7 @@ def test_public_demo_rejects_video_longer_than_demo_limit(
     assert response.json()["detail"] == "Video süresi izin verilen sınırı aşıyor."
 
 
-def test_public_demo_export_limit_returns_429(
+def test_authenticated_user_bypasses_public_demo_export_limit(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     auth_headers_factory,
@@ -149,12 +149,80 @@ def test_public_demo_export_limit_returns_429(
 
     headers = auth_headers_factory(membership_tier="vip")
     accepted = client.post("/api/jobs/dubbing-ai", json=payload, headers=headers)
-    blocked = client.post("/api/jobs/dubbing-ai", json=payload, headers=headers)
+    second = client.post("/api/jobs/dubbing-ai", json=payload, headers=headers)
 
     assert accepted.status_code == 202
-    assert blocked.status_code == 429
-    assert "1 export/gün" in blocked.json()["detail"]
-    assert int(blocked.headers["Retry-After"]) > 0
+    assert second.status_code == 202
+
+
+def test_anonymous_upload_requires_enabled_public_demo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("PUBLIC_DEMO_MODE", "false")
+
+    response = client.post(
+        "/api/video/upload",
+        files={"file": ("ornek.mp4", b"fake-video-ftyp-here", "video/mp4")},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == (
+        "Girişsiz dublaj şu anda kapalı. Devam etmek için giriş yapın veya kayıt olun."
+    )
+
+
+def test_anonymous_recording_export_requires_enabled_public_demo(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("PUBLIC_DEMO_MODE", "false")
+
+    response = client.post(
+        "/api/jobs/dubbing-recordings",
+        data={
+            "video_id": str(uuid4()),
+            "timeline": '[{"id":"line-1","start":0.0,"end":1.0,"text":"Merhaba"}]',
+            "recording_ids": '["line-1"]',
+        },
+        files={"recordings": ("line-1.webm", b"voice", "audio/webm")},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == (
+        "Girişsiz dublaj şu anda kapalı. Devam etmek için giriş yapın veya kayıt olun."
+    )
+
+
+def test_authenticated_upload_uses_normal_limits_when_demo_is_enabled(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    auth_headers_factory,
+) -> None:
+    _enable_public_demo(monkeypatch)
+    video_path = tmp_path / "input.mp4"
+    video_path.write_bytes(b"fake-video-ftyp-here")
+    captured: dict[str, int] = {}
+
+    async def fake_save_upload(_upload, max_file_size):
+        captured["max_file_size"] = max_file_size
+        return str(uuid4()), video_path, 5, "ornek.mp4"
+
+    monkeypatch.setattr(video_router.ffmpeg_service, "ensure_available", lambda: None)
+    monkeypatch.setattr(video_router.storage_service, "save_upload", fake_save_upload)
+    monkeypatch.setattr(
+        video_router.ffmpeg_service,
+        "probe",
+        lambda _path: VideoInfo(duration_seconds=30.0, has_audio=False),
+    )
+    monkeypatch.setattr(video_router.storage_service, "save_video_metadata", lambda *_: None)
+
+    response = client.post(
+        "/api/video/upload",
+        headers=auth_headers_factory(),
+        files={"file": ("ornek.mp4", b"fake-video-ftyp-here", "video/mp4")},
+    )
+
+    assert response.status_code == 201
+    assert captured["max_file_size"] == MAX_FILE_SIZE
 
 
 def test_public_demo_rejects_oversized_recording(

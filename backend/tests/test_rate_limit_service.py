@@ -7,7 +7,6 @@ import pytest
 from fastapi import HTTPException
 from starlette.requests import Request
 
-from backend import auth
 from backend.services.rate_limit_service import (
     DailyExportRateLimiter,
     enforce_public_demo_export_limit,
@@ -69,21 +68,19 @@ async def test_daily_export_limiter_resets_on_next_utc_day() -> None:
 
 
 @pytest.mark.asyncio
-async def test_admin_bypasses_public_demo_export_limit(monkeypatch) -> None:
+async def test_authenticated_user_bypasses_public_demo_export_limit(monkeypatch) -> None:
     monkeypatch.setenv("PUBLIC_DEMO_MODE", "true")
     monkeypatch.setenv("DEMO_MAX_EXPORTS_PER_IP_PER_DAY", "1")
     await export_rate_limiter.reset()
-    admin_id = "mfa-admin-id"
-    admin_token = auth.create_access_token({"sub": admin_id, "amr": "totp"})
-    request = _request("203.0.113.40", authorization=f"Bearer {admin_token}")
-    admin = SimpleNamespace(role="admin", mfa_enabled=True, id=admin_id)
+    request = _request("203.0.113.40")
+    user = SimpleNamespace(role="user")
 
-    await enforce_public_demo_export_limit(request, admin)
-    await enforce_public_demo_export_limit(request, admin)
+    await enforce_public_demo_export_limit(request, user)
+    await enforce_public_demo_export_limit(request, user)
     regular_request = _request("203.0.113.41")
-    await enforce_public_demo_export_limit(regular_request, SimpleNamespace(role="user"))
+    await enforce_public_demo_export_limit(regular_request)
     with pytest.raises(HTTPException) as error:
-        await enforce_public_demo_export_limit(regular_request, SimpleNamespace(role="user"))
+        await enforce_public_demo_export_limit(regular_request)
 
     assert error.value.status_code == 429
     await export_rate_limiter.reset()

@@ -9,7 +9,6 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import TypeAdapter, ValidationError
 
-from backend.config import active_max_video_duration_seconds
 from backend.models import DubbingLine, ProcessRequest, ProcessResponse, UploadResponse
 from backend.services.ffmpeg_service import FFmpegService, MediaProcessingError
 from backend.services.file_storage import FileStorageService
@@ -19,6 +18,7 @@ from backend.services.tts_service import TTSService
 from backend import models_db
 from backend.routers.auth_router import get_current_user, get_current_user_optional
 from backend.services.membership_service import require_active_vip
+from backend.services.public_demo_service import resolve_media_request_policy
 
 
 router = APIRouter(prefix="/api/video", tags=["video"])
@@ -46,13 +46,19 @@ def ensure_media_tools() -> None:
 
 
 @router.post("/upload", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)
-async def upload_video(file: UploadFile = File(...)) -> UploadResponse:
+async def upload_video(
+    file: UploadFile = File(...),
+    current_user: models_db.User | None = Depends(get_current_user_optional),
+) -> UploadResponse:
+    media_policy = resolve_media_request_policy(current_user)
     ensure_media_tools()
-    max_duration = active_max_video_duration_seconds()
-    video_id, path, size, original_filename = await storage_service.save_upload(file)
+    video_id, path, size, original_filename = await storage_service.save_upload(
+        file,
+        media_policy.max_file_size_bytes,
+    )
     try:
         info = await asyncio.to_thread(ffmpeg_service.probe, path)
-        if info.duration_seconds > max_duration:
+        if info.duration_seconds > media_policy.max_video_duration_seconds:
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail="Video süresi izin verilen sınırı aşıyor.",
@@ -159,6 +165,7 @@ async def process_recordings(
     recordings: list[UploadFile] = File(...),
     current_user: models_db.User | None = Depends(get_current_user_optional),
 ) -> ProcessResponse:
+    media_policy = resolve_media_request_policy(current_user)
     ensure_media_tools()
     video_path = storage_service.get_video_path(video_id)
     metadata = storage_service.get_video_metadata(video_id)
@@ -214,6 +221,7 @@ async def process_recordings(
             recordings,
             parsed_recording_ids,
             job_id,
+            media_policy.max_recording_size_bytes,
         )
         subtitle_service.create_timeline_ass(
             lines=lines,

@@ -22,6 +22,10 @@ client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def media_tools_are_available(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("PUBLIC_DEMO_MODE", "true")
+    monkeypatch.setenv("DEMO_MAX_FILE_SIZE_MB", "50")
+    monkeypatch.setenv("DEMO_MAX_VIDEO_DURATION_SECONDS", "60")
+    monkeypatch.setenv("DEMO_MAX_RECORDING_SIZE_MB", "10")
     monkeypatch.setattr(video_router.ffmpeg_service, "ensure_available", lambda: None)
 
 
@@ -40,7 +44,7 @@ def test_supported_video_is_accepted(monkeypatch: pytest.MonkeyPatch, tmp_path: 
     video_path = tmp_path / f"{video_id}.mp4"
     video_path.write_bytes(b"fake-video-ftyp-here")
 
-    async def fake_save_upload(_upload):
+    async def fake_save_upload(_upload, _max_file_size):
         return video_id, video_path, video_path.stat().st_size, "ornek.mp4"
 
     monkeypatch.setattr(video_router.storage_service, "save_upload", fake_save_upload)
@@ -306,7 +310,7 @@ def test_recordings_endpoint_processes_timeline(
         lambda: (output_id, output_path),
     )
 
-    async def fake_save_recordings(_uploads, _ids, _job_id):
+    async def fake_save_recordings(_uploads, _ids, _job_id, _max_recording_size):
         recording_path.write_bytes(b"voice")
         return [recording_path]
 

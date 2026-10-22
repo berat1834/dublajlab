@@ -830,7 +830,7 @@ function App() {
         </div>
 
         {/* ═══════════════════════════ DEMO POLICY BANNER ═══════════════════════════ */}
-        {demoPolicy?.enabled && (
+        {demoPolicy?.enabled && !currentUser && (
           <aside className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-sm text-amber-50">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
             <div>
@@ -922,8 +922,8 @@ function App() {
                 <UploadZone
                   onFile={handleFile}
                   disabled={busy}
-                  maxFileSizeMb={demoPolicy?.enabled ? demoPolicy.max_file_size_mb : 50}
-                  maxDurationSeconds={demoPolicy?.enabled ? demoPolicy.max_video_duration_seconds : 60}
+                  maxFileSizeMb={demoPolicy?.enabled && !currentUser ? demoPolicy.max_file_size_mb : 50}
+                  maxDurationSeconds={demoPolicy?.enabled && !currentUser ? demoPolicy.max_video_duration_seconds : 60}
                 />
               ) : (
                 <div>

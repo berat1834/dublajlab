@@ -41,11 +41,16 @@ sonrasında kapatılır.
      toplandı; klavye odağı ve `aria-pressed` durumları eklendi.
    - Filtreleme ve sıralama saf bir yardımcıya taşındı; API'den gelen dizi artık
      yerinde değiştirilmez ve Türkçe arama yerel harf kurallarını kullanır.
-6. **Girişsiz dublaj politikası — karar verildi (P1)**
+6. **Girişsiz dublaj politikası — tamamlandı (22 Ekim 2026, P1)**
    - Karar: Kısıtlı ve geçici public demo girişsiz kalır; kalıcı proje, kütüphane,
      topluluk yayını, yüksek limitler ve VIP özellikleri giriş gerektirir.
    - Böylece ilk deneme sürtünmesiz kalırken kötüye kullanım hız/IP limitleriyle
      sınırlandırılır.
+   - Demo modu kapalıyken anonim upload ve mikrofon export istekleri `401` ile
+     durdurulur; demo açıkken yalnızca misafir isteklerine düşük medya ve günlük
+     export limitleri uygulanır.
+   - Giriş yapan hesaplar normal üyelik medya limitlerini kullanır; arayüzdeki demo
+     sınırı paneli ve istemci tarafı düşük limitler oturum açılınca kaldırılır.
 7. **Mobil ürün — keşif (P2)**
    - İlk adım ayrı native uygulama değil; mevcut web uygulamasını kurulabilir PWA,
      güvenilir mobil kayıt ve paylaşım akışı olarak tamamlamaktır.

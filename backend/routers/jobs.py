@@ -25,6 +25,7 @@ from backend.services.ffmpeg_service import MediaProcessingError
 from backend.services.job_service import dubbing_job_service, job_registry
 from backend.services.rate_limit_service import enforce_public_demo_export_limit
 from backend.services.membership_service import has_active_vip, require_active_vip
+from backend.services.public_demo_service import resolve_media_request_policy
 from backend import config as app_config
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
@@ -245,6 +246,7 @@ async def create_recording_job(
     db: Session = Depends(get_db),
     current_user: models_db.User | None = Depends(get_current_user_optional)
 ) -> JobResponse:
+    media_policy = resolve_media_request_policy(current_user)
     enforce_lip_sync_vip(apply_lip_sync, current_user)
     ensure_media_tools()
     storage = dubbing_job_service.storage_service
@@ -282,6 +284,7 @@ async def create_recording_job(
             recordings,
             parsed_recording_ids,
             job.job_id,
+            media_policy.max_recording_size_bytes,
         )
     except Exception as exc:
         await job_registry.fail(job.job_id, str(exc) or "Ses kayıtları kaydedilemedi.")

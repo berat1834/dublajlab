@@ -41,7 +41,11 @@ class FileStorageService:
                 detail=f"{label} bulunamadı.",
             ) from None
 
-    async def save_upload(self, upload: UploadFile) -> tuple[str, Path, int, str]:
+    async def save_upload(
+        self,
+        upload: UploadFile,
+        max_file_size_bytes: int | None = None,
+    ) -> tuple[str, Path, int, str]:
         original_filename = Path(upload.filename or "").name
         extension = Path(original_filename).suffix.lower()
         if extension not in ALLOWED_EXTENSIONS:
@@ -76,7 +80,7 @@ class FileStorageService:
 
         video_id = str(uuid4())
         destination = UPLOAD_DIR / f"{video_id}{extension}"
-        max_file_size = active_max_file_size_bytes()
+        max_file_size = max_file_size_bytes or active_max_file_size_bytes()
         size = 0
         try:
             with destination.open("wb") as output:
@@ -151,6 +155,7 @@ class FileStorageService:
         uploads: list[UploadFile],
         recording_ids: list[str],
         job_id: str,
+        max_recording_size_bytes: int | None = None,
     ) -> list[Path]:
         if len(uploads) != len(recording_ids):
             raise HTTPException(
@@ -159,7 +164,9 @@ class FileStorageService:
             )
 
         saved_paths: list[Path] = []
-        max_recording_size = active_max_recording_size_bytes()
+        max_recording_size = (
+            max_recording_size_bytes or active_max_recording_size_bytes()
+        )
         try:
             for index, (upload, recording_id) in enumerate(zip(uploads, recording_ids)):
                 extension = Path(upload.filename or "recording.webm").suffix.lower()

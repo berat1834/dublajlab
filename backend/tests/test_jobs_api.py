@@ -28,6 +28,8 @@ def job_dependencies_are_available(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
+    monkeypatch.setenv("PUBLIC_DEMO_MODE", "true")
+    monkeypatch.setenv("DEMO_MAX_RECORDING_SIZE_MB", "10")
     service = jobs_router.dubbing_job_service
     video_path = tmp_path / "input.mp4"
     video_path.write_bytes(b"video")
@@ -129,7 +131,7 @@ def test_recording_job_is_created_after_files_are_saved(
     monkeypatch.setattr(app_config, "LIPSYNC_ENABLED", False)
     saved_recording = tmp_path / "line-1.webm"
 
-    async def fake_save_recordings(_uploads, _ids, _job_id):
+    async def fake_save_recordings(_uploads, _ids, _job_id, _max_recording_size):
         saved_recording.write_bytes(b"voice")
         return [saved_recording]
 
@@ -193,7 +195,7 @@ def test_vip_recording_job_forwards_lip_sync_flag(
     saved_recording = tmp_path / "line-1.webm"
     captured: dict[str, object] = {}
 
-    async def fake_save_recordings(_uploads, _ids, _job_id):
+    async def fake_save_recordings(_uploads, _ids, _job_id, _max_recording_size):
         saved_recording.write_bytes(b"voice")
         return [saved_recording]
 

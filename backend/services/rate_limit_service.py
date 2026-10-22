@@ -7,9 +7,6 @@ from threading import RLock
 from typing import Callable
 
 from fastapi import HTTPException, Request, status
-from jose import JWTError, jwt
-
-from backend import auth
 from backend.config import public_demo_policy, get_redis_url
 import redis.asyncio as redis
 
@@ -125,18 +122,9 @@ async def enforce_public_demo_export_limit(
     request: Request,
     current_user: object | None = None,
 ) -> None:
-    authorization = request.headers.get("Authorization", "")
-    token = authorization[7:].strip() if authorization.startswith("Bearer ") else ""
-    try:
-        claims = jwt.decode(token, auth.SECRET_KEY, algorithms=[auth.ALGORITHM]) if token else {}
-    except JWTError:
-        claims = {}
-    if (
-        getattr(current_user, "role", None) == "admin"
-        and getattr(current_user, "mfa_enabled", False)
-        and claims.get("amr") == "totp"
-        and claims.get("sub") == str(getattr(current_user, "id", ""))
-    ):
+    # The daily IP quota protects the anonymous public demo. Authenticated
+    # accounts use their membership limits instead.
+    if current_user is not None:
         return
 
     policy = public_demo_policy()
