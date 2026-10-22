@@ -18,6 +18,7 @@ import {
   RotateCcw,
   ServerCrash,
   ShieldCheck,
+  Share2,
   Sparkles,
   Subtitles,
   Video,
@@ -84,6 +85,10 @@ import type {
 type Stage = 'idle' | 'uploading' | 'ready' | 'processing' | 'completed'
 type DubbingMode = 'my-voice' | 'ai-voice'
 type SourceMode = 'upload' | 'templates'
+
+type ShareCapableNavigator = {
+  share?: (data?: ShareData) => Promise<void>
+}
 
 interface ToastState {
   id: number
@@ -372,6 +377,34 @@ function App() {
       toastTimerRef.current = null
     }, 5000)
   }, [])
+
+  const copyOutput = useCallback(async () => {
+    if (!outputUrl) return
+    try {
+      await navigator.clipboard.writeText(outputUrl)
+      showToast(t('studio.export.copied'), 'success')
+    } catch {
+      showToast(t('action.failed'), 'error')
+    }
+  }, [outputUrl, showToast, t])
+
+  const shareOutput = useCallback(async () => {
+    if (!outputUrl) return
+    const nativeShare = (navigator as unknown as ShareCapableNavigator).share
+    if (nativeShare) {
+      try {
+        await nativeShare.call(navigator, {
+          title: 'DublajLab',
+          text: t('studio.export.share_text'),
+          url: outputUrl,
+        })
+        return
+      } catch (shareError) {
+        if (shareError instanceof DOMException && shareError.name === 'AbortError') return
+      }
+    }
+    await copyOutput()
+  }, [copyOutput, outputUrl, t])
 
   useEffect(() => () => {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
@@ -1247,7 +1280,12 @@ function App() {
                   {t('studio.export.description')}
                 </p>
                 <div className="grid grid-cols-2 gap-2 mt-1 mb-2">
-                  <button onClick={() => { navigator.clipboard.writeText(outputUrl); showToast(t('studio.export.copied')) }} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white transition hover:bg-white/20">
+                  {typeof (navigator as unknown as ShareCapableNavigator).share === 'function' && (
+                    <button onClick={() => void shareOutput()} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-lime/25 bg-lime/10 px-3 py-2.5 text-[11px] font-bold text-lime transition hover:bg-lime/20">
+                      <Share2 className="h-3.5 w-3.5" /> {t('studio.export.share')}
+                    </button>
+                  )}
+                  <button onClick={() => void copyOutput()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white transition hover:bg-white/20">
                     <Link className="h-3.5 w-3.5" /> {t('studio.export.copy')}
                   </button>
                   <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(t('studio.export.share_text'))}&url=${encodeURIComponent(outputUrl)}`} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-500/20 px-3 py-2.5 text-[11px] font-bold text-sky-400 transition hover:bg-sky-500/30">

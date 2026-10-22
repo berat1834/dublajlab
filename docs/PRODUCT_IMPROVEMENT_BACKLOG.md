@@ -51,9 +51,14 @@ sonrasında kapatılır.
      export limitleri uygulanır.
    - Giriş yapan hesaplar normal üyelik medya limitlerini kullanır; arayüzdeki demo
      sınırı paneli ve istemci tarafı düşük limitler oturum açılınca kaldırılır.
-7. **Mobil ürün — keşif (P2)**
+7. **Mobil ürün — uygulanıyor (P2)**
    - İlk adım ayrı native uygulama değil; mevcut web uygulamasını kurulabilir PWA,
      güvenilir mobil kayıt ve paylaşım akışı olarak tamamlamaktır.
+   - Web manifesti ve uygulama ikonlarına service worker eklendi; uygulama çevrimdışı
+     durumda kabuğunu açabilir. API yanıtları, kullanıcı medyası ve videolar güvenlik
+     ve güncellik için önbelleğe alınmaz.
+   - Android/masaüstünde yerel kurulum istemi, iOS'ta “Ana Ekrana Ekle” yönlendirmesi
+     ve destekleyen mobil cihazlarda sistem paylaşım menüsü eklendi.
    - Kullanım verisi yeterli talep gösterirse daha sonra native uygulama değerlendirilir.
 8. **Destek e-posta adresi — tamamlandı (19 Ekim 2026)**
    - `destek@dublajlab.com.tr`, `hesap@dublajlab.com.tr` posta kutusuna yönlenen

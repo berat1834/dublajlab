@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Globe, MessageSquare, Crown, Menu, X, User as UserIcon, LogOut, Diamond } from 'lucide-react'
+import { Globe, MessageSquare, Crown, Download, Menu, X, User as UserIcon, LogOut, Diamond } from 'lucide-react'
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
 import { clearAdminMfaSession, logout } from '../lib/api'
@@ -14,10 +14,40 @@ interface PlatformNavbarProps {
   onToast?: (msg: string) => void
 }
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
+
 export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMobileMenuOpen, currentUser, setCurrentUser, onToast }: PlatformNavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [showIosInstall, setShowIosInstall] = useState(false)
   const { language, setLanguage, t } = useLanguage()
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches
+      || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+    if (standalone) return
+
+    setShowIosInstall(/iphone|ipad|ipod/i.test(navigator.userAgent))
+    const handleInstallPrompt = (event: Event) => {
+      event.preventDefault()
+      setInstallPrompt(event as BeforeInstallPromptEvent)
+    }
+    const handleInstalled = () => {
+      setInstallPrompt(null)
+      setShowIosInstall(false)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt)
+    window.addEventListener('appinstalled', handleInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallPrompt)
+      window.removeEventListener('appinstalled', handleInstalled)
+    }
+  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,6 +87,18 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
     setDropdownOpen(false)
   }
 
+  const handleInstall = async () => {
+    if (installPrompt) {
+      await installPrompt.prompt()
+      const choice = await installPrompt.userChoice
+      if (choice.outcome === 'accepted') setInstallPrompt(null)
+      return
+    }
+    if (showIosInstall && onToast) onToast(t('pwa.ios_hint'))
+  }
+
+  const canInstall = Boolean(installPrompt) || showIosInstall
+
   return (
     <>
       <nav className="sticky top-0 z-50 border-b border-white/10 glass-panel" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
@@ -73,6 +115,11 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
             </div>
           </div>
           <div className="hidden items-center gap-4 md:flex text-sm font-medium">
+            {canInstall && (
+              <button onClick={() => void handleInstall()} className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-zinc-300 transition hover:bg-white/5 hover:text-white">
+                <Download className="h-4 w-4" /> {t('pwa.install')}
+              </button>
+            )}
             <button onClick={() => setLanguage(language === 'TR' ? 'EN' : 'TR')} className="flex items-center gap-1.5 text-zinc-400 hover:text-white transition w-[50px] justify-center">
               <Globe className="h-4 w-4" /> {language}
             </button>
@@ -174,6 +221,11 @@ export function PlatformNavbar({ activeTab, setActiveTab, mobileMenuOpen, setMob
             <button onClick={() => { setActiveTab('dubs'); setMobileMenuOpen(false); }} className="text-left">{t('nav.dubs')}</button>
             <button onClick={() => { setActiveTab('daily'); setMobileMenuOpen(false); }} className="text-left">{t('nav.daily')}</button>
             <hr className="border-white/10" />
+            {canInstall && (
+              <button onClick={() => { void handleInstall(); setMobileMenuOpen(false) }} className="text-left flex items-center gap-2 rounded-xl border border-lime/25 bg-lime/10 px-3 py-3 font-bold text-lime">
+                <Download className="h-4 w-4" /> {t('pwa.install')}
+              </button>
+            )}
             <button onClick={() => setLanguage(language === 'TR' ? 'EN' : 'TR')} className="text-left flex items-center gap-2 py-3"><Globe className="h-4 w-4" /> {language}</button>
             <button onClick={() => {
               const discordUrl = import.meta.env.VITE_SOCIAL_DISCORD_URL;
