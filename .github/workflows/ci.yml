@@ -27,7 +27,13 @@ jobs:
           cache-dependency-path: backend/requirements-dev.txt
 
       - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install --yes ffmpeg
+        continue-on-error: true
+        run: |
+          timeout 120s sudo apt-get update \
+            -o Acquire::Retries=2 \
+            -o Acquire::http::Timeout=20 \
+            -o Acquire::https::Timeout=20
+          timeout 120s sudo apt-get install --yes --no-install-recommends ffmpeg
 
       - name: Install dependencies
         run: python -m pip install --requirement backend/requirements-dev.txt
