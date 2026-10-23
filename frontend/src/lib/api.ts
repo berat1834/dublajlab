@@ -9,7 +9,8 @@ import type {
   User,
   AuthResponse,
   DubbingProject,
-  DubbingExport
+  DubbingExport,
+  EngagementProgress,
 } from '../types'
 
 export const API_BASE_URL = (
@@ -108,6 +109,7 @@ export async function processVideo(payload: {
   mute_original_audio: boolean
   burn_subtitles: boolean
   apply_lip_sync: boolean
+  template_id?: string
 }): Promise<JobResponse> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/jobs/dubbing-ai`, {
@@ -134,6 +136,7 @@ export async function processRecordings(payload: {
   muteOriginalAudio: boolean
   burnSubtitles: boolean
   applyLipSync: boolean
+  templateId?: string
 }): Promise<JobResponse> {
   const formData = new FormData()
   const recordingIds = payload.timeline.map((line) => line.id)
@@ -143,6 +146,7 @@ export async function processRecordings(payload: {
   formData.append('mute_original_audio', String(payload.muteOriginalAudio))
   formData.append('burn_subtitles', String(payload.burnSubtitles))
   formData.append('apply_lip_sync', String(payload.applyLipSync))
+  if (payload.templateId) formData.append('template_id', payload.templateId)
   for (const id of recordingIds) {
     const recording = payload.recordings.get(id)
     if (!recording) throw new Error('Her replik için bir kayıt alın.')
@@ -406,6 +410,14 @@ export async function getUserProjects(): Promise<DubbingProject[]> {
     headers: getAuthHeaders(),
   })
   return parseResponse<DubbingProject[]>(response)
+}
+
+export async function getEngagementProgress(): Promise<EngagementProgress> {
+  const response = await fetch(`${API_BASE_URL}/api/me/engagement`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+  return parseResponse<EngagementProgress>(response)
 }
 
 export async function getUserExports(): Promise<DubbingExport[]> {

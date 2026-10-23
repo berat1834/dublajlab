@@ -8,8 +8,17 @@ import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
 from backend.auth import verify_password
+from backend.services.engagement_service import build_engagement_progress
 
 router = APIRouter()
+
+
+@router.get("/engagement", response_model=schemas.EngagementProgressResponse)
+def get_engagement_progress(
+    db: Session = Depends(get_db),
+    current_user: models_db.User = Depends(get_current_user),
+):
+    return build_engagement_progress(db, current_user.id)
 
 @router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
 def delete_account(body: schemas.AccountDeleteRequest, db: Session = Depends(get_db), current_user: models_db.User = Depends(get_current_user)):

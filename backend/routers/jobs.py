@@ -27,6 +27,7 @@ from backend.services.rate_limit_service import enforce_public_demo_export_limit
 from backend.services.membership_service import has_active_vip, require_active_vip
 from backend.services.public_demo_service import resolve_media_request_policy
 from backend import config as app_config
+from backend.services.template_service import TemplateCatalogError, TemplateService
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
@@ -39,6 +40,19 @@ TIMELINE_DURATION_ERROR = (
     "Lütfen son repliği video bitişinden önce tamamlayın."
 )
 timeline_adapter = TypeAdapter(list[DubbingLine])
+template_service = TemplateService()
+
+
+def validated_template(template_id: str | None):
+    if not template_id:
+        return None
+    try:
+        template = template_service.get_template(template_id)
+    except TemplateCatalogError as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    if template is None:
+        raise HTTPException(status_code=422, detail="Hazır sahne kimliği geçersiz.")
+    return template
 
 def get_retention_date(membership_tier: str) -> datetime:
     if membership_tier == "vip":
@@ -202,6 +216,7 @@ async def create_ai_job(
     db: Session = Depends(get_db),
     current_user: models_db.User = Depends(get_current_user)
 ) -> JobResponse:
+    template = validated_template(payload.template_id)
     enforce_lip_sync_vip(payload.apply_lip_sync, current_user)
     require_active_vip(current_user)
     ensure_media_tools()
@@ -214,8 +229,9 @@ async def create_ai_job(
     if current_user:
         project = models_db.DubbingProject(
             user_id=current_user.id,
-            source_type="upload",
-            title=metadata.get("original_filename", "AI Dublaj Projesi"),
+            source_type="template" if template else "upload",
+            template_id=template.id if template else None,
+            title=template.title if template else metadata.get("original_filename", "AI Dublaj Projesi"),
             duration_seconds=str(metadata.get("duration_seconds", "")),
             status="processing"
         )
@@ -242,10 +258,12 @@ async def create_recording_job(
     mute_original_audio: bool = Form(True),
     burn_subtitles: bool = Form(True),
     apply_lip_sync: bool = Form(False),
+    template_id: str | None = Form(None),
     recordings: list[UploadFile] = File(...),
     db: Session = Depends(get_db),
     current_user: models_db.User | None = Depends(get_current_user_optional)
 ) -> JobResponse:
+    template = validated_template(template_id)
     media_policy = resolve_media_request_policy(current_user)
     enforce_lip_sync_vip(apply_lip_sync, current_user)
     ensure_media_tools()
@@ -268,8 +286,9 @@ async def create_recording_job(
     if current_user:
         project = models_db.DubbingProject(
             user_id=current_user.id,
-            source_type="upload",
-            title=metadata.get("original_filename", "Kayıt Dublaj Projesi"),
+            source_type="template" if template else "upload",
+            template_id=template.id if template else None,
+            title=template.title if template else metadata.get("original_filename", "Kayıt Dublaj Projesi"),
             duration_seconds=str(metadata.get("duration_seconds", "")),
             status="processing"
         )

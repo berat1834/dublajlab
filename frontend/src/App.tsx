@@ -594,6 +594,7 @@ function App() {
         muteOriginalAudio,
         burnSubtitles: shouldBurnSubtitles,
         applyLipSync,
+        templateId: selectedTemplate?.id,
       })
       const completedJob = await monitorJob(createdJob)
       if (!completedJob.download_url) {
@@ -630,6 +631,7 @@ function App() {
         mute_original_audio: muteOriginal,
         burn_subtitles: burnSubtitles,
         apply_lip_sync: applyLipSync,
+        template_id: selectedTemplate?.id,
       })
       const completedJob = await monitorJob(createdJob)
       if (!completedJob.download_url) {
@@ -1382,7 +1384,7 @@ function App() {
           ) : activeTab === 'login' || activeTab === 'register' || activeTab === 'forgot_password' || activeTab === 'reset_password' ? (
             <AuthPage mode={activeTab} setActiveTab={setActiveTab} onToast={showToast} setCurrentUser={setCurrentUser} />
           ) : (
-            <DailyDub setActiveTab={setActiveTab} />
+            <DailyDub setActiveTab={setActiveTab} currentUser={currentUser} />
           )}
         </div>
       </main>

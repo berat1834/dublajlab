@@ -51,7 +51,7 @@ sonrasında kapatılır.
      export limitleri uygulanır.
    - Giriş yapan hesaplar normal üyelik medya limitlerini kullanır; arayüzdeki demo
      sınırı paneli ve istemci tarafı düşük limitler oturum açılınca kaldırılır.
-7. **Mobil ürün — uygulanıyor (P2)**
+7. **Mobil ürün — tamamlandı (23 Ekim 2026, P2)**
    - İlk adım ayrı native uygulama değil; mevcut web uygulamasını kurulabilir PWA,
      güvenilir mobil kayıt ve paylaşım akışı olarak tamamlamaktır.
    - Web manifesti ve uygulama ikonlarına service worker eklendi; uygulama çevrimdışı
@@ -65,11 +65,19 @@ sonrasında kapatılır.
      ProMail rumuzu olarak oluşturuldu.
    - Gerçek teslimat ve Resend webhook `email.delivered` olayı doğrulandı.
    - Production `RESEND_REPLY_TO` bu adrese geçirildi.
-9. **Günlük seri, görev ve başarımlar — ürün keşfi (P2)**
-   - Ekran görüntüsündeki fikir doğrudan kopyalanmayacak. Önce temel oluşturma,
-     VIP ve oynatma sorunları kapatılacak.
-   - Sonrasında kullanıcıyı spam üretmeye yöneltmeyen; ilk dublaj, farklı sahne,
-     geri bildirim ve düzenli üretim odaklı hafif görev/seri sistemi tasarlanabilir.
+9. **Günlük seri, görev ve başarımlar — tamamlandı (23 Ekim 2026, P2)**
+   - Fikir doğrudan kopyalanmadan, DublajLab tasarım sistemiyle uyumlu duyarlı bir
+     ilerleme paneli Günün Dublajı sayfasına eklendi.
+   - Günlük seri yalnızca tamamlanmış dublaj günlerinden hesaplanır; mevcut seri,
+     en uzun seri ve bugünkü XP gösterilir.
+   - Günlük görevler bir dublaj tamamlama, iki farklı hazır sahne deneme ve topluluğa
+     görünür geri bildirim bırakma odaklıdır. Her görev günde yalnızca bir kez XP
+     kazandırır; üç görevin tamamlanması sabit bir günlük bonus verir.
+   - İlk dublaj, sahne gezgini, yararlı geri bildirim ve üç günlük seri başarımları
+     gerçek proje/yorum verilerinden hesaplanır; istemciden ödül talep eden ve kolayca
+     suistimal edilebilecek ayrı bir puan yazma uç noktası bulunmaz.
+   - Hazır sahne kimliği yeni projelerde saklanır; farklı sahne ilerlemesi gerçek
+     katalog projelerine dayanır. Girişsiz kullanıcı görev panelinden girişe yönlendirilir.
 
 ## Tamamlanma kuralı
 

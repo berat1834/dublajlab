@@ -115,3 +115,29 @@ export interface DubbingProject {
   created_at: string
   updated_at: string
 }
+
+export interface DailyTaskProgress {
+  key: 'complete_dub' | 'explore_scenes' | 'give_feedback'
+  progress: number
+  target: number
+  xp: number
+  completed: boolean
+}
+
+export interface AchievementProgress {
+  key: 'first_dub' | 'scene_explorer' | 'helpful_voice' | 'three_day_streak'
+  progress: number
+  target: number
+  unlocked: boolean
+}
+
+export interface EngagementProgress {
+  current_streak: number
+  longest_streak: number
+  active_today: boolean
+  today_xp: number
+  daily_bonus_xp: number
+  all_tasks_completed: boolean
+  tasks: DailyTaskProgress[]
+  achievements: AchievementProgress[]
+}

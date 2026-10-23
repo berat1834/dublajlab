@@ -89,6 +89,33 @@ def test_ai_job_is_created_and_can_be_polled(
     assert polled.json()["message"] == "Video birleştiriliyor."
 
 
+def test_template_job_records_catalog_source(
+    monkeypatch: pytest.MonkeyPatch,
+    auth_headers_factory,
+    db_session,
+) -> None:
+    async def keep_queued(*_args, **_kwargs) -> None:
+        return None
+
+    monkeypatch.setattr(jobs_router.dubbing_job_service, "run_ai_job", keep_queued)
+    response = client.post(
+        "/api/jobs/dubbing-ai",
+        headers=auth_headers_factory(membership_tier="vip"),
+        json={
+            "video_id": str(uuid4()),
+            "text": "Merhaba dünya",
+            "voice_style": "dramatic",
+            "template_id": "ofis-surprizi",
+        },
+    )
+
+    assert response.status_code == 202
+    project = db_session.query(jobs_router.models_db.DubbingProject).filter(
+        jobs_router.models_db.DubbingProject.template_id == "ofis-surprizi"
+    ).one()
+    assert project.source_type == "template"
+
+
 def test_ai_job_is_locked_for_free_members(auth_headers_factory) -> None:
     response = client.post(
         "/api/jobs/dubbing-ai",

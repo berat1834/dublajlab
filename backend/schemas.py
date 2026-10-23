@@ -170,3 +170,29 @@ class AdminAuditLogResponse(BaseModel):
     target_id: str
     details: Optional[str] = None
     created_at: datetime
+
+
+class DailyTaskResponse(BaseModel):
+    key: str
+    progress: int = Field(ge=0)
+    target: int = Field(ge=1)
+    xp: int = Field(ge=0)
+    completed: bool
+
+
+class AchievementResponse(BaseModel):
+    key: str
+    progress: int = Field(ge=0)
+    target: int = Field(ge=1)
+    unlocked: bool
+
+
+class EngagementProgressResponse(BaseModel):
+    current_streak: int = Field(ge=0)
+    longest_streak: int = Field(ge=0)
+    active_today: bool
+    today_xp: int = Field(ge=0)
+    daily_bonus_xp: int = Field(ge=0)
+    all_tasks_completed: bool
+    tasks: list[DailyTaskResponse]
+    achievements: list[AchievementResponse]

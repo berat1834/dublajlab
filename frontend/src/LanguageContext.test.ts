@@ -32,4 +32,10 @@ describe('English product navigation and core screens', () => {
     expect(translate('auth.password.strength.3', 'EN')).toBe('Strong')
     expect(translate('auth.password.mismatch', 'EN')).toBe('Passwords do not match.')
   })
+
+  it('translates streaks, daily tasks, and achievements', () => {
+    expect(translate('engagement.current_streak', 'TR')).toBe('Günlük seri')
+    expect(translate('engagement.task.complete_dub', 'EN')).toBe('Complete one dub today')
+    expect(translate('engagement.achievement.three_day_streak', 'EN')).toBe('Three-Day Streak')
+  })
 })

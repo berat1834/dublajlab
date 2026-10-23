@@ -56,6 +56,7 @@ class ProcessRequest(BaseModel):
     mute_original_audio: bool = True
     burn_subtitles: bool = True
     apply_lip_sync: bool = False
+    template_id: str | None = Field(default=None, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")
 
     @field_validator("text")
     @classmethod
