@@ -75,7 +75,16 @@ export default function ScenesScreen() {
             </View>
           </>
         }
-        ListEmptyComponent={<EmptyState loading={loading} message={error || 'Aramana uygun sahne bulunamadı.'} />}
+        ListEmptyComponent={
+          <EmptyState
+            loading={loading}
+            icon="⌕"
+            title={error ? 'Sahneler yüklenemedi' : 'Sonuç bulunamadı'}
+            message={error || 'Aramana uygun sahne bulunamadı. Farklı bir kelime deneyebilirsin.'}
+            actionLabel={error ? 'Tekrar dene' : query ? 'Aramayı temizle' : undefined}
+            onAction={error ? () => void loadTemplates() : query ? () => setQuery('') : undefined}
+          />
+        }
         renderItem={({ item }) => (
           <Pressable
             accessibilityRole="button"

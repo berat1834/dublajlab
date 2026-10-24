@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ActionButton, BrandHeader, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
@@ -17,22 +17,47 @@ export default function AccountScreen() {
   const { user, token, loading, login, logout } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [forgotBusy, setForgotBusy] = useState(false);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<EngagementProgress | null>(null);
+
+  const normalizedEmail = email.trim().toLocaleLowerCase('tr-TR');
+  const credentialsValid = useMemo(
+    () => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) && password.length >= 6,
+    [normalizedEmail, password],
+  );
 
   const submit = useCallback(async () => {
     setBusy(true);
     setError('');
     try {
-      await login(email, password);
+      await login(normalizedEmail, password);
       setPassword('');
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Giriş yapılamadı.');
     } finally {
       setBusy(false);
     }
-  }, [email, login, password]);
+  }, [login, normalizedEmail, password]);
+
+  const requestPasswordReset = useCallback(async () => {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError('Önce geçerli e-posta adresini yazmalısın.');
+      return;
+    }
+    setForgotBusy(true);
+    setError('');
+    try {
+      const response = await api.forgotPassword(normalizedEmail);
+      Alert.alert('E-postanı kontrol et', response.message || 'Parola sıfırlama bağlantısı gönderildi.');
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Sıfırlama bağlantısı gönderilemedi.');
+    } finally {
+      setForgotBusy(false);
+    }
+  }, [normalizedEmail]);
 
   const loadProgress = useCallback(async () => {
     if (!token) return;
@@ -74,18 +99,32 @@ export default function AccountScreen() {
               onChangeText={setEmail}
               style={styles.input}
             />
-            <TextInput
-              autoCapitalize="none"
-              autoComplete="password"
-              secureTextEntry
-              placeholder="Parola"
-              placeholderTextColor={theme.muted}
-              value={password}
-              onChangeText={setPassword}
-              style={styles.input}
-            />
+            <View style={styles.passwordRow}>
+              <TextInput
+                autoCapitalize="none"
+                autoComplete="password"
+                secureTextEntry={!showPassword}
+                placeholder="Parola"
+                placeholderTextColor={theme.muted}
+                value={password}
+                onChangeText={setPassword}
+                onSubmitEditing={() => credentialsValid && void submit()}
+                returnKeyType="done"
+                style={styles.passwordInput}
+              />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={showPassword ? 'Parolayı gizle' : 'Parolayı göster'}
+                onPress={() => setShowPassword((current) => !current)}
+                style={styles.passwordToggle}>
+                <Text style={styles.passwordToggleText}>{showPassword ? 'Gizle' : 'Göster'}</Text>
+              </Pressable>
+            </View>
             {error ? <Text style={styles.error}>{error}</Text> : null}
-            <ActionButton label={busy ? 'Giriş yapılıyor…' : 'Giriş yap'} onPress={() => void submit()} disabled={busy || !email || !password} />
+            <ActionButton label={busy ? 'Giriş yapılıyor…' : 'Giriş yap'} onPress={() => void submit()} disabled={busy || !credentialsValid} />
+            <Pressable disabled={forgotBusy} onPress={() => void requestPasswordReset()} style={styles.forgotButton}>
+              <Text style={styles.forgotText}>{forgotBusy ? 'Gönderiliyor…' : 'Parolamı unuttum'}</Text>
+            </Pressable>
           </View>
         ) : (
           <>
@@ -118,6 +157,12 @@ const styles = StyleSheet.create({
   panel: { margin: 20, marginTop: 8, padding: 18, gap: 13, backgroundColor: theme.surface, borderRadius: 22, borderWidth: 1, borderColor: theme.border },
   copy: { color: theme.muted, lineHeight: 22, marginBottom: 5 },
   input: { minHeight: 52, color: theme.text, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, borderRadius: 15, paddingHorizontal: 15 },
+  passwordRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, borderRadius: 15, overflow: 'hidden' },
+  passwordInput: { flex: 1, minHeight: 52, color: theme.text, paddingLeft: 15, paddingRight: 8 },
+  passwordToggle: { minHeight: 52, justifyContent: 'center', paddingHorizontal: 14 },
+  passwordToggleText: { color: theme.green, fontSize: 12, fontWeight: '900' },
+  forgotButton: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 12 },
+  forgotText: { color: theme.purple, fontWeight: '800' },
   error: { color: theme.danger, lineHeight: 20 },
   profile: { flexDirection: 'row', justifyContent: 'space-between', margin: 20, marginTop: 8, padding: 18, backgroundColor: theme.greenDark, borderRadius: 20, borderWidth: 1, borderColor: '#426715' },
   label: { color: '#bef264', fontSize: 10, fontWeight: '900', letterSpacing: 1 },

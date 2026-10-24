@@ -130,6 +130,12 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     }),
+  forgotPassword: (email: string) =>
+    request<{ message: string }>('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    }),
   uploadTemplateVideo,
   submitRecordings,
   job: (id: string) => request<JobResponse>(`/api/jobs/${encodeURIComponent(id)}`),

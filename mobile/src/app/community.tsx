@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Linking, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 
 import { ActionButton, BrandHeader, EmptyState, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
@@ -54,7 +55,16 @@ export default function CommunityScreen() {
             </View>
           </>
         }
-        ListEmptyComponent={<EmptyState loading={loading} message={error || 'Henüz yayınlanmış dublaj yok.'} />}
+        ListEmptyComponent={
+          <EmptyState
+            loading={loading}
+            icon="♫"
+            title={error ? 'Dublajlar yüklenemedi' : 'İlk dublajı sen yayınla'}
+            message={error || 'Toplulukta henüz yayınlanmış bir dublaj yok. Bir sahne seçip kayda başlayabilirsin.'}
+            actionLabel={error ? 'Tekrar dene' : 'Sahnelere git'}
+            onAction={error ? () => void loadDubs() : () => router.navigate('/')}
+          />
+        }
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.title}>{item.title}</Text>
