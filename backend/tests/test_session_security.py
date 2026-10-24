@@ -53,6 +53,35 @@ def test_cookie_only_login_omits_bearer_token(db_session, monkeypatch):
     assert "dublajlab_session=" in response.headers["set-cookie"]
 
 
+def test_native_mobile_login_returns_bearer_token(db_session, monkeypatch):
+    monkeypatch.setenv("AUTH_COOKIE_ONLY", "true")
+    client = _registered_client("mobile-login@dublajlab.com")
+
+    response = client.post(
+        "/api/auth/mobile/login",
+        json={"email": "mobile-login@dublajlab.com", "password": STRONG_PASSWORD},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["access_token"]
+    assert response.json()["token_type"] == "bearer"
+
+
+def test_browser_cannot_use_mobile_login(db_session):
+    client = _registered_client("browser-mobile-login@dublajlab.com")
+
+    response = client.post(
+        "/api/auth/mobile/login",
+        headers={"Origin": "https://www.dublajlab.com.tr"},
+        json={
+            "email": "browser-mobile-login@dublajlab.com",
+            "password": STRONG_PASSWORD,
+        },
+    )
+
+    assert response.status_code == 400
+
+
 def test_cookie_session_authenticates_me(db_session, monkeypatch):
     monkeypatch.setenv("AUTH_SESSION_COOKIE_ENABLED", "true")
     client = _registered_client("cookie-me@dublajlab.com")

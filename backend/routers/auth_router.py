@@ -400,13 +400,11 @@ def reset_password(
         )
     )
 
-@router.post("/login", response_model=schemas.Token)
-def login(
+def _authenticate_password_user(
     request: Request,
-    response: Response,
     user_credentials: schemas.UserLogin,
-    db: Session = Depends(get_db),
-):
+    db: Session,
+) -> models_db.User:
     email_lower = user_credentials.email.lower()
     client_ip = resolve_client_ip(
         request, config.public_demo_policy().trust_proxy_headers
@@ -435,9 +433,18 @@ def login(
         )
 
     auth_attempt_limiter.clear(limiter_key)
-        
     grant_configured_admin_role(user, db)
-            
+    return user
+
+
+@router.post("/login", response_model=schemas.Token)
+def login(
+    request: Request,
+    response: Response,
+    user_credentials: schemas.UserLogin,
+    db: Session = Depends(get_db),
+):
+    user = _authenticate_password_user(request, user_credentials, db)
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth.create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
@@ -447,6 +454,28 @@ def login(
         "access_token": None if cookie_only_enabled() else access_token,
         "token_type": "bearer",
     }
+
+
+@router.post("/mobile/login", response_model=schemas.Token)
+def mobile_login(
+    request: Request,
+    user_credentials: schemas.UserLogin,
+    db: Session = Depends(get_db),
+):
+    # Native clients store the token in the OS keychain/keystore. Browser clients
+    # must keep using the HttpOnly cookie flow and may not call this endpoint.
+    if request.headers.get("origin"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mobil giriş uç noktası yalnızca native istemciler içindir.",
+        )
+
+    user = _authenticate_password_user(request, user_credentials, db)
+    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/logout", response_model=schemas.MessageResponse)
