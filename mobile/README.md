@@ -35,6 +35,39 @@ Android emülatörü için `npm run android`; web önizlemesi için `npm run web
 kullanılabilir. Native giriş akışı güvenlik nedeniyle tarayıcıda kapalıdır;
 giriş testi Expo Go, Android emülatörü veya iOS simülatöründe yapılmalıdır.
 
+## Gerçek Android APK
+
+Expo Go yalnızca hızlı geliştirme önizlemesidir. Hocaya veya başka bir cihaza
+gösterilecek bağımsız APK aşağıdaki komutla EAS üzerinde hazırlanır:
+
+```bash
+npx eas-cli build --platform android --profile preview
+```
+
+`preview` profili `eas.json` içinde `buildType: apk` kullanır. Oluşan dosya
+telefona doğrudan kurulabilir; Expo Go veya bilgisayarda çalışan geliştirme
+sunucusu gerekmez. Paket kimliği `tr.com.dublajlab.mobile` şeklindedir.
+
+Google ve Discord girişleri cihazın sistem tarayıcısında açılır. Başarılı OAuth
+işleminden sonra backend yalnızca tam eşleşen `dublajlab://oauth-callback` deep
+link'i üzerinden uygulamaya döner ve mobil oturum SecureStore içinde saklanır.
+
+Android Studio ile yerel native proje görmek gerekirse önce şu komut çalıştırılır:
+
+```bash
+npx expo prebuild --platform android
+```
+
+Oluşan `android` klasörü Android Studio ile açılabilir. Bu klasör üretilen native
+katmandır; asıl uygulama kodları `src/app`, `src/context` ve `src/lib` içindedir.
+
+## Sunumda gösterilecek hook örnekleri
+
+1. `AuthContext.tsx`: `useContext` ile oturumun bütün sekmelerde paylaşılması.
+2. `index.tsx`: `useCallback` ile katalog isteği, `useMemo` ile arama ve sıralama.
+3. `scene/[id].tsx`: `useCallback` ile kayıt/export işlemleri, `useMemo` ile kayıt sayacı.
+4. `account.tsx`: `useMemo` ile form doğrulama ve görev yüzdesi.
+
 ## Doğrulama
 
 ```bash

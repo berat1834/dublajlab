@@ -30,6 +30,7 @@ DISCORD_CLIENT_SECRET = os.getenv("DISCORD_CLIENT_SECRET")
 
 CANONICAL_DOMAIN = "dublajlab.com.tr"
 OAUTH_STATE_COOKIE = "dublajlab_oauth_state"
+MOBILE_OAUTH_CALLBACK = "dublajlab://oauth-callback"
 
 
 def _normalize_origin(value: str | None) -> str | None:
@@ -46,6 +47,8 @@ def resolve_return_origin(value: str | None) -> str | None:
 
     Prevents open redirects: arbitrary origins from the query/state are ignored.
     """
+    if value and value.strip().rstrip("/").lower() == MOBILE_OAUTH_CALLBACK:
+        return MOBILE_OAUTH_CALLBACK
     origin = _normalize_origin(value)
     if not origin:
         return None
@@ -119,11 +122,16 @@ def _decode_state(state: str | None) -> tuple[str | None, str]:
 
 def _frontend_redirect(origin: str | None, token: str) -> RedirectResponse:
     frontend_url = origin or get_frontend_url()
-    location = (
-        f"{frontend_url}/oauth-callback"
-        if cookie_only_enabled()
-        else f"{frontend_url}/oauth-callback#token={token}"
-    )
+    if frontend_url == MOBILE_OAUTH_CALLBACK:
+        # Native apps cannot use the web session cookie. The token is returned
+        # in the URL fragment so it is not sent to servers or intermediary logs.
+        location = f"{MOBILE_OAUTH_CALLBACK}#token={token}"
+    else:
+        location = (
+            f"{frontend_url}/oauth-callback"
+            if cookie_only_enabled()
+            else f"{frontend_url}/oauth-callback#token={token}"
+        )
     response = RedirectResponse(location)
     set_session_cookie(response, token)
     response.delete_cookie(OAUTH_STATE_COOKIE, path="/api/auth")

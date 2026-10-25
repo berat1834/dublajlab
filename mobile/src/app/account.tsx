@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ActionButton, BrandHeader, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
@@ -14,12 +15,13 @@ const taskLabels: Record<string, string> = {
 };
 
 export default function AccountScreen() {
-  const { user, token, loading, login, logout } = useAuth();
+  const { user, token, loading, login, loginWithProvider, logout } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [forgotBusy, setForgotBusy] = useState(false);
+  const [socialBusy, setSocialBusy] = useState<'google' | 'discord' | null>(null);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<EngagementProgress | null>(null);
 
@@ -58,6 +60,18 @@ export default function AccountScreen() {
       setForgotBusy(false);
     }
   }, [normalizedEmail]);
+
+  const socialLogin = useCallback(async (provider: 'google' | 'discord') => {
+    setSocialBusy(provider);
+    setError('');
+    try {
+      await loginWithProvider(provider);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Sosyal giriş tamamlanamadı.');
+    } finally {
+      setSocialBusy(null);
+    }
+  }, [loginWithProvider]);
 
   const loadProgress = useCallback(async () => {
     if (!token) return;
@@ -125,6 +139,27 @@ export default function AccountScreen() {
             <Pressable disabled={forgotBusy} onPress={() => void requestPasswordReset()} style={styles.forgotButton}>
               <Text style={styles.forgotText}>{forgotBusy ? 'Gönderiliyor…' : 'Parolamı unuttum'}</Text>
             </Pressable>
+            <View style={styles.dividerRow}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>VEYA</Text>
+              <View style={styles.divider} />
+            </View>
+            <View style={styles.socialRow}>
+              <Pressable
+                disabled={Boolean(socialBusy)}
+                onPress={() => void socialLogin('google')}
+                style={({ pressed }) => [styles.socialButton, pressed && styles.socialPressed]}>
+                <Ionicons name="logo-google" color={theme.text} size={19} />
+                <Text style={styles.socialText}>{socialBusy === 'google' ? 'Açılıyor…' : 'Google'}</Text>
+              </Pressable>
+              <Pressable
+                disabled={Boolean(socialBusy)}
+                onPress={() => void socialLogin('discord')}
+                style={({ pressed }) => [styles.socialButton, styles.discordButton, pressed && styles.socialPressed]}>
+                <Ionicons name="logo-discord" color="#c7d2fe" size={20} />
+                <Text style={[styles.socialText, styles.discordText]}>{socialBusy === 'discord' ? 'Açılıyor…' : 'Discord'}</Text>
+              </Pressable>
+            </View>
           </View>
         ) : (
           <>
@@ -163,6 +198,15 @@ const styles = StyleSheet.create({
   passwordToggleText: { color: theme.green, fontSize: 12, fontWeight: '900' },
   forgotButton: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 12 },
   forgotText: { color: theme.purple, fontWeight: '800' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
+  divider: { flex: 1, height: 1, backgroundColor: theme.border },
+  dividerText: { color: theme.muted, fontSize: 10, fontWeight: '900', letterSpacing: 1.4 },
+  socialRow: { flexDirection: 'row', gap: 10 },
+  socialButton: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border },
+  discordButton: { backgroundColor: '#202441', borderColor: '#3f477f' },
+  socialPressed: { opacity: 0.72 },
+  socialText: { color: theme.text, fontWeight: '900' },
+  discordText: { color: '#c7d2fe' },
   error: { color: theme.danger, lineHeight: 20 },
   profile: { flexDirection: 'row', justifyContent: 'space-between', margin: 20, marginTop: 8, padding: 18, backgroundColor: theme.greenDark, borderRadius: 20, borderWidth: 1, borderColor: '#426715' },
   label: { color: '#bef264', fontSize: 10, fontWeight: '900', letterSpacing: 1 },

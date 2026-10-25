@@ -143,6 +143,25 @@ def test_oauth_token_redirect_uses_url_fragment(monkeypatch):
     )
 
 
+def test_mobile_oauth_callback_is_exactly_allowlisted():
+    assert (
+        oauth_router.resolve_return_origin("dublajlab://oauth-callback")
+        == "dublajlab://oauth-callback"
+    )
+    assert oauth_router.resolve_return_origin("dublajlab://evil") is None
+    assert oauth_router.resolve_return_origin("dublajlab://oauth-callback.evil") is None
+
+
+def test_mobile_oauth_redirect_returns_fragment_token_even_in_cookie_only_mode(monkeypatch):
+    monkeypatch.setattr(oauth_router, "cookie_only_enabled", lambda: True)
+    response = oauth_router._frontend_redirect(
+        "dublajlab://oauth-callback", "mobile-secret-token"
+    )
+    assert response.headers["location"] == (
+        "dublajlab://oauth-callback#token=mobile-secret-token"
+    )
+
+
 def test_oauth_cookie_only_redirect_never_exposes_token(monkeypatch):
     monkeypatch.setenv("AUTH_COOKIE_ONLY", "true")
     monkeypatch.setattr(

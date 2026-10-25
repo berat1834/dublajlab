@@ -19,6 +19,8 @@ export const WEB_BASE_URL = (
   process.env.EXPO_PUBLIC_WEB_BASE_URL || 'https://www.dublajlab.com.tr'
 ).replace(/\/$/, '');
 
+export const MOBILE_OAUTH_CALLBACK = 'dublajlab://oauth-callback';
+
 type ApiErrorBody = { detail?: string };
 
 async function request<T>(path: string, init: RequestInit = {}, token?: string | null) {
@@ -136,6 +138,8 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     }),
+  oauthLoginUrl: (provider: 'google' | 'discord') =>
+    `${API_BASE_URL}/api/auth/${provider}/login?return_to=${encodeURIComponent(MOBILE_OAUTH_CALLBACK)}`,
   uploadTemplateVideo,
   submitRecordings,
   job: (id: string) => request<JobResponse>(`/api/jobs/${encodeURIComponent(id)}`),
