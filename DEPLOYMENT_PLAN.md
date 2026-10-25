@@ -174,6 +174,10 @@ bozulabilir.
 3. OAuth sağlayıcı callback allowlist'lerine şunlar eklenir:
    - `https://api.dublajlab.com.tr/api/auth/google/callback`
    - `https://api.dublajlab.com.tr/api/auth/discord/callback`
+   Discord için Railway backend servisinde ayrıca
+   `DISCORD_OAUTH_ENABLED=true`, `DISCORD_CLIENT_ID` ve
+   `DISCORD_CLIENT_SECRET` tanımlanır. Client secret yalnızca Discord ile
+   Railway panelleri arasında taşınır; repoya veya ekran görüntüsüne eklenmez.
 4. Vercel production `VITE_API_BASE_URL` değeri
    `https://api.dublajlab.com.tr` yapılır ve frontend yeniden dağıtılır.
 5. Parola, Google ve Discord girişleri Bearer uyumluluğu açıkken denenir. Ardından
