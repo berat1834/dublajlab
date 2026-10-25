@@ -51,6 +51,9 @@ sunucusu gerekmez. Paket kimliği `tr.com.dublajlab.mobile` şeklindedir.
 Google ve Discord girişleri cihazın sistem tarayıcısında açılır. Başarılı OAuth
 işleminden sonra backend yalnızca tam eşleşen `dublajlab://oauth-callback` deep
 link'i üzerinden uygulamaya döner ve mobil oturum SecureStore içinde saklanır.
+Discord production yapılandırması tamamlanana kadar
+`EXPO_PUBLIC_DISCORD_AUTH_ENABLED=false` bırakılır; bu durumda buton web
+sürümündeki gibi görünür ancak devre dışıdır.
 
 Android Studio ile yerel native proje görmek gerekirse önce şu komut çalıştırılır:
 

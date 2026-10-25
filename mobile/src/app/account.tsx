@@ -14,6 +14,8 @@ const taskLabels: Record<string, string> = {
   give_feedback: 'Topluluğa katkı ver',
 };
 
+const discordAuthEnabled = process.env.EXPO_PUBLIC_DISCORD_AUTH_ENABLED === 'true';
+
 export default function AccountScreen() {
   const { user, token, loading, login, loginWithProvider, logout } = useAuth();
   const [email, setEmail] = useState('');
@@ -153,11 +155,19 @@ export default function AccountScreen() {
                 <Text style={styles.socialText}>{socialBusy === 'google' ? 'Açılıyor…' : 'Google'}</Text>
               </Pressable>
               <Pressable
-                disabled={Boolean(socialBusy)}
+                accessibilityHint={!discordAuthEnabled ? 'Discord girişi geçici olarak kapalı' : undefined}
+                disabled={Boolean(socialBusy) || !discordAuthEnabled}
                 onPress={() => void socialLogin('discord')}
-                style={({ pressed }) => [styles.socialButton, styles.discordButton, pressed && styles.socialPressed]}>
-                <Ionicons name="logo-discord" color="#c7d2fe" size={20} />
-                <Text style={[styles.socialText, styles.discordText]}>{socialBusy === 'discord' ? 'Açılıyor…' : 'Discord'}</Text>
+                style={({ pressed }) => [
+                  styles.socialButton,
+                  styles.discordButton,
+                  !discordAuthEnabled && styles.socialDisabled,
+                  pressed && discordAuthEnabled && styles.socialPressed,
+                ]}>
+                <Ionicons name="logo-discord" color={discordAuthEnabled ? '#c7d2fe' : theme.muted} size={20} />
+                <Text style={[styles.socialText, styles.discordText, !discordAuthEnabled && styles.socialDisabledText]}>
+                  {socialBusy === 'discord' ? 'Açılıyor…' : discordAuthEnabled ? 'Discord' : 'Discord kapalı'}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -205,6 +215,8 @@ const styles = StyleSheet.create({
   socialButton: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border },
   discordButton: { backgroundColor: '#202441', borderColor: '#3f477f' },
   socialPressed: { opacity: 0.72 },
+  socialDisabled: { opacity: 0.45 },
+  socialDisabledText: { color: theme.muted },
   socialText: { color: theme.text, fontWeight: '900' },
   discordText: { color: '#c7d2fe' },
   error: { color: theme.danger, lineHeight: 20 },
