@@ -5,6 +5,7 @@ import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View 
 import { BrandHeader, EmptyState, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
 import { api } from '@/lib/api';
+import { cacheScenes, readCachedScenes } from '@/lib/scene-cache';
 import type { VideoTemplate } from '@/types';
 
 type SortMode = 'popular' | 'short';
@@ -15,15 +16,26 @@ export default function ScenesScreen() {
   const [sort, setSort] = useState<SortMode>('popular');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   // useCallback prevents a new request callback on every render.
   const loadTemplates = useCallback(async () => {
     setLoading(true);
     setError('');
+    setNotice('');
     try {
-      setTemplates(await api.templates());
+      const remoteTemplates = await api.templates();
+      setTemplates(remoteTemplates);
+      // Cache writes are an optimization; a device-storage error must not hide fresh API data.
+      await cacheScenes(remoteTemplates).catch(() => undefined);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Sahneler alınamadı.');
+      const cachedTemplates = await readCachedScenes().catch(() => []);
+      if (cachedTemplates.length) {
+        setTemplates(cachedTemplates);
+        setNotice('Çevrimdışısın: son kaydedilen sahneler gösteriliyor.');
+      } else {
+        setError(reason instanceof Error ? reason.message : 'Sahneler alınamadı.');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,6 +68,7 @@ export default function ScenesScreen() {
           <>
             <BrandHeader eyebrow="DublajLab Mobile" title="Sahneni seç" />
             <Text style={styles.lead}>Hazır bir sahne seç, repliklerini kaydet ve kendi dublajını oluştur.</Text>
+            {notice ? <Text style={styles.notice}>{notice}</Text> : null}
             <TextInput
               accessibilityLabel="Sahne ara"
               value={query}
@@ -111,6 +124,7 @@ export default function ScenesScreen() {
 const styles = StyleSheet.create({
   content: { paddingBottom: 30 },
   lead: { color: theme.muted, fontSize: 15, lineHeight: 22, paddingHorizontal: 20, marginBottom: 16 },
+  notice: { color: '#fde68a', backgroundColor: '#3a2c08', borderColor: '#6b5310', borderWidth: 1, borderRadius: 14, marginHorizontal: 20, marginBottom: 14, padding: 12, lineHeight: 19 },
   search: { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1, borderRadius: 16, minHeight: 52, marginHorizontal: 20, paddingHorizontal: 16, fontSize: 15 },
   sortRow: { flexDirection: 'row', gap: 9, padding: 14, paddingHorizontal: 20 },
   pill: { paddingVertical: 9, paddingHorizontal: 16, borderRadius: 999, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border },

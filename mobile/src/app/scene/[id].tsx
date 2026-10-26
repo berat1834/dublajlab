@@ -14,6 +14,7 @@ import { ActionButton, EmptyState, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
 import { useAuth } from '@/context/AuthContext';
 import { absoluteApiUrl, api, templateMediaUrl } from '@/lib/api';
+import { notifyDubReady } from '@/lib/notifications';
 import type { JobResponse, VideoTemplate } from '@/types';
 
 const delay = (milliseconds: number) =>
@@ -137,6 +138,7 @@ export default function SceneStudioScreen() {
       }
       if (nextJob.status !== 'completed') throw new Error('İşlem bekleme süresini aştı.');
       setBusyMessage('');
+      await notifyDubReady(template.title);
     } catch (reason) {
       setBusyMessage('');
       setError(reason instanceof Error ? reason.message : 'Dublaj oluşturulamadı.');

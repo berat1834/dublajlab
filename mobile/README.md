@@ -71,6 +71,11 @@ katmandır; asıl uygulama kodları `src/app`, `src/context` ve `src/lib` içind
 3. `scene/[id].tsx`: `useCallback` ile kayıt/export işlemleri, `useMemo` ile kayıt sayacı.
 4. `account.tsx`: `useMemo` ile form doğrulama ve görev yüzdesi.
 
+Ders değerlendirme ölçütlerinin kod karşılıkları ve sunum sırası için
+[`GRADING_GUIDE.md`](./GRADING_GUIDE.md) dosyasına bakın. Mobil uygulama ayrıca
+SQLite çevrimdışı sahne önbelleği, uygulama geneli hata sınırı ve export
+tamamlanma bildirimi içerir.
+
 ## Doğrulama
 
 ```bash

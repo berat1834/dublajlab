@@ -23,12 +23,26 @@ export const MOBILE_OAUTH_CALLBACK = 'dublajlab://oauth-callback';
 
 type ApiErrorBody = { detail?: string };
 
+const REQUEST_TIMEOUT_MS = 15_000;
+
 async function request<T>(path: string, init: RequestInit = {}, token?: string | null) {
   const headers = new Headers(init.headers);
   headers.set('Accept', 'application/json');
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers, signal: controller.signal });
+  } catch (reason) {
+    if (reason instanceof Error && reason.name === 'AbortError') {
+      throw new Error('İstek zaman aşımına uğradı. İnternet bağlantını kontrol edip tekrar dene.');
+    }
+    throw new Error('Sunucuya ulaşılamadı. İnternet bağlantını kontrol edip tekrar dene.');
+  } finally {
+    clearTimeout(timeout);
+  }
   if (response.ok) return response.json() as Promise<T>;
 
   let message = 'İstek tamamlanamadı.';
