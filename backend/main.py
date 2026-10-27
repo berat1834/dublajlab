@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from backend.config import allowed_origins, ensure_media_directories, public_demo_policy
+from backend.middleware.security_headers import SecurityHeadersMiddleware
 from backend.models import DemoPolicyResponse, HealthResponse
 from backend.routers.jobs import router as jobs_router
 from backend.routers.maintenance import router as maintenance_router
@@ -57,6 +58,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(video_router)
 app.include_router(templates_router)
 app.include_router(jobs_router)
