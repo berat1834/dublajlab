@@ -8,6 +8,7 @@ import backend.schemas as schemas
 from backend.services.file_storage import FileStorageService
 from backend.routers.auth_router import get_current_user, get_current_user_optional
 from backend.services.storage_provider import get_storage_provider
+from backend.services.media_access import retention_has_expired
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 storage = FileStorageService()
@@ -32,9 +33,9 @@ def get_public_dubs(db: Session = Depends(get_db), current_user: models_db.User 
     for project, user in projects:
         export = db.query(models_db.DubbingExport).filter(
             models_db.DubbingExport.project_id == project.id
-        ).first()
+        ).order_by(models_db.DubbingExport.created_at.desc()).first()
         
-        if export and export.output_video_id:
+        if export and export.output_video_id and not retention_has_expired(export.retention_expires_at):
             provider = get_storage_provider()
             filename = f"{export.output_video_id}.mp4"
             try:
@@ -92,10 +93,12 @@ def get_public_dub(project_id: str, db: Session = Depends(get_db), current_user:
     
     export = db.query(models_db.DubbingExport).filter(
         models_db.DubbingExport.project_id == project.id
-    ).first()
+    ).order_by(models_db.DubbingExport.created_at.desc()).first()
     
     if not export or not export.output_video_id:
         raise HTTPException(status_code=404, detail="Dublaj dosyası bulunamadı.")
+    if retention_has_expired(export.retention_expires_at):
+        raise HTTPException(status_code=404, detail="Dublaj dosyası silinmiş.")
         
     provider = get_storage_provider()
     filename = f"{export.output_video_id}.mp4"

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from subprocess import CompletedProcess
 from uuid import uuid4
@@ -37,6 +38,55 @@ def test_health_endpoint() -> None:
     assert data["status"] == "ok"
     assert data["app"] == "DublajLab"
     assert data["version"] == "0.2.0"
+
+
+def test_private_saved_video_requires_owner(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    db_session,
+    auth_headers_factory,
+) -> None:
+    headers = auth_headers_factory()
+    from backend import models_db
+
+    user_id = db_session.query(models_db.User).one().id
+    output_id = str(uuid4())
+    output_path = tmp_path / f"{output_id}.mp4"
+    output_path.write_bytes(b"video")
+    project = models_db.DubbingProject(
+        user_id=user_id,
+        source_type="upload",
+        title="Private video",
+        status="completed",
+        visibility="private",
+    )
+    db_session.add(project)
+    db_session.commit()
+    saved_export = models_db.DubbingExport(
+        project_id=project.id,
+        output_video_id=output_id,
+        download_url=f"/api/video/download/{output_id}",
+    )
+    db_session.add(saved_export)
+    db_session.commit()
+    monkeypatch.setattr(video_router.storage_service, "get_output_path", lambda _: output_path)
+    monkeypatch.setattr(
+        video_router.storage_service,
+        "get_output_metadata",
+        lambda _: {"original_filename": "private.mp4"},
+    )
+
+    anonymous = client.get(f"/api/video/download/{output_id}")
+    owner = client.get(f"/api/video/download/{output_id}", headers=headers)
+
+    assert anonymous.status_code == 404
+    assert owner.status_code == 200
+    assert owner.headers["content-disposition"].startswith("inline")
+
+    saved_export.retention_expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    db_session.commit()
+    expired = client.get(f"/api/video/download/{output_id}", headers=headers)
+    assert expired.status_code == 410
 
 
 def test_supported_video_is_accepted(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

@@ -493,8 +493,17 @@ const translations: Record<string, Record<Language, string>> = {
   'library.private_tooltip': { TR: 'Herkese açık yaptığında Dublajlar sayfasında görünür.', EN: 'When you make it public, it will appear on the Dubs page.' },
   'library.public': { TR: 'Açık', EN: 'Public' },
   'library.private': { TR: 'Gizli', EN: 'Private' },
+  'library.publish_confirm': { TR: 'Bu videoyu herkese açık yayımlamak istiyor musun? Dublajlar sayfasında herkes izleyebilir ve bağlantısını paylaşabilir.', EN: 'Publish this video publicly? Anyone will be able to watch it on the Dubs page and share its link.' },
   'library.expired_tooltip': { TR: 'Dosya sunucudan silinmiş (Süre aşımı)', EN: 'File deleted from server (Expired)' },
   'library.expired': { TR: 'Süresi Dolmuş', EN: 'Expired' },
+  'library.play': { TR: 'Oynat', EN: 'Play' },
+  'library.retention_until': { TR: '{date} tarihine kadar saklanır.', EN: 'Stored until {date}.' },
+  'library.retention_permanent': { TR: 'Kalıcı olarak saklanır.', EN: 'Stored permanently.' },
+  'video.close': { TR: 'Oynatıcıyı kapat', EN: 'Close player' },
+  'video.play_named': { TR: '{title} videosunu oynat', EN: 'Play {title}' },
+  'video.download': { TR: 'Videoyu indir', EN: 'Download video' },
+  'video.share': { TR: 'Bağlantıyı paylaş', EN: 'Share link' },
+  'video.link_copied': { TR: 'Video bağlantısı kopyalandı.', EN: 'Video link copied.' },
 
   // UserScenes
   'scenes.feat1_title': { TR: 'Video', EN: 'Video' },
@@ -831,7 +840,7 @@ const translations: Record<string, Record<Language, string>> = {
   'legal.privacy.title': { TR: 'Gizlilik Politikası (Taslak)', EN: 'Privacy Policy (Draft)' },
   'legal.privacy.p1': { TR: 'DublajLab, kişisel verilerinizin güvenliğine önem verir. Bu metin Public Beta süreci için bir bilgilendirmedir.', EN: 'DublajLab cares about the security of your personal data. This text is an information for the Public Beta process.' },
   'legal.privacy.li1': { TR: 'Medya Verileri: Tarayıcı üzerinden kaydettiğiniz sesler sadece export işlemi için sunucuya iletilir ve işlem bittikten sonra geçici sunuculardan silinir.', EN: 'Media Data: The sounds you record via the browser are only transmitted to the server for export and are deleted from temporary servers after the process is finished.' },
-  'legal.privacy.li2': { TR: 'Kalıcı Saklama: Üye olan kullanıcıların projeleri ve indirmeye hazır MP4 çıktıları sunucularımızda saklanır. Depolama temizlik politikalarımız (cleanup) eski dosyaları silebilir.', EN: 'Persistent Storage: The projects and ready-to-download MP4 outputs of registered users are stored on our servers. Our storage cleanup policies can delete old files.' },
+  'legal.privacy.li2': { TR: 'Saklama Süresi: İndirmeye hazır MP4 çıktıları ücretsiz hesaplarda 24 saat, VIP hesaplarda 30 gün saklanır ve süre sonunda otomatik olarak silinir. Kesin son tarih Dublajlarım ekranında gösterilir.', EN: 'Retention: Ready-to-download MP4 exports are stored for 24 hours on free accounts and 30 days on VIP accounts, then deleted automatically. The exact expiry is shown in My Dubs.' },
   'legal.privacy.li3': { TR: 'Üçüncü Taraflar: Verileriniz izniniz olmadan üçüncü taraf reklam şirketlerine satılmaz. Sadece hizmeti sunmak için gereken bulut sağlayıcıları (örn. Cloudflare, Railway) kullanılır.', EN: 'Third Parties: Your data is not sold to third-party advertising companies without your permission. Only cloud providers (e.g. Cloudflare, Railway) required to provide the service are used.' },
 
   'legal.terms.title': { TR: 'Kullanım Koşulları (Taslak)', EN: 'Terms of Use (Draft)' },

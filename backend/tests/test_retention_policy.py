@@ -191,6 +191,7 @@ def test_user_library_returns_remote_storage_url(
         project_id=project.id,
         output_video_id=output_id,
         download_url=f"/api/video/download/{output_id}",
+        retention_expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
     ))
     db_session.commit()
     video_path, metadata_path = create_mock_export_file(output_id)
@@ -217,6 +218,49 @@ def test_user_library_returns_remote_storage_url(
     assert response.json()[0]["download_url"] == (
         f"https://media.example.com/{output_id}.mp4"
     )
+    assert response.json()[0]["retention_expires_at"] is not None
+
+
+def test_user_library_hides_expired_remote_export(
+    client: TestClient,
+    db_session: Session,
+    sample_user_free,
+    monkeypatch,
+):
+    output_id = str(uuid.uuid4())
+    project = DubbingProject(
+        user_id=sample_user_free.id,
+        source_type="upload",
+        title="Expired Remote File",
+        status="completed",
+    )
+    db_session.add(project)
+    db_session.commit()
+    db_session.add(DubbingExport(
+        project_id=project.id,
+        output_video_id=output_id,
+        download_url=f"/api/video/download/{output_id}",
+        retention_expires_at=datetime.now(timezone.utc) - timedelta(seconds=1),
+    ))
+    db_session.commit()
+    provider = MagicMock()
+    provider.provider_name = "s3"
+    provider.file_exists.return_value = True
+    monkeypatch.setattr(
+        "backend.services.storage_provider.get_storage_provider",
+        lambda: provider,
+    )
+    from backend.auth import create_access_token
+    token = create_access_token({"sub": str(sample_user_free.id)})
+
+    response = client.get(
+        "/api/me/exports",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()[0]["download_url"] is None
+    provider.get_public_url.assert_not_called()
 
 
 def test_project_delete_removes_remote_object_without_local_metadata(

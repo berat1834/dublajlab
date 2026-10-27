@@ -100,6 +100,7 @@ export interface DubbingExport {
   download_url?: string
   duration_seconds?: string
   file_size_bytes?: string
+  retention_expires_at?: string | null
   created_at: string
 }
 

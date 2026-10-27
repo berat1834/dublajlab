@@ -93,15 +93,8 @@ def test_s3_provider_upload_delete_exists_and_health(
 
 
 @patch("backend.services.storage_provider.boto3.client")
-def test_s3_provider_returns_public_or_presigned_url(mock_boto: MagicMock) -> None:
-    with patch("backend.services.storage_provider.S3_PUBLIC_BASE_URL", "https://media.example.com/"):
-        provider, _ = _configured_provider(mock_boto)
-    assert provider.get_public_url("exports/my video.mp4") == (
-        "https://media.example.com/exports/my%20video.mp4"
-    )
-
-    with patch("backend.services.storage_provider.S3_PUBLIC_BASE_URL", ""):
-        provider, client = _configured_provider(mock_boto)
+def test_s3_provider_always_returns_expiring_presigned_url(mock_boto: MagicMock) -> None:
+    provider, client = _configured_provider(mock_boto)
     client.generate_presigned_url.return_value = "https://signed.example.com/object"
     assert provider.get_public_url("exports/test.mp4") == "https://signed.example.com/object"
     client.generate_presigned_url.assert_called_once_with(

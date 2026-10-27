@@ -87,6 +87,7 @@ class ExportResponse(BaseModel):
     download_url: Optional[str] = None
     duration_seconds: Optional[str] = None
     file_size_bytes: Optional[str] = None
+    retention_expires_at: Optional[datetime] = None
     created_at: datetime
 
 class ProjectResponse(BaseModel):
@@ -107,9 +108,8 @@ class ProjectResponse(BaseModel):
     # exports: list[ExportResponse] = []
 
 class ProjectUpdate(BaseModel):
-    title: Optional[str] = None
-    visibility: Optional[str] = None
-    moderation_status: Optional[str] = None
+    title: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    visibility: Optional[Literal["private", "public"]] = None
 
 class PublicDubResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

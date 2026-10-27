@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path, PurePosixPath
-from urllib.parse import quote
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -12,7 +11,6 @@ from backend.config import (
     S3_ACCESS_KEY_ID,
     S3_BUCKET_NAME,
     S3_ENDPOINT_URL,
-    S3_PUBLIC_BASE_URL,
     S3_SECRET_ACCESS_KEY,
     STORAGE_PROVIDER,
 )
@@ -120,7 +118,6 @@ class S3StorageProvider(StorageAbstraction):
 
     def __init__(self) -> None:
         self.bucket = S3_BUCKET_NAME.strip()
-        self.base_url = S3_PUBLIC_BASE_URL.rstrip("/") if S3_PUBLIC_BASE_URL else None
         self._configured = all(
             value.strip()
             for value in (
@@ -192,8 +189,6 @@ class S3StorageProvider(StorageAbstraction):
             return None
         try:
             key = _safe_object_key(remote_path)
-            if self.base_url:
-                return f"{self.base_url}/{quote(key, safe='/')}"
             return self.client.generate_presigned_url(
                 "get_object",
                 Params={"Bucket": self.bucket, "Key": key},

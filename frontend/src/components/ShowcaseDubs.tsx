@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Play, CheckCircle2, MessageSquare, Download, Flag } from 'lucide-react'
 import { getPublicDubs, toggleLikePublicDub, recordViewPublicDub, type PublicDub, absoluteApiUrl } from '../lib/api'
 import { ReportModal } from './ReportModal'
 import { PublicDubComments } from './PublicDubComments'
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
+import { VideoPreviewModal, VideoThumbnail } from './VideoPreviewModal'
 
 export function ShowcaseDubs({ currentUser, onToast, setActiveTab }: { currentUser: User | null; onToast: (msg: string) => void; setActiveTab: (tab: Tab) => void }) {
   const { language, t } = useLanguage()
@@ -13,6 +14,8 @@ export function ShowcaseDubs({ currentUser, onToast, setActiveTab }: { currentUs
   const [loadError, setLoadError] = useState(false)
   const [reportingProjectId, setReportingProjectId] = useState<string | null>(null)
   const [commentingProjectId, setCommentingProjectId] = useState<string | null>(null)
+  const [previewDub, setPreviewDub] = useState<PublicDub | null>(null)
+  const openedSharedDub = useRef(false)
 
   useEffect(() => {
     const fetchDubs = async () => {
@@ -27,6 +30,17 @@ export function ShowcaseDubs({ currentUser, onToast, setActiveTab }: { currentUs
     }
     fetchDubs()
   }, [])
+
+  useEffect(() => {
+    if (openedSharedDub.current || dubs.length === 0) return
+    const sharedProjectId = new URLSearchParams(window.location.search).get('dub')
+    if (!sharedProjectId) return
+    const sharedDub = dubs.find((dub) => dub.project_id === sharedProjectId)
+    if (!sharedDub) return
+    openedSharedDub.current = true
+    setPreviewDub(sharedDub)
+    recordViewPublicDub(sharedDub.project_id).catch(() => {})
+  }, [dubs])
 
   const handleLikeToggle = async (dub: PublicDub) => {
     if (!currentUser) {
@@ -54,12 +68,39 @@ export function ShowcaseDubs({ currentUser, onToast, setActiveTab }: { currentUs
     }
   }
 
-  const handlePlayDub = (projectId: string) => {
-    recordViewPublicDub(projectId).catch(() => {})
+  const handlePlayDub = (dub: PublicDub) => {
+    recordViewPublicDub(dub.project_id).catch(() => {})
     setDubs(currentDubs => currentDubs.map(d =>
-      d.project_id === projectId ? { ...d, view_count: d.view_count + 1 } : d
+      d.project_id === dub.project_id ? { ...d, view_count: d.view_count + 1 } : d
     ))
-    onToast(t('dubs.preparing'))
+    setPreviewDub(dub)
+    window.history.replaceState({}, '', `/dublajlar?dub=${encodeURIComponent(dub.project_id)}`)
+  }
+
+  const closePreview = () => {
+    setPreviewDub(null)
+    window.history.replaceState({}, '', '/dublajlar')
+  }
+
+  const sharePreview = async () => {
+    if (!previewDub) return
+    const url = `${window.location.origin}/dublajlar?dub=${encodeURIComponent(previewDub.project_id)}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: previewDub.title, url })
+      } else {
+        await navigator.clipboard.writeText(url)
+        onToast(t('video.link_copied'))
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return
+      try {
+        await navigator.clipboard.writeText(url)
+        onToast(t('video.link_copied'))
+      } catch {
+        onToast(t('dubs.action_failed'))
+      }
+    }
   }
 
   return (
@@ -69,6 +110,14 @@ export function ShowcaseDubs({ currentUser, onToast, setActiveTab }: { currentUs
           projectId={reportingProjectId}
           onClose={() => setReportingProjectId(null)}
           onToast={onToast}
+        />
+      )}
+      {previewDub?.download_url && (
+        <VideoPreviewModal
+          sourceUrl={absoluteApiUrl(previewDub.download_url)}
+          title={previewDub.title}
+          onClose={closePreview}
+          onShare={sharePreview}
         />
       )}
       {commentingProjectId && (
@@ -93,11 +142,18 @@ export function ShowcaseDubs({ currentUser, onToast, setActiveTab }: { currentUs
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {dubs.map((dub) => (
             <div key={dub.project_id} className="group overflow-hidden rounded-2xl border border-white/10 bg-surface/80 shadow-card transition hover:border-white/20">
-              <div
-                className="relative aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 grid place-items-center cursor-pointer"
-                onClick={() => handlePlayDub(dub.project_id)}
-              >
-                <Play className="h-10 w-10 text-white/40 group-hover:text-lime transition group-hover:scale-110" />
+              <div className="relative bg-gradient-to-br from-zinc-800 to-zinc-900">
+                {dub.download_url ? (
+                  <VideoThumbnail
+                    sourceUrl={absoluteApiUrl(dub.download_url)}
+                    title={dub.title}
+                    onOpen={() => handlePlayDub(dub)}
+                  />
+                ) : (
+                  <div className="grid aspect-video place-items-center">
+                    <Play className="h-10 w-10 text-white/40" />
+                  </div>
+                )}
                 {dub.duration_seconds && (
                   <span className="absolute bottom-2 right-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] tabular-nums text-white">
                     {Math.round(parseFloat(dub.duration_seconds))}s

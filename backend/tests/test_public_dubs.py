@@ -13,7 +13,7 @@ def override_get_current_user(test_user):
         return test_user
     return _override
 
-def test_change_visibility(db_session):
+def test_change_visibility(db_session, monkeypatch):
     test_user = User(
         email=f"test_{uuid4().hex[:6]}@example.com",
         password_hash="hashed_pw",
@@ -35,11 +35,86 @@ def test_change_visibility(db_session):
     )
     db_session.add(project)
     db_session.commit()
+    db_session.add(DubbingExport(
+        project_id=project.id,
+        output_video_id=str(uuid4()),
+        download_url="/api/video/download/test",
+    ))
+    db_session.commit()
+
+    provider = MagicMock()
+    provider.provider_name = "s3"
+    provider.file_exists.return_value = True
+    monkeypatch.setattr(
+        "backend.services.storage_provider.get_storage_provider",
+        lambda: provider,
+    )
 
     res = client.patch(f"/api/me/projects/{project.id}", json={"visibility": "public"})
     assert res.status_code == 200
     assert res.json()["visibility"] == "public"
 
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+def test_cannot_publish_project_without_playable_export(db_session):
+    test_user = User(
+        email=f"test_{uuid4().hex[:6]}@example.com",
+        password_hash="hashed_pw",
+        display_name="Public Tester",
+        role="user",
+    )
+    db_session.add(test_user)
+    db_session.commit()
+    db_session.refresh(test_user)
+    app.dependency_overrides[get_current_user] = override_get_current_user(test_user)
+
+    project = DubbingProject(
+        user_id=test_user.id,
+        source_type="upload",
+        title="Missing Export",
+        status="completed",
+        visibility="private",
+    )
+    db_session.add(project)
+    db_session.commit()
+
+    response = client.patch(
+        f"/api/me/projects/{project.id}",
+        json={"visibility": "public"},
+    )
+
+    assert response.status_code == 409
+    assert project.visibility == "private"
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+def test_visibility_only_accepts_private_or_public(db_session):
+    test_user = User(
+        email=f"test_{uuid4().hex[:6]}@example.com",
+        password_hash="hashed_pw",
+        display_name="Public Tester",
+        role="user",
+    )
+    db_session.add(test_user)
+    db_session.commit()
+    db_session.refresh(test_user)
+    app.dependency_overrides[get_current_user] = override_get_current_user(test_user)
+    project = DubbingProject(
+        user_id=test_user.id,
+        source_type="upload",
+        title="Invalid Visibility",
+        status="completed",
+    )
+    db_session.add(project)
+    db_session.commit()
+
+    response = client.patch(
+        f"/api/me/projects/{project.id}",
+        json={"visibility": "friends-only"},
+    )
+
+    assert response.status_code == 422
     app.dependency_overrides.pop(get_current_user, None)
 
 def test_public_dubs_feed(db_session, monkeypatch):

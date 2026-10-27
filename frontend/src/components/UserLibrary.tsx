@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Download, Play, Trash2, Clock, CheckCircle2, AlertCircle, Globe, Lock } from 'lucide-react'
 import { getUserProjects, getUserExports, deleteUserProject, updateProjectVisibility, absoluteApiUrl } from '../lib/api'
 import type { DubbingProject, DubbingExport, Tab } from '../types'
+import { VideoPreviewModal, VideoThumbnail } from './VideoPreviewModal'
 
 interface UserLibraryProps {
   onToast: (msg: string) => void
@@ -14,6 +15,11 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
   const [projects, setProjects] = useState<DubbingProject[]>([])
   const [exports, setExports] = useState<DubbingExport[]>([])
   const [loading, setLoading] = useState(true)
+  const [preview, setPreview] = useState<{
+    sourceUrl: string
+    title: string
+    retentionLabel: string
+  } | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,6 +59,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
   const handleToggleVisibility = async (project: DubbingProject, relatedExport?: DubbingExport) => {
     if (project.status !== 'completed' || !relatedExport?.download_url) return
     const newVisibility = project.visibility === 'public' ? 'private' : 'public'
+    if (newVisibility === 'public' && !window.confirm(t('library.publish_confirm'))) return
     try {
       const updated = await updateProjectVisibility(project.id, newVisibility)
       setProjects(projects.map(p => p.id === project.id ? updated : p))
@@ -110,6 +117,14 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
 
   return (
     <div className="max-w-4xl mx-auto py-12 px-4 space-y-8">
+      {preview && (
+        <VideoPreviewModal
+          sourceUrl={preview.sourceUrl}
+          title={preview.title}
+          retentionLabel={preview.retentionLabel}
+          onClose={() => setPreview(null)}
+        />
+      )}
       <div className="mb-12">
         <h1 className="text-3xl font-black text-white tracking-tight">{t('library.title')}</h1>
         <p className="text-zinc-400 mt-2">{t('library.subtitle').replace('{count}', String(projects.length))}</p>
@@ -118,15 +133,36 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
       <div className="grid grid-cols-1 gap-4">
         {projects.map((project) => {
           const relatedExport = exports.find(e => e.project_id === project.id)
+          const mediaUrl = relatedExport?.download_url
+            ? absoluteApiUrl(relatedExport.download_url)
+            : ''
+          const retentionLabel = relatedExport?.retention_expires_at
+            ? t('library.retention_until').replace(
+                '{date}',
+                new Date(relatedExport.retention_expires_at).toLocaleString(
+                  language === 'TR' ? 'tr-TR' : 'en-US',
+                  { dateStyle: 'medium', timeStyle: 'short' },
+                ),
+              )
+            : t('library.retention_permanent')
           const dateStr = new Date(project.created_at).toLocaleDateString(language === 'TR' ? 'tr-TR' : 'en-US', {
             day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
           })
 
           return (
             <div key={project.id} className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center transition-colors hover:bg-white/10">
-              {/* Thumbnail Placeholder */}
-              <div className="w-full sm:w-40 aspect-video bg-black/40 rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden group">
-                <Play className="w-8 h-8 text-white/40 group-hover:text-lime-400 group-hover:scale-110 transition-all" />
+              <div className="w-full flex-shrink-0 sm:w-40">
+                {mediaUrl ? (
+                  <VideoThumbnail
+                    sourceUrl={mediaUrl}
+                    title={project.title}
+                    onOpen={() => setPreview({ sourceUrl: mediaUrl, title: project.title, retentionLabel })}
+                  />
+                ) : (
+                  <div className="grid aspect-video place-items-center rounded-xl bg-black/40">
+                    <Play className="h-8 w-8 text-white/25" />
+                  </div>
+                )}
               </div>
 
               {/* Info */}
@@ -173,8 +209,16 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                         {project.visibility === 'public' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                         <span className="hidden sm:inline">{project.visibility === 'public' ? t('library.public') : t('library.private')}</span>
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setPreview({ sourceUrl: mediaUrl, title: project.title, retentionLabel })}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-bold text-zinc-200 transition hover:bg-white/10 sm:flex-none"
+                      >
+                        <Play className="h-4 w-4 fill-current" />
+                        {t('library.play')}
+                      </button>
                       <a
-                        href={absoluteApiUrl(relatedExport.download_url)}
+                        href={mediaUrl}
                         download
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-lime text-ink font-extrabold rounded-xl hover:brightness-110 transition-colors"
                       >

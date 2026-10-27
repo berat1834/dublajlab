@@ -8,7 +8,9 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import TypeAdapter, ValidationError
+from sqlalchemy.orm import Session
 
+from backend.database import get_db
 from backend.models import DubbingLine, ProcessRequest, ProcessResponse, UploadResponse
 from backend.services.ffmpeg_service import FFmpegService, MediaProcessingError
 from backend.services.file_storage import FileStorageService
@@ -18,6 +20,7 @@ from backend.services.tts_service import TTSService
 from backend import models_db
 from backend.routers.auth_router import get_current_user, get_current_user_optional
 from backend.services.membership_service import require_active_vip
+from backend.services.media_access import retention_has_expired
 from backend.services.public_demo_service import resolve_media_request_policy
 
 
@@ -280,13 +283,46 @@ async def preview_video(video_id: str) -> FileResponse:
 
 
 @router.get("/download/{output_video_id}", response_model=None)
-async def download_video(output_video_id: str) -> FileResponse | RedirectResponse:
+async def download_video(
+    output_video_id: str,
+    db: Session = Depends(get_db),
+    current_user: models_db.User | None = Depends(get_current_user_optional),
+) -> FileResponse | RedirectResponse:
     safe_id = storage_service._validate_uuid(output_video_id, "Çıktı videosu")
+    export = db.query(models_db.DubbingExport).filter(
+        models_db.DubbingExport.output_video_id == safe_id
+    ).first()
+    if export is not None:
+        project = db.query(models_db.DubbingProject).filter(
+            models_db.DubbingProject.id == export.project_id
+        ).first()
+        is_public = bool(
+            project
+            and project.visibility == "public"
+            and project.status == "completed"
+            and project.moderation_status == "visible"
+        )
+        is_owner = bool(project and current_user and project.user_id == current_user.id)
+        if not is_public and not is_owner:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Video bulunamadı veya bu videoya erişim yetkiniz yok.",
+            )
+        if retention_has_expired(export.retention_expires_at):
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="Videonun saklama süresi dolmuş.",
+            )
     try:
         path = storage_service.get_output_path(safe_id)
         metadata = storage_service.get_output_metadata(safe_id)
         filename = storage_service.safe_download_name(metadata.get("original_filename", "meme"))
-        return FileResponse(path, media_type="video/mp4", filename=filename)
+        return FileResponse(
+            path,
+            media_type="video/mp4",
+            filename=filename,
+            content_disposition_type="inline",
+        )
     except HTTPException as local_error:
         from backend.services.storage_provider import get_storage_provider
 

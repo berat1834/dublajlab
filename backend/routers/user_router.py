@@ -9,6 +9,7 @@ import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
 from backend.auth import verify_password
 from backend.services.engagement_service import build_engagement_progress
+from backend.services.media_access import retention_has_expired
 
 router = APIRouter()
 
@@ -79,8 +80,43 @@ def update_user_project(project_id: str, project_update: schemas.ProjectUpdate, 
         raise HTTPException(status_code=404, detail="Proje bulunamadı.")
 
     if project_update.title is not None:
-        project.title = project_update.title
+        project.title = project_update.title.strip()
     if project_update.visibility is not None:
+        if project_update.visibility == "public":
+            export = db.query(models_db.DubbingExport).filter(
+                models_db.DubbingExport.project_id == project.id
+            ).order_by(models_db.DubbingExport.created_at.desc()).first()
+            if project.status != "completed" or not export or not export.output_video_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Yalnızca tamamlanmış ve oynatılabilir projeler yayınlanabilir.",
+                )
+            if retention_has_expired(export.retention_expires_at):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Saklama süresi dolmuş bir video yayınlanamaz.",
+                )
+
+            from backend.services.file_storage import FileStorageService
+            from backend.services.storage_provider import get_storage_provider
+
+            storage = FileStorageService()
+            provider = get_storage_provider()
+            filename = f"{export.output_video_id}.mp4"
+            try:
+                metadata = storage.get_output_metadata(export.output_video_id)
+                filename = str(metadata.get("stored_filename") or filename)
+            except HTTPException:
+                if provider.provider_name != "s3":
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail="Video dosyası bulunamadığı için proje yayınlanamadı.",
+                    ) from None
+            if not provider.file_exists(filename):
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Video dosyası bulunamadığı için proje yayınlanamadı.",
+                )
         project.visibility = project_update.visibility
 
     db.commit()
@@ -156,6 +192,9 @@ def get_user_exports(db: Session = Depends(get_db), current_user: models_db.User
     # Check if files still exist, if not set download_url to None
     for exp in exports:
         if exp.output_video_id and exp.download_url:
+            if retention_has_expired(exp.retention_expires_at):
+                exp.download_url = None
+                continue
             filename = f"{exp.output_video_id}.mp4"
             try:
                 meta = storage.get_output_metadata(exp.output_video_id)
