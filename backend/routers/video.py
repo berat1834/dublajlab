@@ -11,7 +11,8 @@ from pydantic import TypeAdapter, ValidationError
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
-from backend.models import DubbingLine, ProcessRequest, ProcessResponse, UploadResponse
+from backend.config import AUDIO_DIR
+from backend.models import DubbingLine, ProcessRequest, ProcessResponse, UploadResponse, VoiceStyle
 from backend.services.ffmpeg_service import FFmpegService, MediaProcessingError
 from backend.services.file_storage import FileStorageService
 from backend.services.rate_limit_service import enforce_public_demo_export_limit
@@ -36,6 +37,8 @@ ffmpeg_service = FFmpegService()
 tts_service = TTSService()
 subtitle_service = SubtitleService()
 timeline_adapter = TypeAdapter(list[DubbingLine])
+VOICE_PREVIEW_TEXT = "Merhaba! DublajLab'de hikâyene kendi tarzımla ses vermeye hazırım."
+voice_preview_locks = {style: asyncio.Lock() for style in VoiceStyle}
 
 
 def ensure_media_tools() -> None:
@@ -46,6 +49,35 @@ def ensure_media_tools() -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(exc),
         ) from exc
+
+
+@router.get("/voice-preview/{voice_style}", response_model=None)
+async def preview_ai_voice(voice_style: VoiceStyle) -> FileResponse:
+    """Return a cached, quota-free sample for one of the preset AI voices."""
+
+    preview_path = AUDIO_DIR / f"voice-preview-{voice_style.value}.mp3"
+    lock = voice_preview_locks[voice_style]
+    async with lock:
+        if not preview_path.is_file() or preview_path.stat().st_size == 0:
+            try:
+                await tts_service.generate_voiceover(
+                    VOICE_PREVIEW_TEXT,
+                    voice_style,
+                    preview_path,
+                )
+            except RuntimeError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail="Ses önizlemesi şu anda hazırlanamadı. Lütfen tekrar deneyin.",
+                ) from exc
+
+    return FileResponse(
+        preview_path,
+        media_type="audio/mpeg",
+        filename=f"dublajlab-{voice_style.value}-preview.mp3",
+        content_disposition_type="inline",
+        headers={"Cache-Control": "public, max-age=86400, stale-while-revalidate=604800"},
+    )
 
 
 @router.post("/upload", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)

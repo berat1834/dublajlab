@@ -17,6 +17,10 @@ export const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 ).replace(/\/$/, '')
 
+export function voicePreviewUrl(voiceStyle: VoiceStyle): string {
+  return `${API_BASE_URL}/api/video/voice-preview/${encodeURIComponent(voiceStyle)}`
+}
+
 // Session cookies live on the API host. `include` is required when production
 // uses the same-site api.dublajlab.com.tr subdomain.
 function fetch(input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> {

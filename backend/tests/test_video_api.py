@@ -40,6 +40,37 @@ def test_health_endpoint() -> None:
     assert data["version"] == "0.2.0"
 
 
+def test_voice_preview_is_public_and_cached(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    calls: list[tuple[str, str]] = []
+
+    async def fake_generate(text, voice_style, destination):
+        calls.append((text, voice_style.value))
+        destination.write_bytes(b"preview-mp3")
+        return destination
+
+    monkeypatch.setattr(video_router, "AUDIO_DIR", tmp_path)
+    monkeypatch.setattr(video_router.tts_service, "generate_voiceover", fake_generate)
+
+    first = client.get("/api/video/voice-preview/dramatic")
+    second = client.get("/api/video/voice-preview/dramatic")
+
+    assert first.status_code == 200
+    assert first.content == b"preview-mp3"
+    assert first.headers["content-type"].startswith("audio/mpeg")
+    assert first.headers["content-disposition"].startswith("inline")
+    assert "max-age=86400" in first.headers["cache-control"]
+    assert second.status_code == 200
+    assert len(calls) == 1
+
+
+def test_voice_preview_rejects_unknown_style() -> None:
+    response = client.get("/api/video/voice-preview/celebrity")
+    assert response.status_code == 422
+
+
 def test_private_saved_video_requires_owner(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
