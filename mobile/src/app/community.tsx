@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Linking, RefreshControl, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { router, type Href } from 'expo-router';
 
 import { ActionButton, BrandHeader, EmptyState, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
@@ -69,10 +69,21 @@ export default function CommunityScreen() {
           <View style={styles.card}>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.author}>@{item.display_name}</Text>
-            <Text style={styles.stats}>▶ {item.view_count}   ♥ {item.like_count}</Text>
-            {item.download_url ? (
-              <ActionButton label="Videoyu aç" onPress={() => void Linking.openURL(item.download_url!)} />
-            ) : null}
+            <View style={styles.reactionRow}>
+              <Text style={styles.stats}>▶ {item.view_count}</Text>
+              <Pressable
+                disabled={!token}
+                accessibilityLabel={item.liked_by_me ? 'Beğeniyi kaldır' : 'Beğen'}
+                onPress={async () => {
+                  if (!token) return;
+                  const liking = !item.liked_by_me;
+                  setDubs((current) => current.map((dub) => dub.project_id === item.project_id ? { ...dub, liked_by_me: liking, like_count: Math.max(0, dub.like_count + (liking ? 1 : -1)) } : dub));
+                  try { await api.likeDub(item.project_id, liking, token); } catch { void loadDubs(); }
+                }}>
+                <Text style={[styles.like, item.liked_by_me && styles.liked]}>♥ {item.like_count}</Text>
+              </Pressable>
+            </View>
+            <ActionButton label="İzle, yorumla ve paylaş" onPress={() => router.push({ pathname: '/dub/[id]', params: { id: item.project_id } } as unknown as Href)} />
           </View>
         )}
       />
@@ -89,4 +100,7 @@ const styles = StyleSheet.create({
   title: { color: theme.text, fontSize: 19, fontWeight: '900' },
   author: { color: theme.purple, fontWeight: '700' },
   stats: { color: theme.muted, marginBottom: 4 },
+  reactionRow: { flexDirection: 'row', alignItems: 'center', gap: 18 },
+  like: { color: theme.muted, fontWeight: '900', paddingVertical: 7 },
+  liked: { color: '#fb7185' },
 });

@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   AudioModule,
   RecordingPresets,
   setAudioModeAsync,
+  useAudioPlayer,
   useAudioRecorder,
   useAudioRecorderState,
 } from 'expo-audio';
@@ -13,12 +14,26 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { ActionButton, EmptyState, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
 import { useAuth } from '@/context/AuthContext';
-import { absoluteApiUrl, api, templateMediaUrl } from '@/lib/api';
+import { absoluteApiUrl, api, templateMediaUrl, voicePreviewUrl } from '@/lib/api';
 import { notifyDubReady } from '@/lib/notifications';
-import type { JobResponse, VideoTemplate } from '@/types';
+import type { JobResponse, VideoTemplate, VoiceStyle } from '@/types';
 
 const delay = (milliseconds: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+
+const voiceStyles: { id: VoiceStyle; label: string }[] = [
+  { id: 'announcer', label: 'Sunucu' }, { id: 'robot', label: 'Robot' },
+  { id: 'dramatic', label: 'Dramatik' }, { id: 'documentary', label: 'Belgesel' },
+  { id: 'energetic', label: 'Enerjik' },
+];
+
+function VoiceChoice({ item, selected, onSelect }: { item: { id: VoiceStyle; label: string }; selected: boolean; onSelect: () => void }) {
+  const player = useAudioPlayer(voicePreviewUrl(item.id));
+  return <View style={[styles.voiceCard, selected && styles.voiceCardSelected]}>
+    <Pressable style={styles.voiceSelect} onPress={onSelect}><Text style={styles.voiceName}>{selected ? '✓ ' : ''}{item.label}</Text></Pressable>
+    <Pressable accessibilityLabel={`${item.label} sesini dinle`} onPress={() => { void player.seekTo(0); player.play(); }}><Text style={styles.listen}>▶ Dinle</Text></Pressable>
+  </View>;
+}
 
 function ResultVideo({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri);
@@ -38,7 +53,7 @@ function ResultVideo({ uri }: { uri: string }) {
 
 export default function SceneStudioScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { token } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 150);
   const mounted = useRef(true);
@@ -49,6 +64,11 @@ export default function SceneStudioScreen() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [busyMessage, setBusyMessage] = useState('');
   const [error, setError] = useState('');
+  const [mode, setMode] = useState<'recording' | 'ai'>('recording');
+  const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>('announcer');
+  const [muteOriginalAudio, setMuteOriginalAudio] = useState(true);
+  const [burnSubtitles, setBurnSubtitles] = useState(true);
+  const [applyLipSync, setApplyLipSync] = useState(false);
 
   const videoUrl = template?.video_url ? templateMediaUrl(template.video_url) : null;
   const previewPlayer = useVideoPlayer(videoUrl);
@@ -82,6 +102,14 @@ export default function SceneStudioScreen() {
     [recordings, template],
   );
   const allRecorded = Boolean(template?.lines.length && recordedCount === template.lines.length);
+  const canExport = mode === 'ai' ? Boolean(token && user?.has_active_vip) : allRecorded;
+
+  const chooseAiMode = useCallback(async () => {
+    if (!token) { Alert.alert('Giriş gerekli', 'AI ses modu hesabına bağlıdır.', [{ text: 'Tamam' }]); return; }
+    const refreshed = await refreshUser();
+    if (!refreshed?.has_active_vip) { Alert.alert('VIP gerekli', 'AI ses ve lip-sync yalnızca aktif VIP üyelikte kullanılabilir.'); return; }
+    setMode('ai');
+  }, [refreshUser, token]);
 
   const startRecording = useCallback(async (lineId: string) => {
     setError('');
@@ -108,20 +136,16 @@ export default function SceneStudioScreen() {
   }, [activeLineId, recorder]);
 
   const exportDub = useCallback(async () => {
-    if (!template || !allRecorded) return;
+    if (!template || !canExport) return;
     setError('');
     setJob(null);
     try {
       setBusyMessage('Sahne hazırlanıyor…');
       const upload = await api.uploadTemplateVideo(template, token);
       setBusyMessage('Kayıtlar gönderiliyor…');
-      let nextJob = await api.submitRecordings({
-        videoId: upload.video_id,
-        templateId: template.id,
-        timeline: template.lines,
-        recordings,
-        token,
-      });
+      let nextJob = mode === 'ai'
+        ? await api.submitAi({ videoId: upload.video_id, templateId: template.id, text: template.lines.map((line) => line.text).join(' '), voiceStyle, token: token!, options: { muteOriginalAudio, burnSubtitles, applyLipSync } })
+        : await api.submitRecordings({ videoId: upload.video_id, templateId: template.id, timeline: template.lines, recordings, token, options: { muteOriginalAudio, burnSubtitles, applyLipSync } });
       setJob(nextJob);
       setBusyMessage(nextJob.message || 'Dublaj işleniyor…');
 
@@ -143,7 +167,7 @@ export default function SceneStudioScreen() {
       setBusyMessage('');
       setError(reason instanceof Error ? reason.message : 'Dublaj oluşturulamadı.');
     }
-  }, [allRecorded, recordings, template, token]);
+  }, [applyLipSync, burnSubtitles, canExport, mode, muteOriginalAudio, recordings, template, token, voiceStyle]);
 
   if (loading || !template) {
     return (
@@ -185,8 +209,15 @@ export default function SceneStudioScreen() {
           <Text style={styles.tipText}>Videoyu izle, her repliği kendi zaman aralığına uygun uzunlukta oku ve kaydı bitir.</Text>
         </View>
 
-        <Text style={styles.sectionTitle}>Replik kayıtları</Text>
-        {template.lines.map((line, index) => {
+        <Text style={styles.sectionTitle}>Ses yöntemi</Text>
+        <View style={styles.modeRow}>
+          <Pressable style={[styles.modeButton, mode === 'recording' && styles.modeActive]} onPress={() => setMode('recording')}><Text style={styles.modeText}>Kendi sesim</Text></Pressable>
+          <Pressable style={[styles.modeButton, mode === 'ai' && styles.modeActive]} onPress={() => void chooseAiMode()}><Text style={styles.modeText}>AI ses · VIP</Text></Pressable>
+        </View>
+        {mode === 'ai' ? <View style={styles.voiceGrid}>{voiceStyles.map((item) => <VoiceChoice key={item.id} item={item} selected={voiceStyle === item.id} onSelect={() => setVoiceStyle(item.id)} />)}</View> : null}
+
+        {mode === 'recording' ? <Text style={styles.sectionTitle}>Replik kayıtları</Text> : null}
+        {mode === 'recording' ? template.lines.map((line, index) => {
           const isActive = activeLineId === line.id;
           const isRecorded = Boolean(recordings[line.id]);
           return (
@@ -211,7 +242,14 @@ export default function SceneStudioScreen() {
               </Pressable>
             </View>
           );
-        })}
+        }) : null}
+
+        <Text style={styles.sectionTitle}>Export ayarları</Text>
+        <View style={styles.settingsPanel}>
+          <View style={styles.setting}><View style={styles.settingCopy}><Text style={styles.settingTitle}>Orijinal sesi kapat</Text><Text style={styles.settingHint}>Dublajın net duyulmasını sağlar.</Text></View><Switch value={muteOriginalAudio} onValueChange={setMuteOriginalAudio} trackColor={{ true: theme.greenDark }} thumbColor={muteOriginalAudio ? theme.green : theme.muted} /></View>
+          <View style={styles.setting}><View style={styles.settingCopy}><Text style={styles.settingTitle}>Altyazı göm</Text><Text style={styles.settingHint}>Replikler yalnızca kendi zaman aralığında görünür.</Text></View><Switch value={burnSubtitles} onValueChange={setBurnSubtitles} trackColor={{ true: theme.greenDark }} thumbColor={burnSubtitles ? theme.green : theme.muted} /></View>
+          <View style={styles.setting}><View style={styles.settingCopy}><Text style={styles.settingTitle}>Lip-sync · VIP</Text><Text style={styles.settingHint}>Aktif VIP üyelik gerektirir.</Text></View><Switch value={applyLipSync} onValueChange={(value) => { if (value && !user?.has_active_vip) { Alert.alert('VIP gerekli', 'Lip-sync yalnızca aktif VIP üyelikte kullanılabilir.'); return; } setApplyLipSync(value); }} trackColor={{ true: theme.greenDark }} thumbColor={applyLipSync ? theme.green : theme.muted} /></View>
+        </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {busyMessage ? (
@@ -222,8 +260,8 @@ export default function SceneStudioScreen() {
         ) : null}
         {!resultUrl ? (
           <ActionButton
-            label={busyMessage || (allRecorded ? 'Dublajı oluştur' : `${template.lines.length - recordedCount} kayıt kaldı`)}
-            disabled={!allRecorded || Boolean(busyMessage) || Boolean(activeLineId)}
+            label={busyMessage || (canExport ? 'Dublajı oluştur' : mode === 'ai' ? 'VIP ve giriş gerekli' : `${template.lines.length - recordedCount} kayıt kaldı`)}
+            disabled={!canExport || Boolean(busyMessage) || Boolean(activeLineId)}
             onPress={() => void exportDub()}
           />
         ) : (
@@ -266,4 +304,9 @@ const styles = StyleSheet.create({
   progressValue: { color: theme.green, fontWeight: '900' },
   resultPanel: { gap: 13, padding: 16, backgroundColor: theme.greenDark, borderRadius: 20 },
   resultTitle: { color: theme.green, fontSize: 22, fontWeight: '900' },
+  modeRow: { flexDirection: 'row', gap: 9, marginBottom: 12 },
+  modeButton: { flex: 1, padding: 14, borderRadius: 14, alignItems: 'center', backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border },
+  modeActive: { backgroundColor: theme.greenDark, borderColor: theme.green }, modeText: { color: theme.text, fontWeight: '900' },
+  voiceGrid: { gap: 8, marginBottom: 8 }, voiceCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }, voiceCardSelected: { borderColor: theme.green }, voiceSelect: { flex: 1, padding: 14 }, voiceName: { color: theme.text, fontWeight: '800' }, listen: { color: theme.purple, padding: 14, fontWeight: '900' },
+  settingsPanel: { backgroundColor: theme.surface, borderRadius: 18, borderWidth: 1, borderColor: theme.border, paddingHorizontal: 15, marginBottom: 14 }, setting: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border }, settingCopy: { flex: 1, paddingRight: 12 }, settingTitle: { color: theme.text, fontWeight: '800' }, settingHint: { color: theme.muted, fontSize: 12, marginTop: 3 },
 });

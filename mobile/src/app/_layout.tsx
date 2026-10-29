@@ -21,8 +21,11 @@ export default function RootLayout() {
         }}>
         <Tabs.Screen name="index" options={{ title: 'Sahneler', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'film' : 'film-outline'} color={String(color)} size={21} /> }} />
         <Tabs.Screen name="community" options={{ title: 'Dublajlar', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'mic-circle' : 'mic-circle-outline'} color={String(color)} size={23} /> }} />
+        <Tabs.Screen name="library" options={{ title: 'Kütüphanem', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'folder-open' : 'folder-open-outline'} color={String(color)} size={22} /> }} />
         <Tabs.Screen name="account" options={{ title: 'Hesabım', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} color={String(color)} size={23} /> }} />
         <Tabs.Screen name="scene/[id]" options={{ href: null }} />
+        <Tabs.Screen name="dub/[id]" options={{ href: null }} />
+        <Tabs.Screen name="upload" options={{ href: null }} />
         </Tabs>
       </AuthProvider>
     </AppErrorBoundary>

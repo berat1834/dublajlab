@@ -12,7 +12,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   loginWithProvider: (provider: 'google' | 'discord') => Promise<boolean>;
   logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<User | null>;
 };
 
 WebBrowser.maybeCompleteAuthSession();
@@ -26,10 +26,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     const activeToken = token ?? (await getStoredToken());
-    if (!activeToken) return;
+    if (!activeToken) return null;
     const nextUser = await api.me(activeToken);
     setToken(activeToken);
     setUser(nextUser);
+    return nextUser;
   }, [token]);
 
   const logout = useCallback(async () => {

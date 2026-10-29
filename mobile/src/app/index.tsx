@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { BrandHeader, EmptyState, Screen } from '@/components/ui';
+import { ActionButton, BrandHeader, EmptyState, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
 import { api } from '@/lib/api';
 import { cacheScenes, readCachedScenes } from '@/lib/scene-cache';
@@ -67,6 +67,7 @@ export default function ScenesScreen() {
         ListHeaderComponent={
           <>
             <BrandHeader eyebrow="DublajLab Mobile" title="Sahneni seç" />
+            <View style={styles.uploadAction}><ActionButton label="Kendi videonu yükle" onPress={() => router.push('/upload' as Href)} /></View>
             <Text style={styles.lead}>Hazır bir sahne seç, repliklerini kaydet ve kendi dublajını oluştur.</Text>
             {notice ? <Text style={styles.notice}>{notice}</Text> : null}
             <TextInput
@@ -123,6 +124,7 @@ export default function ScenesScreen() {
 
 const styles = StyleSheet.create({
   content: { paddingBottom: 30 },
+  uploadAction: { marginHorizontal: 20, marginBottom: 14 },
   lead: { color: theme.muted, fontSize: 15, lineHeight: 22, paddingHorizontal: 20, marginBottom: 16 },
   notice: { color: '#fde68a', backgroundColor: '#3a2c08', borderColor: '#6b5310', borderWidth: 1, borderRadius: 14, marginHorizontal: 20, marginBottom: 14, padding: 12, lineHeight: 19 },
   search: { color: theme.text, backgroundColor: theme.surface, borderColor: theme.border, borderWidth: 1, borderRadius: 16, minHeight: 52, marginHorizontal: 20, paddingHorizontal: 16, fontSize: 15 },

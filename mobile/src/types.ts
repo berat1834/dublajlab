@@ -1,78 +1,15 @@
-export type TimelineLine = {
-  id: string;
-  start: number;
-  end: number;
-  text: string;
-};
-
-export type VideoTemplate = {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  duration_seconds: number;
-  video_url: string | null;
-  license: string;
-  source: string;
-  is_demo?: boolean;
-  lines: TimelineLine[];
-  play_count?: number;
-  character_count?: number;
-};
-
-export type PublicDub = {
-  project_id: string;
-  title: string;
-  display_name: string;
-  created_at: string;
-  duration_seconds?: string | null;
-  download_url?: string | null;
-  view_count: number;
-  like_count: number;
-  liked_by_me: boolean;
-};
-
-export type User = {
-  id: string;
-  email: string;
-  display_name: string;
-  role: string;
-  membership_tier: 'free' | 'vip';
-  has_active_vip: boolean;
-  email_verified: boolean;
-};
-
-export type DailyTask = {
-  key: string;
-  progress: number;
-  target: number;
-  xp: number;
-  completed: boolean;
-};
-
-export type EngagementProgress = {
-  current_streak: number;
-  longest_streak: number;
-  today_xp: number;
-  tasks: DailyTask[];
-};
-
-export type UploadResponse = {
-  video_id: string;
-  original_filename: string;
-  duration_seconds: number;
-  size_bytes: number;
-  preview_url: string;
-};
-
+export type VoiceStyle = 'announcer' | 'robot' | 'dramatic' | 'documentary' | 'energetic';
+export type TimelineLine = { id: string; start: number; end: number; text: string };
+export type VideoTemplate = { id: string; title: string; category: string; description: string; duration_seconds: number; video_url: string | null; license: string; source: string; is_demo?: boolean; lines: TimelineLine[]; play_count?: number; character_count?: number };
+export type PublicDub = { project_id: string; title: string; display_name: string; created_at: string; duration_seconds?: string | null; download_url?: string | null; view_count: number; like_count: number; liked_by_me: boolean };
+export type DubComment = { id: string; project_id: string; user_id: string; display_name: string; body: string; created_at: string; is_mine: boolean };
+export type User = { id: string; email: string; display_name: string; avatar_url?: string | null; role: string; membership_tier: 'free' | 'vip'; membership_expires_at?: string | null; has_active_vip: boolean; has_password?: boolean; mfa_enabled?: boolean; email_verified: boolean; email_verification_required?: boolean };
+export type DailyTask = { key: string; progress: number; target: number; xp: number; completed: boolean };
+export type Achievement = { key: string; progress: number; target: number; unlocked: boolean };
+export type EngagementProgress = { current_streak: number; longest_streak: number; active_today?: boolean; today_xp: number; daily_bonus_xp?: number; all_tasks_completed?: boolean; tasks: DailyTask[]; achievements?: Achievement[] };
+export type DubbingProject = { id: string; user_id?: string; source_type: string; template_id?: string | null; title: string; duration_seconds?: string | null; status: string; visibility: 'private' | 'public'; moderation_status: string; created_at: string; updated_at: string };
+export type DubbingExport = { id: string; project_id: string; output_video_id: string; download_url?: string | null; duration_seconds?: string | null; file_size_bytes?: string | null; retention_expires_at?: string | null; created_at: string };
+export type MembershipPlan = { id?: string; key?: string; name: string; price?: number | string; currency?: string; features?: string[] };
+export type UploadResponse = { video_id: string; original_filename: string; duration_seconds: number; size_bytes: number; preview_url: string };
 export type JobStatus = 'queued' | 'processing' | 'completed' | 'failed';
-
-export type JobResponse = {
-  job_id: string;
-  status: JobStatus;
-  progress: number;
-  message: string;
-  output_video_id: string | null;
-  download_url: string | null;
-  error: string | null;
-};
+export type JobResponse = { job_id: string; status: JobStatus; progress: number; message: string; output_video_id: string | null; download_url: string | null; error: string | null };
