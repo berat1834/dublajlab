@@ -11,6 +11,7 @@ type AuthContextValue = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginWithProvider: (provider: 'google' | 'discord') => Promise<boolean>;
+  completeOAuthCallback: (url: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<User | null>;
 };
@@ -40,8 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const finishLogin = useCallback(async (activeToken: string) => {
-    await setStoredToken(activeToken);
     const nextUser = await api.me(activeToken);
+    await setStoredToken(activeToken);
     setToken(activeToken);
     setUser(nextUser);
   }, []);
@@ -51,18 +52,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await finishLogin(result.access_token);
   }, [finishLogin]);
 
+  const completeOAuthCallback = useCallback(async (url: string) => {
+    const fragment = url.split('#', 2)[1] ?? '';
+    const query = url.split('?', 2)[1]?.split('#', 1)[0] ?? '';
+    const activeToken = new URLSearchParams(fragment).get('token')
+      ?? new URLSearchParams(query).get('token');
+    if (!activeToken) throw new Error('Google giriş yanıtında oturum bilgisi bulunamadı.');
+    await finishLogin(activeToken);
+  }, [finishLogin]);
+
   const loginWithProvider = useCallback(async (provider: 'google' | 'discord') => {
     const result = await WebBrowser.openAuthSessionAsync(
       api.oauthLoginUrl(provider),
       MOBILE_OAUTH_CALLBACK,
     );
     if (result.type !== 'success') return false;
-    const fragment = result.url.split('#', 2)[1] ?? '';
-    const activeToken = new URLSearchParams(fragment).get('token');
-    if (!activeToken) throw new Error('Sosyal giriş tamamlanamadı. Lütfen tekrar deneyin.');
-    await finishLogin(activeToken);
+    await completeOAuthCallback(result.url);
     return true;
-  }, [finishLogin]);
+  }, [completeOAuthCallback]);
 
   useEffect(() => {
     // Restore the native session exactly when the memoized auth callbacks change.
@@ -74,8 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // useMemo keeps the context object stable unless auth state really changes.
   const value = useMemo(
-    () => ({ user, token, loading, login, loginWithProvider, logout, refreshUser }),
-    [user, token, loading, login, loginWithProvider, logout, refreshUser],
+    () => ({ user, token, loading, login, loginWithProvider, completeOAuthCallback, logout, refreshUser }),
+    [user, token, loading, login, loginWithProvider, completeOAuthCallback, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

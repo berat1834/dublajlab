@@ -16,6 +16,7 @@ export default function RootLayout() {
             <Stack.Screen name="scene/[id]" />
             <Stack.Screen name="dub/[id]" />
             <Stack.Screen name="upload" />
+            <Stack.Screen name="oauth-callback" />
           </Stack>
         </AuthProvider>
       </SafeAreaProvider>

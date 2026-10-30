@@ -1,6 +1,7 @@
 from backend.routers import oauth_router
 from fastapi import HTTPException
 import pytest
+from urllib.parse import parse_qs, urlparse
 
 
 def test_frontend_url_prefers_explicit_configuration(monkeypatch):
@@ -160,6 +161,23 @@ def test_mobile_oauth_redirect_returns_fragment_token_even_in_cookie_only_mode(m
     assert response.headers["location"] == (
         "dublajlab://oauth-callback#token=mobile-secret-token"
     )
+
+
+@pytest.mark.asyncio
+async def test_google_login_prompts_for_account_selection(monkeypatch):
+    class RequestStub:
+        @staticmethod
+        def url_for(_name):
+            return "https://api.dublajlab.com.tr/api/auth/google/callback"
+
+    monkeypatch.setattr(oauth_router, "GOOGLE_CLIENT_ID", "google-client-id")
+    response = await oauth_router.google_login(
+        RequestStub(), return_to="dublajlab://oauth-callback"
+    )
+    query = parse_qs(urlparse(response.headers["location"]).query)
+
+    assert query["prompt"] == ["select_account"]
+    assert query["client_id"] == ["google-client-id"]
 
 
 def test_oauth_cookie_only_redirect_never_exposes_token(monkeypatch):

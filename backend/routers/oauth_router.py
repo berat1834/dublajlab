@@ -172,6 +172,7 @@ async def google_login(request: Request, return_to: str | None = None):
         "redirect_uri": str(redirect_uri),
         "scope": "openid email profile",
         "access_type": "offline",
+        "prompt": "select_account",
     }
     origin = resolve_return_origin(return_to)
     nonce = secrets.token_urlsafe(32)
