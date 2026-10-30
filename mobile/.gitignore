@@ -5,6 +5,7 @@ node_modules/
 
 # Expo
 .expo/
+.eas-inspect/
 dist/
 dist-android/
 dist-*/
