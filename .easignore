@@ -1,29 +1,28 @@
-# EAS resolves this file from the Git root but applies it to the mobile
-# project directory selected by the CLI.
-node_modules/
-.expo/
-dist/
-dist-*/
-builds/
-web-build/
-expo-env.d.ts
-*.tsbuildinfo
+# The repository is a monorepo. The EAS archive only needs the Expo project.
+/*
+!/mobile/
 
-android/
-ios/
-.kotlin/
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
+/mobile/dist-*/
+/mobile/builds/
+/mobile/web-build/
+/mobile/expo-env.d.ts
+/mobile/*.tsbuildinfo
 
-.env
-.env.*
-!.env.example
-.DS_Store
-Thumbs.db
-*.log
-npm-debug.*
-yarn-debug.*
-yarn-error.*
+/mobile/android/
+/mobile/ios/
+/mobile/.kotlin/
+/mobile/*.jks
+/mobile/*.p8
+/mobile/*.p12
+/mobile/*.key
+/mobile/*.mobileprovision
+
+/mobile/.env
+/mobile/.env.*
+!/mobile/.env.example
+/mobile/.DS_Store
+/mobile/Thumbs.db
+/mobile/*.log
