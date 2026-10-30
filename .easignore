@@ -1,0 +1,21 @@
+# EAS is invoked from the mobile workspace, but the Git repository root is
+# used to assemble the archive. Only the Expo application is needed.
+*
+!mobile/
+!mobile/**
+
+# Re-exclude local/generated mobile content after including the app sources.
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/dist-*/
+mobile/builds/
+mobile/web-build/
+mobile/android/
+mobile/ios/
+mobile/.kotlin/
+mobile/.env
+mobile/.env.*
+!mobile/.env.example
+mobile/*.log
+mobile/*.tsbuildinfo
