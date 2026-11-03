@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { router, type Href } from 'expo-router';
 
 import { ActionButton, BrandHeader, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
@@ -219,6 +220,21 @@ export default function AccountScreen() {
             <View style={styles.logout}><ActionButton label="Çıkış yap" onPress={() => void logout()} /></View>
           </>
         )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="DublajLab stüdyo konumunu haritada göster"
+          onPress={() => router.push('/studio-location' as Href)}
+          style={({ pressed }) => [styles.locationCard, pressed && styles.locationCardPressed]}>
+          <View style={styles.locationIcon}>
+            <Ionicons name="location" color={theme.green} size={25} />
+          </View>
+          <View style={styles.locationCopy}>
+            <Text style={styles.locationEyebrow}>İLETİŞİM VE KONUM</Text>
+            <Text style={styles.locationTitle}>DublajLab Stüdyo</Text>
+            <Text style={styles.locationText}>Temsili konumu haritada gör ve yol tarifi al.</Text>
+          </View>
+          <Ionicons name="chevron-forward" color={theme.muted} size={22} />
+        </Pressable>
       </ScrollView>
     </Screen>
   );
@@ -258,5 +274,12 @@ const styles = StyleSheet.create({
   taskTitle: { color: theme.text, fontWeight: '800' },
   taskMeta: { color: theme.muted, fontSize: 12, marginTop: 4 },
   logout: { marginHorizontal: 20, marginTop: 10 },
+  locationCard: { flexDirection: 'row', alignItems: 'center', gap: 13, marginHorizontal: 20, marginTop: 18, marginBottom: 20, padding: 16, backgroundColor: theme.surface, borderRadius: 20, borderWidth: 1, borderColor: theme.border },
+  locationCardPressed: { opacity: 0.76, transform: [{ scale: 0.99 }] },
+  locationIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.greenDark, borderWidth: 1, borderColor: '#426715' },
+  locationCopy: { flex: 1 },
+  locationEyebrow: { color: theme.green, fontSize: 10, fontWeight: '900', letterSpacing: 1.2 },
+  locationTitle: { color: theme.text, fontSize: 17, fontWeight: '900', marginTop: 3 },
+  locationText: { color: theme.muted, fontSize: 12, lineHeight: 17, marginTop: 3 },
   authTabs: { flexDirection: 'row', gap: 8 }, authTab: { flex: 1, alignItems: 'center', padding: 11, borderRadius: 12, backgroundColor: theme.background }, authTabActive: { backgroundColor: theme.greenDark, borderWidth: 1, borderColor: theme.green }, authTabText: { color: theme.text, fontWeight: '900' }, vipActive: { color: theme.green, fontWeight: '900', textAlign: 'center', padding: 10 },
 });
