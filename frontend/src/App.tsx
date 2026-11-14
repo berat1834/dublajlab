@@ -471,6 +471,7 @@ function App() {
   }
 
   const handleTemplateSelect = async (templateId: string) => {
+    setSourceMode('templates')
     clearFeedback()
     setSelectingTemplateId(templateId)
     setOutputUrl('')
