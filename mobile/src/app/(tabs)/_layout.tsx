@@ -1,17 +1,34 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { theme } from '@/constants/app-theme';
 
+const MIN_BOTTOM_TOUCH_OFFSET = 56;
+
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+  const bottomTouchOffset = Math.max(insets.bottom, MIN_BOTTOM_TOUCH_OFFSET);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.green,
         tabBarInactiveTintColor: theme.muted,
-        tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border, height: 66 },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', paddingBottom: 7 },
+        tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderColor: theme.border,
+          borderRadius: 20,
+          borderTopColor: theme.border,
+          borderWidth: 1,
+          height: 72,
+          marginBottom: bottomTouchOffset,
+          marginHorizontal: 12,
+          overflow: 'hidden',
+        },
+        tabBarItemStyle: { paddingVertical: 6 },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700', paddingBottom: 3 },
       }}>
       <Tabs.Screen name="index" options={{ title: 'Sahneler', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'film' : 'film-outline'} color={String(color)} size={21} /> }} />
       <Tabs.Screen name="community" options={{ title: 'Dublajlar', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'mic-circle' : 'mic-circle-outline'} color={String(color)} size={23} /> }} />
