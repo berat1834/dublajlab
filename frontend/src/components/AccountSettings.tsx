@@ -4,6 +4,7 @@ import type { User as UserType, Tab } from '../types'
 import { deleteAccount, updateProfile } from '../lib/api'
 import { useLanguage } from '../LanguageContext'
 import { AdminMfaSettings } from './AdminMfaSettings'
+import { StudioLocationCard } from './StudioLocationCard'
 
 interface AccountSettingsProps {
   currentUser: UserType
@@ -231,6 +232,8 @@ export function AccountSettings({ currentUser, setCurrentUser, onToast, setActiv
             )}
           </div>
         </div>
+
+        <StudioLocationCard />
 
         {/* Security & Danger Zone */}
         <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 mt-8">
