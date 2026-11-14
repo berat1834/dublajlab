@@ -702,7 +702,6 @@ function App() {
 
   const changeSourceMode = (nextMode: SourceMode) => {
     if (sourceMode === nextMode) return
-    reset()
     setSourceMode(nextMode)
   }
 
