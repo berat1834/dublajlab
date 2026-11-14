@@ -1,6 +1,12 @@
 # DublajLab Project Report
 
-## Current Status (Public Beta + Portfolio Ready - Sprint 55)
+## Current Status (Public Beta + Portfolio Ready - Sprint 62)
+
+- **Sprint 56–62 production işletimi:** Cookie-only oturum geçişi, secret
+  temizliği, Node 24 CI uyumluluğu, Resend webhook gözlemlenebilirliği, PostgreSQL
+  backup/restore tatbikatı, R2 production smoke ve destek e-posta yönlendirmesi
+  tamamlandı. Ayrıntılı kanıtlar `docs/reports/sprint-56-*` ile
+  `docs/reports/sprint-62-*` arasındaki tarihli raporlardadır.
 
 - **Sprint 51 canlı denetim düzeltmeleri:** Hesap/profil, OAuth state, auth rate limit,
   template 404, i18n, stabil SPA URL'leri, güvenlik header'ları, ödeme fail-closed davranışı,

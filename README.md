@@ -26,23 +26,21 @@ alan adının geçerli olması posta kutusunun kullanıcıya ait olduğunu kanı
 Doğrulanmamış hesaplar parola ile giriş yapamaz. Google ve Discord kayıtlarında
 ise yalnız sağlayıcının doğruladığı e-posta kabul edilir.
 
-Canlı ortamda `EMAIL_VERIFICATION_REQUIRED=true`, `FRONTEND_URL` ve genel SMTP
-değişkenleri (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
-`SMTP_FROM_EMAIL`, `SMTP_USE_TLS`, `SMTP_USE_SSL`) Railway dashboard üzerinden
-tanımlanmalıdır. Port 587/STARTTLS için `SMTP_USE_TLS=true` ve
-`SMTP_USE_SSL=false`; port 465/implicit SSL için `SMTP_USE_TLS=false` ve
-`SMTP_USE_SSL=true` kullanılır. İki seçenek aynı anda etkinleştirilmez.
-SMTP gönderimi hazır değilse kayıt endpoint'i güvenli biçimde `503` döner; kullanıcıya
-yanıltıcı bir “kayıt başarılı” mesajı gösterilmez. Secret değerleri repoya yazılmaz.
-
-Railway Trial, Free ve Hobby planlarında outbound SMTP kapalıdır. Bu planlarda
+Canlı production ortamında `EMAIL_VERIFICATION_REQUIRED=true`, `FRONTEND_URL`,
 `EMAIL_DELIVERY_PROVIDER=resend`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` ve isteğe
-bağlı `RESEND_REPLY_TO` kullanılır. Teslimat görünürlüğü için Resend'de
+bağlı `RESEND_REPLY_TO` Railway dashboard üzerinden tanımlanır. Teslimat
+görünürlüğü için Resend'de
 `https://api.dublajlab.com.tr/api/webhooks/resend` endpoint'i oluşturulur ve
 endpoint signing secret değeri Railway'de `RESEND_WEBHOOK_SECRET` olarak saklanır.
 Resend gönderici domaini doğrulanmadan
-production kayıt akışı açılmamalıdır. SMTP provider geriye uyumluluk ve SMTP
-erişimi olan ortamlarda kullanılmak üzere korunur.
+production kayıt akışı açılmamalıdır. Gönderim yapılandırması hazır değilse kayıt
+endpoint'i güvenli biçimde `503` döner; kullanıcıya yanıltıcı bir “kayıt başarılı”
+mesajı gösterilmez. Secret değerleri repoya yazılmaz.
+
+SMTP provider yalnız geriye uyumluluk ve SMTP erişimi olan geliştirme/özel
+ortamlar için korunur. Bu durumda `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`,
+`SMTP_PASSWORD`, `SMTP_FROM_EMAIL`, `SMTP_USE_TLS` ve `SMTP_USE_SSL` kullanılır;
+bu değişkenler mevcut production Resend yolunun gereksinimi değildir.
 
 ## Yönetim ve moderasyon
 
