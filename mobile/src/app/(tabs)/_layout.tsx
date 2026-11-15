@@ -32,11 +32,10 @@ export default function TabsLayout() {
         },
         tabBarItemStyle: { paddingVertical: 6 },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700', paddingBottom: 3 },
-        sceneStyle: { backgroundColor: theme.background, paddingBottom: 128 },
+        sceneStyle: { paddingBottom: 128 },
       }}>
       <Tabs.Screen name="index" options={{ title: 'Sahneler', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'film' : 'film-outline'} color={String(color)} size={21} /> }} />
       <Tabs.Screen name="community" options={{ title: 'Dublajlar', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'mic-circle' : 'mic-circle-outline'} color={String(color)} size={23} /> }} />
-      <Tabs.Screen name="daily" options={{ title: 'Günlük', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'calendar' : 'calendar-outline'} color={String(color)} size={21} /> }} />
       <Tabs.Screen name="library" options={{ title: 'K\u00fct\u00fcphanem', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'folder-open' : 'folder-open-outline'} color={String(color)} size={22} /> }} />
       <Tabs.Screen name="account" options={{ title: 'Hesab\u0131m', tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} color={String(color)} size={23} /> }} />
     </Tabs>
