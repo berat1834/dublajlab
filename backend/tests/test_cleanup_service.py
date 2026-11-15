@@ -12,7 +12,9 @@ import pytest
 from backend.services.cleanup_service import CleanupService
 
 
-def test_cleanup_removes_only_old_runtime_files(tmp_path: Path) -> None:
+def test_cleanup_removes_only_old_runtime_files(
+    tmp_path: Path, db_session, monkeypatch
+) -> None:
     uploads = tmp_path / "uploads"
     outputs = tmp_path / "outputs"
     uploads.mkdir()
@@ -25,6 +27,10 @@ def test_cleanup_removes_only_old_runtime_files(tmp_path: Path) -> None:
     hidden_file.write_bytes(b"")
     now = time.time()
     os.utime(old_file, (now - 48 * 3600, now - 48 * 3600))
+
+    import backend.database
+    from backend.tests.conftest import TestingSessionLocal
+    monkeypatch.setattr(backend.database, "SessionLocal", TestingSessionLocal)
 
     result = CleanupService((uploads, outputs)).cleanup_old_files(
         older_than_hours=24,
@@ -71,3 +77,22 @@ def test_cleanup_deletes_expired_remote_object(
     CleanupService((tmp_path,)).cleanup_old_files(older_than_hours=24)
 
     provider.delete_file.assert_called_once_with(f"{output_id}.mp4")
+
+
+def test_cleanup_fails_closed_when_retention_lookup_fails(tmp_path: Path, monkeypatch) -> None:
+    old_file = tmp_path / "old.mp4"
+    old_file.write_bytes(b"keep until retention can be checked")
+    old_time = time.time() - 48 * 3600
+    os.utime(old_file, (old_time, old_time))
+
+    import backend.database
+
+    def fail_session():
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr(backend.database, "SessionLocal", fail_session)
+
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        CleanupService((tmp_path,)).cleanup_old_files(older_than_hours=24)
+
+    assert old_file.exists()

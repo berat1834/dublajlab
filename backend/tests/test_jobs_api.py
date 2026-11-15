@@ -9,12 +9,60 @@ from fastapi.testclient import TestClient
 
 from backend import config as app_config
 from backend.main import app
-from backend.models import JobStatus, ProcessRequest
+from backend.models import JobResponse, JobStatus, ProcessRequest
 from backend.routers import jobs as jobs_router
+from backend.services.job_service import JobRegistry
 from backend.services.lip_sync_service import LipSyncService
 
 
 client = TestClient(app)
+
+def test_redis_jobs_interrupted_by_restart_become_failed() -> None:
+    class MemoryRedis:
+        def __init__(self) -> None:
+            self.values: dict[str, str] = {}
+
+        async def setex(self, key: str, _ttl: int, value: str) -> None:
+            self.values[key] = value
+
+        async def get(self, key: str) -> str | None:
+            return self.values.get(key)
+
+        async def scan_iter(self, match: str):
+            assert match == "job:*"
+            for key in list(self.values):
+                yield key
+
+    registry = JobRegistry()
+    redis_client = MemoryRedis()
+    registry._redis = redis_client
+    queued = JobResponse(
+        job_id="interrupted-job",
+        status=JobStatus.QUEUED,
+        progress=0,
+        message="Sırada.",
+    )
+    completed = JobResponse(
+        job_id="completed-job",
+        status=JobStatus.COMPLETED,
+        progress=100,
+        message="Tamamlandı.",
+    )
+    redis_client.values = {
+        f"job:{queued.job_id}": queued.model_dump_json(),
+        f"job:{completed.job_id}": completed.model_dump_json(),
+    }
+
+    recovered = asyncio.run(registry.recover_interrupted_jobs())
+
+    assert recovered == 1
+    failed = asyncio.run(registry.get(queued.job_id))
+    untouched = asyncio.run(registry.get(completed.job_id))
+    assert failed is not None
+    assert failed.status == JobStatus.FAILED
+    assert failed.error == "İşlem tamamlanamadı. Lütfen yeniden deneyin."
+    assert untouched is not None
+    assert untouched.status == JobStatus.COMPLETED
 
 
 def enable_local_lip_sync(monkeypatch: pytest.MonkeyPatch) -> None:

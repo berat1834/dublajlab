@@ -65,6 +65,7 @@ import {
   getMe,
   getMeFromSessionCookie,
   clearAdminMfaSession,
+  trackProductEvent,
 } from './lib/api'
 import { shouldShowLipSync } from './lib/lipSync'
 import { refreshMembershipUser } from './lib/membershipAccess'
@@ -264,6 +265,7 @@ function App() {
   const [mode, setMode] = useState<DubbingMode>('my-voice')
   const [sourceMode, setSourceMode] = useState<SourceMode>('upload')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadRightsConfirmed, setUploadRightsConfirmed] = useState(false)
   const [upload, setUpload] = useState<UploadResponse | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState<VideoTemplate | null>(null)
   const [selectingTemplateId, setSelectingTemplateId] = useState('')
@@ -297,6 +299,10 @@ function App() {
   useEffect(() => {
     if (!hasVip || !shouldShowLipSync(demoPolicy)) setApplyLipSync(false)
   }, [demoPolicy, hasVip])
+
+  useEffect(() => {
+    if (activeTab === 'scenes') trackProductEvent('catalog_view')
+  }, [activeTab])
 
   useEffect(() => {
     if (!currentUser) return
@@ -427,6 +433,17 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if ((!selectedFile && !selectedTemplate) || stage === 'idle') return
+
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+    window.addEventListener('beforeunload', warnBeforeLeaving)
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving)
+  }, [selectedFile, selectedTemplate, stage])
+
+  useEffect(() => {
     let active = true
     void fetchDemoPolicy()
       .then((policy) => {
@@ -447,6 +464,8 @@ function App() {
   }
 
   const handleFile = async (file: File) => {
+    if (!uploadRightsConfirmed) return
+    trackProductEvent('source_upload_selected')
     setSourceMode('upload')
     setSelectedTemplate(null)
     setSelectedFile(file)
@@ -456,9 +475,11 @@ function App() {
     setStage('uploading')
     try {
       const result = await uploadVideo(file)
+      trackProductEvent('upload_succeeded')
       setUpload(result)
       setStage('ready')
     } catch (uploadError) {
+      trackProductEvent('upload_failed')
       setStage('idle')
       setError(
         uploadError instanceof Error
@@ -471,6 +492,7 @@ function App() {
   }
 
   const handleTemplateSelect = async (templateId: string) => {
+    trackProductEvent('source_template_selected')
     setSourceMode('templates')
     clearFeedback()
     setSelectingTemplateId(templateId)
@@ -523,6 +545,7 @@ function App() {
   }
 
   const completeProcessing = (downloadUrl: string) => {
+    trackProductEvent('export_succeeded')
     setJobProgress(100)
     setJobMessage(t('action.export_ready'))
     setOutputUrl(absoluteApiUrl(downloadUrl))
@@ -536,6 +559,7 @@ function App() {
     processError: unknown,
     retryAction: () => Promise<void>,
   ) => {
+    trackProductEvent('export_failed')
     const rawMessage =
       processError instanceof Error
         ? processError.message
@@ -671,6 +695,7 @@ function App() {
     setStage('idle')
     setSourceMode('upload')
     setSelectedFile(null)
+    setUploadRightsConfirmed(false)
     setUpload(null)
     setSelectedTemplate(null)
     setSelectingTemplateId('')
@@ -954,12 +979,26 @@ function App() {
 
             {sourceMode === 'upload' ? (
               !selectedFile ? (
-                <UploadZone
-                  onFile={handleFile}
-                  disabled={busy}
-                  maxFileSizeMb={demoPolicy?.enabled && !currentUser ? demoPolicy.max_file_size_mb : 50}
-                  maxDurationSeconds={demoPolicy?.enabled && !currentUser ? demoPolicy.max_video_duration_seconds : 60}
-                />
+                <>
+                  <div className="mb-3 rounded-xl border border-amber-400/15 bg-amber-400/[0.04] p-3">
+                    <p className="text-xs leading-5 text-zinc-300">{t('studio.upload_rights.copy')}</p>
+                    <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs leading-5 text-zinc-200">
+                      <input
+                        type="checkbox"
+                        checked={uploadRightsConfirmed}
+                        onChange={(event) => setUploadRightsConfirmed(event.target.checked)}
+                        className="mt-1 accent-lime"
+                      />
+                      <span>{t('studio.upload_rights.confirm')}</span>
+                    </label>
+                  </div>
+                  <UploadZone
+                    onFile={handleFile}
+                    disabled={busy || !uploadRightsConfirmed}
+                    maxFileSizeMb={demoPolicy?.enabled && !currentUser ? demoPolicy.max_file_size_mb : 50}
+                    maxDurationSeconds={demoPolicy?.enabled && !currentUser ? demoPolicy.max_video_duration_seconds : 60}
+                  />
+                </>
               ) : (
                 <div>
                   <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black shadow-inner">
@@ -1043,6 +1082,11 @@ function App() {
                   </p>
                 </div>
               </div>
+            )}
+            {(selectedFile || selectedTemplate) && (
+              <p role="status" className="mt-3 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs leading-5 text-zinc-400">
+                {t('studio.draft.warning')}
+              </p>
             )}
           </section>
 
@@ -1145,6 +1189,7 @@ function App() {
                 videoAvailable={Boolean(inputPreview)}
                 exportUnavailableReason={upload ? '' : t('action.template_export_unavailable')}
                 disabled={busy}
+                onRecordingStart={() => trackProductEvent('recording_started')}
                 onError={showEditorError}
                 onProcess={handleRecordingProcess}
               />

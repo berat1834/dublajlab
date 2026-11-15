@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, Crown, LockKeyhole, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react'
-import { createCheckout, getMe } from '../lib/api'
+import { createCheckout, getMe, getMembershipPlans } from '../lib/api'
 import type { Tab, User } from '../types'
 import { useLanguage } from '../LanguageContext'
 
@@ -14,6 +14,7 @@ interface MembershipProps {
 export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast }: MembershipProps) {
   const { t } = useLanguage()
   const [refreshing, setRefreshing] = useState(false)
+  const [checkoutEnabled, setCheckoutEnabled] = useState(false)
   const isVip = Boolean(currentUser?.has_active_vip)
   const vipPrice = (import.meta.env.VITE_VIP_PRICE_LABEL || '₺199').trim()
   const included = t('membership.included')
@@ -26,13 +27,28 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
     { name: t('membership.feature.badge'), free: '—', vip: included },
   ]
 
+  useEffect(() => {
+    let active = true
+    void getMembershipPlans()
+      .then((plans) => {
+        if (active) setCheckoutEnabled(plans.checkout_enabled)
+      })
+      .catch(() => {
+        if (active) {
+          setCheckoutEnabled(false)
+          onToast(t('membership.payment_unavailable'))
+        }
+      })
+    return () => { active = false }
+  }, [onToast, t])
+
   const startCheckout = async () => {
     if (!currentUser) {
       onToast(t('membership.login_first'))
       setActiveTab('login')
       return
     }
-    if (!(import.meta.env.VITE_SHOPIER_VIP_URL || '').trim()) {
+    if (!checkoutEnabled) {
       onToast(t('membership.payment_unavailable'))
       return
     }
@@ -111,8 +127,13 @@ export function Membership({ currentUser, setCurrentUser, setActiveTab, onToast 
           {isVip ? (
             <div className="mt-8 rounded-xl border border-lime/25 bg-lime/10 px-4 py-3 text-center text-sm font-black text-lime">{t('membership.active')}</div>
           ) : (
-            <button type="button" onClick={startCheckout} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-300 px-5 py-4 text-sm font-black text-black transition hover:bg-amber-200">
-              <Crown className="h-5 w-5" /> {t('membership.buy')}
+            <button
+              type="button"
+              onClick={startCheckout}
+              disabled={!checkoutEnabled}
+              className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-300 px-5 py-4 text-sm font-black text-black transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Crown className="h-5 w-5" /> {checkoutEnabled ? t('membership.buy') : t('membership.checkout_pending')}
             </button>
           )}
         </section>

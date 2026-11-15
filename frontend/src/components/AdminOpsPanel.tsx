@@ -143,8 +143,12 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
               <StatusIcon ok={metrics.ffmpeg_available && metrics.ffprobe_available} />
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-zinc-400">Shopier Webhook</span>
-              <StatusIcon ok={metrics.shopier_enabled} />
+              <span className="text-zinc-400">{t('admin.checkout')}</span>
+              <StatusIcon ok={metrics.shopier_checkout_available} />
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-zinc-400">{t('admin.product_metrics')}</span>
+              <StatusIcon ok={metrics.product_metrics_enabled} />
             </div>
             <div className="flex justify-between items-center">
               <span className="text-zinc-400">Resend Webhook</span>
@@ -252,6 +256,46 @@ export function AdminOpsPanel({ onToast }: AdminOpsPanelProps) {
             <div className="flex justify-between items-center"><span className="text-zinc-400">Şikâyet</span><span className="text-red-400 font-mono">{metrics.email_complained_24h}</span></div>
             <div className="flex justify-between items-center"><span className="text-zinc-400">Son olay</span><span className="text-xs text-zinc-300">{metrics.email_last_event_at ? new Date(metrics.email_last_event_at).toLocaleString(locale) : '-'}</span></div>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-zinc-900 border border-white/10 rounded-2xl overflow-hidden mb-8">
+        <div className="p-6 border-b border-white/10">
+          <h2 className="text-lg font-bold text-white">{t('admin.product_flow_30d')}</h2>
+          <p className="mt-1 text-xs text-zinc-500">
+            {metrics.product_metrics_enabled
+              ? t('admin.product_metrics_privacy')
+              : t('admin.product_metrics_disabled')}
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-zinc-300">
+            <thead className="text-xs text-zinc-400 uppercase bg-white/5 border-b border-white/10">
+              <tr>
+                <th className="px-6 py-4 font-semibold">{t('common.date')}</th>
+                <th className="px-6 py-4 font-semibold">{t('admin.product_event')}</th>
+                <th className="px-6 py-4 font-semibold text-right">{t('admin.product_total')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {metrics.product_metrics_30d.map((event) => (
+                <tr key={`${event.date}-${event.event}`}>
+                  <td className="px-6 py-3">{event.date}</td>
+                  <td className="px-6 py-3 font-mono text-xs">{event.event}</td>
+                  <td className="px-6 py-3 text-right font-bold">{event.count}</td>
+                </tr>
+              ))}
+              {metrics.product_metrics_30d.length === 0 && (
+                <tr>
+                  <td colSpan={3} className="px-6 py-6 text-center text-zinc-500">
+                    {metrics.product_metrics_enabled
+                      ? t('admin.product_no_data')
+                      : t('admin.product_metrics_off')}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

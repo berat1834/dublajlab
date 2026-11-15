@@ -60,26 +60,23 @@ class CleanupService:
         freed_bytes = 0
 
         # Protect active exports based on retention_expires_at
+        from backend.database import SessionLocal
+        import backend.models_db as models_db
+
+        db = SessionLocal()
         try:
-            from backend.database import SessionLocal
-            import backend.models_db as models_db
-            db = SessionLocal()
-            try:
-                now_dt = datetime.now(timezone.utc)
-                active_exports = db.query(models_db.DubbingExport.output_video_id).filter(
-                    (models_db.DubbingExport.retention_expires_at > now_dt) |
-                    (models_db.DubbingExport.retention_expires_at.is_(None))
-                ).all()
-                active_output_ids = {e[0] for e in active_exports if e[0]}
-                expired_exports = db.query(models_db.DubbingExport.output_video_id).filter(
-                    models_db.DubbingExport.retention_expires_at <= now_dt
-                ).all()
-                expired_output_ids = {e[0] for e in expired_exports if e[0]}
-            finally:
-                db.close()
-        except Exception:
-            active_output_ids = set()
-            expired_output_ids = set()
+            now_dt = datetime.now(timezone.utc)
+            active_exports = db.query(models_db.DubbingExport.output_video_id).filter(
+                (models_db.DubbingExport.retention_expires_at > now_dt) |
+                (models_db.DubbingExport.retention_expires_at.is_(None))
+            ).all()
+            active_output_ids = {e[0] for e in active_exports if e[0]}
+            expired_exports = db.query(models_db.DubbingExport.output_video_id).filter(
+                models_db.DubbingExport.retention_expires_at <= now_dt
+            ).all()
+            expired_output_ids = {e[0] for e in expired_exports if e[0]}
+        finally:
+            db.close()
 
         # Object storage may outlive the local Railway volume. Delete expired
         # remote objects even when their local mirror is already gone.
@@ -88,7 +85,10 @@ class CleanupService:
         provider = get_storage_provider()
         if provider.provider_name == "s3":
             for output_id in expired_output_ids:
-                provider.delete_file(f"{output_id}.mp4")
+                if not provider.delete_file(f"{output_id}.mp4"):
+                    raise RuntimeError(
+                        f"Expired export could not be removed from object storage: {output_id}"
+                    )
 
         for directory in self.directories:
             if not directory.is_dir():
@@ -97,11 +97,13 @@ class CleanupService:
                 if path.name.startswith(".") or not path.is_file():
                     continue
 
-                if directory == OUTPUT_DIR:
+                is_output_directory = directory.resolve() == OUTPUT_DIR.resolve()
+                is_metadata_directory = directory.resolve() == METADATA_DIR.resolve()
+                if is_output_directory:
                     file_id = path.stem
                     if file_id in active_output_ids:
                         continue
-                elif directory == METADATA_DIR and path.name.startswith("output-"):
+                elif is_metadata_directory and path.name.startswith("output-"):
                     file_id = path.stem.replace("output-", "")
                     if file_id in active_output_ids:
                         continue
@@ -110,9 +112,13 @@ class CleanupService:
                     stat = path.stat()
                     if stat.st_mtime >= cutoff:
                         continue
+                    if is_output_directory and provider.provider_name == "s3":
+                        file_id = path.stem
+                        if file_id not in expired_output_ids and not provider.delete_file(path.name):
+                            raise RuntimeError(
+                                f"Old output could not be removed from object storage: {path.name}"
+                            )
                     path.unlink()
-                    if directory == OUTPUT_DIR:
-                        provider.delete_file(path.name)
                     deleted_files += 1
                     freed_bytes += stat.st_size
                 except FileNotFoundError:
@@ -124,4 +130,3 @@ class CleanupService:
             freed_bytes=freed_bytes,
             older_than_hours=older_than_hours,
         )
-

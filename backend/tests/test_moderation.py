@@ -1,3 +1,4 @@
+import asyncio
 from fastapi.testclient import TestClient
 from uuid import uuid4
 from unittest.mock import MagicMock
@@ -6,6 +7,7 @@ from backend import auth
 from backend.main import app
 from backend.models_db import User, DubbingProject, DubbingExport, ContentReport
 from backend.routers.auth_router import get_current_user
+from backend.services.rate_limit_service import export_rate_limiter
 
 client = TestClient(app)
 
@@ -15,6 +17,7 @@ def override_user(user):
     return _override
 
 def test_report_public_dub(db_session):
+    asyncio.run(export_rate_limiter.reset())
     normal_user = User(
         email=f"normal_{uuid4().hex[:6]}@example.com",
         password_hash="hashed_pw",
@@ -59,6 +62,106 @@ def test_report_public_dub(db_session):
     reports = db_session.query(ContentReport).all()
     assert any(r.reporter_user_id == normal_user.id for r in reports)
     app.dependency_overrides.pop(get_optional_user, None)
+
+def test_anonymous_content_reports_are_rate_limited(db_session):
+    asyncio.run(export_rate_limiter.reset())
+    owner = User(
+        email=f"report_owner_{uuid4().hex[:6]}@example.com",
+        display_name="Owner",
+        role="user",
+    )
+    db_session.add(owner)
+    db_session.commit()
+    project = DubbingProject(
+        user_id=owner.id,
+        source_type="upload",
+        title="Reportable project",
+        status="completed",
+        visibility="public",
+        moderation_status="visible",
+    )
+    db_session.add(project)
+    db_session.commit()
+
+    responses = [
+        client.post(
+            f"/api/public/dubs/{project.id}/report",
+            json={"reason": "inappropriate", "details": "Please review."},
+        )
+        for _ in range(11)
+    ]
+
+    assert all(response.status_code == 201 for response in responses[:10])
+    assert responses[10].status_code == 429
+
+def test_authenticated_duplicate_pending_report_is_rejected(db_session):
+    asyncio.run(export_rate_limiter.reset())
+    reporter = User(
+        email=f"reporter_{uuid4().hex[:6]}@example.com",
+        display_name="Reporter",
+        role="user",
+    )
+    db_session.add(reporter)
+    db_session.commit()
+    project = DubbingProject(
+        user_id=reporter.id,
+        source_type="upload",
+        title="Duplicate report target",
+        status="completed",
+        visibility="public",
+        moderation_status="visible",
+    )
+    db_session.add(project)
+    db_session.commit()
+    from backend.routers.public_router import get_optional_user
+
+    app.dependency_overrides[get_optional_user] = override_user(reporter)
+    payload = {"reason": "copyright", "details": "No permission"}
+    first = client.post(f"/api/public/dubs/{project.id}/report", json=payload)
+    second = client.post(f"/api/public/dubs/{project.id}/report", json=payload)
+    app.dependency_overrides.pop(get_optional_user, None)
+
+    assert first.status_code == 201
+    assert second.status_code == 409
+
+def test_action_taken_hides_project_and_records_audit(db_session):
+    admin = User(
+        email=f"admin_{uuid4().hex[:6]}@example.com",
+        display_name="Moderator",
+        role="admin",
+        mfa_enabled=True,
+    )
+    db_session.add(admin)
+    db_session.commit()
+    project = DubbingProject(
+        user_id=admin.id,
+        source_type="upload",
+        title="Reported project",
+        status="completed",
+        visibility="public",
+        moderation_status="visible",
+    )
+    db_session.add(project)
+    db_session.commit()
+    report = ContentReport(
+        project_id=project.id,
+        reason="inappropriate",
+        status="pending",
+    )
+    db_session.add(report)
+    db_session.commit()
+
+    app.dependency_overrides[get_current_user] = override_user(admin)
+    admin_token = auth.create_access_token({"sub": admin.id, "amr": "totp"})
+    response = client.patch(
+        f"/api/admin/reports/{report.id}?status=action_taken",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 200
+    db_session.refresh(project)
+    assert project.moderation_status == "hidden"
+    app.dependency_overrides.pop(get_current_user, None)
 
 def test_admin_hide_project_removes_from_feed(db_session, monkeypatch):
     admin_user = User(

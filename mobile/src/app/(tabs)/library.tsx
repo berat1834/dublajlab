@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Linking, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import * as Sharing from 'expo-sharing';
@@ -44,10 +44,24 @@ export default function LibraryScreen() {
   const toggleVisibility = useCallback(async (project: DubbingProject) => {
     if (!token) return;
     const visibility = project.visibility === 'public' ? 'private' : 'public';
-    try {
-      const updated = await api.updateProject(project.id, { visibility }, token);
-      setProjects((current) => current.map((item) => item.id === updated.id ? updated : item));
-    } catch (reason) { Alert.alert('Yayın durumu değişmedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); }
+    const publish = async () => {
+      try {
+        const updated = await api.updateProject(project.id, { visibility }, token);
+        setProjects((current) => current.map((item) => item.id === updated.id ? updated : item));
+      } catch (reason) { Alert.alert('Yayın durumu değişmedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); }
+    };
+    if (visibility === 'public') {
+      Alert.alert(
+        'Herkese açık yayınla?',
+        'Bu video toplulukta herkes tarafından görülebilir. Yalnızca paylaşma hakkına sahip olduğun içerikleri yayınla.',
+        [
+          { text: 'Vazgeç', style: 'cancel' },
+          { text: 'Yayınla', onPress: () => void publish() },
+        ],
+      );
+      return;
+    }
+    await publish();
   }, [token]);
 
   const remove = useCallback((project: DubbingProject) => {
@@ -97,6 +111,11 @@ export default function LibraryScreen() {
           return <View style={styles.card}>
             <View style={styles.row}><View style={styles.flex}><Text style={styles.title}>{item.title}</Text><Text style={styles.meta}>{statusLabel} · {item.source_type === 'template' ? 'Hazır sahne' : 'Yüklenen video'}</Text></View><Text style={item.visibility === 'public' ? styles.public : styles.private}>{item.visibility === 'public' ? 'Herkese açık' : 'Gizli'}</Text></View>
             <Text style={styles.meta}>{new Date(item.created_at).toLocaleDateString('tr-TR', { dateStyle: 'medium' })}</Text>
+            {item.moderation_status !== 'visible' ? (
+              <Pressable onPress={() => void Linking.openURL(`mailto:destek@dublajlab.com.tr?subject=${encodeURIComponent(`İçerik incelemesi ${item.id}`)}`)}>
+                <Text style={styles.moderationNotice}>Bu proje inceleme sırasında topluluktan gizlendi. Yeniden inceleme için destek ekibine yaz.</Text>
+              </Pressable>
+            ) : null}
             {playable && isExpanded && token ? <ProjectVideo uri={playable} token={token} /> : null}
             {item.status === 'completed' ? <Text style={styles.retention}>{retentionLabel}</Text> : null}
             {!playable && item.status === 'completed' ? <Text style={styles.warning}>Video saklama süresi dolmuş veya dosya artık mevcut değil.</Text> : null}
@@ -116,6 +135,7 @@ export default function LibraryScreen() {
 const styles = StyleSheet.create({
   content: { paddingBottom: 34 }, card: { marginHorizontal: 20, marginBottom: 12, padding: 16, gap: 12, backgroundColor: theme.surface, borderRadius: 20, borderWidth: 1, borderColor: theme.border },
   retentionNotice: { color: theme.muted, lineHeight: 19, marginHorizontal: 20, marginBottom: 14, fontSize: 12 },
+  moderationNotice: { color: '#fbbf24', lineHeight: 19, fontSize: 12, textDecorationLine: 'underline' },
   row: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' }, flex: { flex: 1 }, title: { color: theme.text, fontWeight: '900', fontSize: 17 }, meta: { color: theme.muted, marginTop: 5, fontSize: 12 },
   public: { color: theme.green, fontSize: 11, fontWeight: '900' }, private: { color: theme.muted, fontSize: 11, fontWeight: '900' }, video: { width: '100%', aspectRatio: 16 / 9, backgroundColor: '#000', borderRadius: 14 }, retention: { color: theme.muted, fontSize: 12, lineHeight: 18 },
   warning: { color: '#fbbf24', lineHeight: 19 }, actions: { flexDirection: 'row', gap: 8 }, smallButton: { flex: 1, alignItems: 'center', padding: 11, borderRadius: 12, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border }, smallText: { color: theme.text, fontWeight: '800' }, delete: { borderColor: '#7f1d1d' }, deleteText: { color: '#fda4af', fontWeight: '800' },

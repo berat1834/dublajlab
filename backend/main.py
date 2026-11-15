@@ -13,13 +13,14 @@ from fastapi.responses import JSONResponse
 from backend.config import allowed_origins, ensure_media_directories, public_demo_policy
 from backend.middleware.security_headers import SecurityHeadersMiddleware
 from backend.models import DemoPolicyResponse, HealthResponse
-from backend.routers.jobs import router as jobs_router
+from backend.routers.jobs import job_registry, router as jobs_router
 from backend.routers.maintenance import router as maintenance_router
 from backend.routers.templates import router as templates_router
 from backend.routers.video import ffmpeg_service, router as video_router
 from backend.routers.membership import router as membership_router
 from backend.routers.payments import router as payments_router
 from backend.routers.resend_webhook import router as resend_webhook_router
+from backend.routers.analytics_router import router as analytics_router
 
 
 logger = logging.getLogger("dublajlab")
@@ -28,6 +29,12 @@ logger = logging.getLogger("dublajlab")
 @asynccontextmanager
 async def lifespan(application: FastAPI) -> AsyncIterator[None]:
     ensure_media_directories()
+    interrupted_jobs = await job_registry.recover_interrupted_jobs()
+    if interrupted_jobs:
+        logger.warning(
+            "Marked %s interrupted export job(s) as failed after process restart.",
+            interrupted_jobs,
+        )
     demo_policy = public_demo_policy()
     application.state.demo_policy = demo_policy
     if demo_policy.enabled:
@@ -66,6 +73,7 @@ app.include_router(maintenance_router)
 app.include_router(membership_router)
 app.include_router(payments_router, prefix="/api/payments", tags=["payments"])
 app.include_router(resend_webhook_router)
+app.include_router(analytics_router)
 
 from backend.routers.auth_router import router as auth_router
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])

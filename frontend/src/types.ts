@@ -113,6 +113,7 @@ export interface DubbingProject {
   duration_seconds?: string
   status: JobStatus | string
   visibility: string
+  moderation_status: string
   created_at: string
   updated_at: string
 }

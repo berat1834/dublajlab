@@ -21,12 +21,28 @@ def test_checkout_requires_login():
 def test_checkout_disabled_returns_503(auth_headers_factory, monkeypatch):
     headers = auth_headers_factory()
     monkeypatch.setenv("SHOPIER_ENABLED", "false")
+    monkeypatch.setenv("COMMERCIAL_READINESS_CONFIRMED", "true")
     response = client.post("/api/payments/checkout?plan=monthly", headers=headers)
     assert response.status_code == 503
+
+def test_checkout_requires_commercial_readiness_confirmation(
+    auth_headers_factory, monkeypatch, db_session
+):
+    headers = auth_headers_factory()
+    monkeypatch.setenv("SHOPIER_ENABLED", "true")
+    monkeypatch.setenv("SHOPIER_API_SECRET", "test_api_secret")
+    monkeypatch.setenv("SHOPIER_PAYMENT_URL", "https://www.shopier.com/example")
+    monkeypatch.delenv("COMMERCIAL_READINESS_CONFIRMED", raising=False)
+
+    response = client.post("/api/payments/checkout?plan=monthly", headers=headers)
+
+    assert response.status_code == 503
+    assert db_session.query(Payment).count() == 0
 
 def test_checkout_does_not_create_pending_record_without_payment_url(auth_headers_factory, monkeypatch, db_session):
     headers = auth_headers_factory()
     monkeypatch.setenv("SHOPIER_ENABLED", "true")
+    monkeypatch.setenv("COMMERCIAL_READINESS_CONFIRMED", "true")
     monkeypatch.setenv("SHOPIER_API_SECRET", "test_api_secret")
     monkeypatch.delenv("SHOPIER_PAYMENT_URL", raising=False)
 
@@ -35,9 +51,19 @@ def test_checkout_does_not_create_pending_record_without_payment_url(auth_header
     assert response.status_code == 503
     assert db_session.query(Payment).count() == 0
 
+def test_membership_plans_report_checkout_availability(monkeypatch):
+    monkeypatch.setenv("SHOPIER_ENABLED", "true")
+    monkeypatch.delenv("COMMERCIAL_READINESS_CONFIRMED", raising=False)
+
+    response = client.get("/api/membership/plans")
+
+    assert response.status_code == 200
+    assert response.json()["checkout_enabled"] is False
+
 def test_checkout_creates_pending_payment(auth_headers_factory, monkeypatch, db_session):
     headers = auth_headers_factory()
     monkeypatch.setenv("SHOPIER_ENABLED", "true")
+    monkeypatch.setenv("COMMERCIAL_READINESS_CONFIRMED", "true")
     monkeypatch.setenv("SHOPIER_API_SECRET", "test_api_secret")
     monkeypatch.setenv("SHOPIER_PAYMENT_URL", "https://www.shopier.com/example")
     response = client.post("/api/payments/checkout?plan=monthly", headers=headers)
@@ -50,6 +76,13 @@ def test_checkout_creates_pending_payment(auth_headers_factory, monkeypatch, db_
     payment = db_session.query(Payment).filter(Payment.id == data["payment_id"]).first()
     assert payment is not None
     assert payment.status == "pending"
+
+def test_legacy_unsigned_membership_webhook_is_not_registered():
+    response = client.post(
+        "/api/membership/shopier-webhook",
+        json={"status": "success", "email": "user@example.com"},
+    )
+    assert response.status_code == 404
 
 def test_webhook_invalid_signature(monkeypatch):
     monkeypatch.setenv("SHOPIER_ENABLED", "true")

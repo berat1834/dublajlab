@@ -62,7 +62,7 @@ devam eder; yalnız MFA doğrulaması yapılmış admin oturumu bu sınırdan mu
 - [ ] Hazır, açık lisanslı demo video paketi
 - [ ] Kayıt ses seviyesi ve gürültü azaltma kontrolleri
 - [ ] Video trim ve dikey/yatay export presetleri
-- [ ] Kalıcı job queue ve otomatik dosya temizliği
+- [ ] Kalıcı job queue
 
 ### Sonraki ürün — Müzik Pratik + Cover Studio
 
@@ -93,13 +93,26 @@ Gelecekteki ürün özeti: “Şarkı dosyanı yükle; tempo/ton değiştir, vok
 - Export istekleri arka plan job'ına alınır. Redis yapılandırılırsa job durumu Redis'te tutulur;
   Redis yoksa process belleği fallback'i kullanıldığı için restart sırasında durum kaybolabilir.
 - BackgroundTasks tabanlı worker aynı uygulama sürecinde çalışır; yoğun production kullanımı için Celery/RQ, retry politikası ve concurrency limiti gerekir.
-- Kaynak ve çıktı videoları uygulama içinde otomatik zamanlanmaz; TTL policy'li cleanup endpoint'i cron/zamanlanmış görevle çağrılmalıdır.
+- Kaynak ve çıktı videolarının otomatik temizliği TTL policy'li cleanup endpoint'inin
+  cron/zamanlanmış görevle çağrılmasına bağlıdır. Aktif veya kalıcı export'lar silinmez;
+  retention sorgusu başarısız olursa cleanup güvenli biçimde durur.
+- Hesap silme, kullanıcıya bağlı projeleri, proje çıktılarını ve ilişkili sosyal içerikleri
+  temizler. Giriş yapmış kullanıcıların yeni video yüklemeleri kullanıcı kimliğiyle
+  işaretlenir ve hesap silme sırasında kaldırılır. Bu sahiplik alanı eklenmeden önce
+  yüklenmiş, kullanıcıyla ilişkilendirilmemiş geçici videolar hesap silme sırasında
+  güvenle eşleştirilemez; genel cleanup politikasına tabidir.
 - Public demo export limiter Redis yapılandırılmadığında process belleğine düşer; bu fallback
   restart durumunda sıfırlanır ve çoklu worker/container arasında paylaşılmaz.
 - Mikrofon formatı tarayıcıya göre WebM/Opus veya MP4/AAC olabilir; FFmpeg’in ilgili decoder ile derlenmiş olması gerekir.
 - Bu geliştirme ortamında FFmpeg kurulu değilse gerçek medya smoke testi yapılamaz.
 - Replik zamanları form alanlarıyla düzenlenir; görsel sürükle-bırak timeline henüz yoktur.
 - Platform arayüzündeki Discord bağlantısı ve bazı kurumsal metinler beta/taslak durumundadır.
-  VIP yetkisi backend tarafından uygulanır. Shopier checkout yalnız gerekli provider ayarları
-  mevcutsa açılır; canlı ticari kullanımdan önce gerçek yasal metinler ve gerçek Shopier
-  sandbox/callback doğrulaması tamamlanmalıdır.
+  VIP yetkisi backend tarafından uygulanır. Shopier checkout ancak hem
+  `SHOPIER_ENABLED=true` hem de `COMMERCIAL_READINESS_CONFIRMED=true` iken açılır;
+  bu ikinci ayar varsayılan olarak kapalıdır. Canlı ticari kullanımdan önce gerçek yasal
+  metinler ve Shopier sandbox/callback doğrulaması tamamlanmalıdır.
+- Gizlilik dostu günlük ürün metrikleri varsayılan olarak kapalıdır. Açılmaları için hem
+  backend `PRODUCT_METRICS_ENABLED=true` hem de frontend `VITE_PRODUCT_METRICS_ENABLED=true`
+  ayarı gerekir. Metrikler yalnızca günlük olay toplamlarını saklar; kullanıcı, içerik,
+  e-posta veya medya kimliği tutmaz. Production'da açılmadan önce gizlilik metni ve
+  operasyonel onay tamamlanmalıdır.

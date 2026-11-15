@@ -140,6 +140,25 @@ class FileStorageService:
     def get_video_metadata(self, video_id: str) -> dict[str, Any]:
         return self._read_metadata("video", video_id, "Video")
 
+    def delete_owned_uploads(self, user_id: str) -> None:
+        for metadata_path in METADATA_DIR.glob("video-*.json"):
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            if metadata.get("owner_user_id") != user_id:
+                continue
+
+            video_id = metadata_path.stem[len("video-") :]
+            safe_id = self._validate_uuid(video_id, "Video")
+            filename = str(metadata.get("stored_filename") or "")
+            if not filename or Path(filename).name != filename:
+                raise RuntimeError(f"Invalid stored filename in {metadata_path.name}")
+
+            video_path = UPLOAD_DIR / filename
+            if video_path.exists():
+                if video_path.resolve().parent != UPLOAD_DIR.resolve():
+                    raise RuntimeError(f"Invalid upload path in {metadata_path.name}")
+                video_path.unlink()
+            (METADATA_DIR / f"video-{safe_id}.json").unlink(missing_ok=True)
+
     def get_output_path(self, output_id: str) -> Path:
         metadata = self._read_metadata("output", output_id, "Çıktı videosu")
         path = OUTPUT_DIR / str(metadata.get("stored_filename", ""))

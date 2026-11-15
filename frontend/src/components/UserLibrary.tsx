@@ -194,6 +194,17 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                     </span>
                   )}
                 </div>
+                {project.moderation_status !== 'visible' && (
+                  <p className="mt-3 rounded-xl border border-amber-400/15 bg-amber-400/[0.05] px-3 py-2 text-xs leading-5 text-amber-100/80">
+                    {t('library.moderation_hidden')}{' '}
+                    <a
+                      className="underline"
+                      href={`mailto:destek@dublajlab.com.tr?subject=${encodeURIComponent(`İçerik incelemesi ${project.id}`)}`}
+                    >
+                      {t('library.moderation_appeal')}
+                    </a>
+                  </p>
+                )}
               </div>
 
               {/* Actions */}

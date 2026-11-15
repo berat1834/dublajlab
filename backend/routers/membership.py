@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request, HTTPException
-import hmac
-import hashlib
-import json
+from fastapi import APIRouter, Depends
 
 from backend import models_db, schemas, config
 from backend.routers.auth_router import get_current_user
@@ -16,6 +13,7 @@ router = APIRouter(prefix="/api/membership", tags=["membership"])
 @router.get("/plans")
 def get_membership_plans() -> dict[str, object]:
     return {
+        "checkout_enabled": config.is_checkout_available(),
         "plans": [
             {
                 "id": "free",
@@ -49,52 +47,3 @@ def get_my_membership(
         "has_password": bool(current_user.password_hash),
         "discord_linked": bool(current_user.discord_id),
     })
-
-@router.post("/shopier-webhook")
-async def shopier_webhook(request: Request):
-    """
-    Shopier'den gelen başarılı ödeme bildirimlerini yakalar.
-    Form data veya JSON olarak gelebilir.
-    """
-    secret = config.get_shopier_api_secret()
-    
-    # Try to parse as JSON or Form
-    try:
-        if request.headers.get("content-type") == "application/json":
-            payload = await request.json()
-        else:
-            form = await request.form()
-            payload = dict(form)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid payload")
-
-    status = payload.get("status")
-    email = payload.get("email")
-
-    if status != "success":
-        # Ödeme başarılı değilse yoksay
-        return {"message": "Ignored"}
-
-    if not email:
-        raise HTTPException(status_code=400, detail="Email is missing")
-
-    # Basit bir güvenlik kontrolü (Shopier gerçek hash'ini kullanıyorsanız buraya ekleyin)
-    # Şimdilik sadece secret tanımlı mı diye bakıyoruz ve gelen hash'i kontrol ediyoruz (Örnek).
-    # Gelişmiş entegrasyonlarda Shopier'in HMAC-SHA256 imzası doğrulanmalıdır.
-
-    from backend.database import SessionLocal
-    db = SessionLocal()
-    try:
-        user = db.query(models_db.User).filter(models_db.User.email == email).first()
-        if user:
-            user.membership_tier = "vip"
-            # Aboneliği ömür boyu veya 1 aylık yapabiliriz, şimdilik ömür boyu VIP.
-            db.commit()
-            print(f"Shopier Webhook: {email} adlı kullanıcı VIP yapıldı!")
-            return {"status": "success", "message": "User upgraded to VIP"}
-        else:
-            print(f"Shopier Webhook: {email} e-postasına sahip kullanıcı bulunamadı!")
-            # 200 dönüyoruz ki Shopier tekrar tekrar aynı webhook'u atmasın.
-            return {"status": "ignored", "message": "User not found"}
-    finally:
-        db.close()

@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Boolean, Column, String, DateTime, Integer, Text, UniqueConstraint
+from sqlalchemy import Boolean, Column, String, Date, DateTime, Integer, Text, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
 from backend.database import Base
@@ -150,3 +150,12 @@ class EmailDeliveryEvent(Base):
     failure_reason = Column(String(500), nullable=True)
     occurred_at = Column(DateTime(timezone=True), index=True, nullable=False)
     received_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class ProductMetricDaily(Base):
+    __tablename__ = "product_metric_daily"
+
+    event_date = Column(Date, primary_key=True, nullable=False)
+    event_name = Column(String(40), primary_key=True, nullable=False)
+    event_count = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

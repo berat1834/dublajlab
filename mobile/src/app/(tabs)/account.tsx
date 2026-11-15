@@ -419,7 +419,7 @@ export default function AccountScreen() {
             ))}
             <View style={styles.dangerPanel}>
               <Text style={styles.dangerTitle}>Hesabı sil</Text>
-              <Text style={styles.dangerCopy}>Hesap erişimini ve profilini kalıcı olarak kapatır. Toplulukta paylaştığın dublajlar ile ödeme/işlem kayıtları yasal ve operasyonel gereklilikler nedeniyle korunabilir. Bu işlem geri alınamaz.</Text>
+              <Text style={styles.dangerCopy}>Hesap erişimini ve profilini kalıcı olarak kapatır. Projelerin, çıktı videoların ve ilişkili topluluk verilerin silinir. Ödeme ve işlem kayıtları muhasebe yükümlülükleri nedeniyle saklanabilir. Bu işlem geri alınamaz.</Text>
               {!showDeleteConfirm ? (
                 <Pressable onPress={() => setShowDeleteConfirm(true)} style={styles.dangerButton}>
                   <Text style={styles.dangerButtonText}>Hesabımı kalıcı olarak sil</Text>

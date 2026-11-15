@@ -31,6 +31,7 @@ interface TimelineRecorderProps {
   videoAvailable?: boolean
   exportUnavailableReason?: string
   disabled?: boolean
+  onRecordingStart?: () => void
   onError: (message: string) => void
   onProcess: (
     lines: TimelineLine[],
@@ -52,6 +53,7 @@ export function TimelineRecorder({
   videoAvailable = true,
   exportUnavailableReason = '',
   disabled = false,
+  onRecordingStart,
   onError,
   onProcess,
 }: TimelineRecorderProps) {
@@ -199,6 +201,7 @@ export function TimelineRecorder({
       recorderRef.current = recorder
       setActiveLineId(line.id)
       recorder.start(200)
+      onRecordingStart?.()
 
       const video = videoRef.current
       if (video) {

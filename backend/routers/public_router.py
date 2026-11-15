@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -9,6 +9,8 @@ from backend.services.file_storage import FileStorageService
 from backend.routers.auth_router import get_current_user, get_current_user_optional
 from backend.services.storage_provider import get_storage_provider
 from backend.services.media_access import retention_has_expired
+from backend.config import public_demo_policy
+from backend.services.rate_limit_service import export_rate_limiter, resolve_client_ip
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 storage = FileStorageService()
@@ -135,9 +137,10 @@ def get_public_dub(project_id: str, db: Session = Depends(get_db), current_user:
     )
 
 @router.post("/dubs/{project_id}/report", status_code=201)
-def report_public_dub(
+async def report_public_dub(
     project_id: str,
     payload: schemas.ContentReportCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: models_db.User | None = Depends(get_optional_user)
 ):
@@ -148,7 +151,38 @@ def report_public_dub(
     
     if not project:
         raise HTTPException(status_code=404, detail="Proje bulunamadı.")
-        
+
+    if current_user:
+        duplicate = db.query(models_db.ContentReport).filter(
+            models_db.ContentReport.project_id == project_id,
+            models_db.ContentReport.reporter_user_id == current_user.id,
+            models_db.ContentReport.reason == payload.reason,
+            models_db.ContentReport.details == payload.details,
+            models_db.ContentReport.status == "pending",
+        ).first()
+        if duplicate:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Bu içerik için incelemede olan bir raporunuz var.",
+            )
+
+    reporter_key = (
+        f"user:{current_user.id}"
+        if current_user
+        else f"ip:{resolve_client_ip(request, public_demo_policy().trust_proxy_headers)}"
+    )
+    limit = await export_rate_limiter.consume(
+        reporter_key,
+        10,
+        namespace="report",
+    )
+    if not limit.allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Günlük rapor sınırına ulaştınız. Lütfen daha sonra tekrar deneyin.",
+            headers={"Retry-After": str(limit.retry_after_seconds)},
+        )
+
     report = models_db.ContentReport(
         project_id=project_id,
         reporter_user_id=current_user.id if current_user else None,

@@ -13,6 +13,7 @@ from backend.routers.auth_router import get_current_user
 from backend.config import (
     get_vip_price_amount,
     get_vip_price_currency,
+    is_checkout_available,
     is_shopier_enabled,
     get_shopier_api_secret,
     get_shopier_payment_url,
@@ -28,10 +29,13 @@ async def create_checkout(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if not is_shopier_enabled():
+    if not is_checkout_available():
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Ödeme altyapısı şu anda devre dışı."
+            detail=(
+                "Ödeme altyapısı, yasal satış metinleri ve canlı ödeme akışı "
+                "doğrulanana kadar kullanıma kapalıdır."
+            )
         )
 
     api_secret = get_shopier_api_secret()

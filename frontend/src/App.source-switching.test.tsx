@@ -16,6 +16,7 @@ vi.mock('./lib/api', () => ({
   getMeFromSessionCookie: vi.fn().mockRejectedValue(new Error('anonymous')),
   processRecordings: vi.fn(),
   processVideo: vi.fn(),
+  trackProductEvent: vi.fn(),
   uploadVideo: vi.fn().mockResolvedValue({
     video_id: 'upload-1',
     original_filename: 'clip.mp4',
@@ -76,6 +77,12 @@ function buttonWithText(container: HTMLElement, text: string) {
   return button as HTMLButtonElement
 }
 
+function confirmUploadRights(container: HTMLElement) {
+  const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]')
+  if (!checkbox) throw new Error('Upload rights checkbox not found')
+  checkbox.click()
+}
+
 describe('studio source switching', () => {
   let container: HTMLDivElement
   let root: Root
@@ -108,6 +115,7 @@ describe('studio source switching', () => {
 
   it('preserves the selected upload and recorder state across source tabs', async () => {
     await act(async () => {
+      confirmUploadRights(container)
       buttonWithText(container, 'Select test video').click()
     })
 
@@ -137,6 +145,7 @@ describe('studio source switching', () => {
 
   it('still clears the project through the explicit change-source action', async () => {
     await act(async () => {
+      confirmUploadRights(container)
       buttonWithText(container, 'Select test video').click()
     })
     expect(container.querySelector('[data-testid="timeline-recorder"]')).not.toBeNull()

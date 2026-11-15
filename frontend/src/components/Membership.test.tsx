@@ -31,7 +31,7 @@ describe('Membership', () => {
       ),
     )
 
-    expect(markup).toContain('VIP üyelik al')
+    expect(markup).toContain('Satın alma henüz açılmadı')
     expect(markup).toContain('Ücretsiz')
     expect(markup).toContain('720p')
   })

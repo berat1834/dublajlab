@@ -17,6 +17,32 @@ export const API_BASE_URL = (
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 ).replace(/\/$/, '')
 
+export type ProductEvent =
+  | 'catalog_view'
+  | 'source_upload_selected'
+  | 'source_template_selected'
+  | 'upload_succeeded'
+  | 'upload_failed'
+  | 'recording_started'
+  | 'export_succeeded'
+  | 'export_failed'
+
+export function trackProductEvent(event: ProductEvent): void {
+  if (import.meta.env.VITE_PRODUCT_METRICS_ENABLED !== 'true') return
+
+  void globalThis.fetch(`${API_BASE_URL}/api/analytics/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event }),
+    credentials: 'omit',
+    keepalive: true,
+  }).then((response) => {
+    if (!response.ok) console.warn(`Product metric event was rejected: ${response.status}`)
+  }).catch((error: unknown) => {
+    console.warn('Product metric event could not be sent.', error)
+  })
+}
+
 export function voicePreviewUrl(voiceStyle: VoiceStyle): string {
   return `${API_BASE_URL}/api/video/voice-preview/${encodeURIComponent(voiceStyle)}`
 }
@@ -292,6 +318,13 @@ export async function createCheckout(): Promise<{ checkout_url: string }> {
     headers: getAuthHeaders(),
   })
   return parseResponse<{ checkout_url: string }>(response)
+}
+
+export async function getMembershipPlans(): Promise<{
+  checkout_enabled: boolean
+}> {
+  const response = await fetch(`${API_BASE_URL}/api/membership/plans`)
+  return parseResponse<{ checkout_enabled: boolean }>(response)
 }
 
 export async function startAdminMfaSetup(password: string): Promise<{ secret: string; otpauth_uri: string }> {
@@ -627,7 +660,14 @@ export interface AdminOpsMetrics {
   lipsync_enabled: boolean;
   lipsync_provider: string;
   shopier_enabled: boolean;
+  shopier_checkout_available: boolean;
+  product_metrics_enabled: boolean;
   resend_webhook_configured: boolean;
+  product_metrics_30d: Array<{
+    date: string;
+    event: ProductEvent;
+    count: number;
+  }>;
 
   total_users: number;
   active_vip_users: number;

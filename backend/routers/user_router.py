@@ -1,17 +1,74 @@
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 import os
 
 from backend.database import get_db
+from backend.config import METADATA_DIR
 import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
 from backend.auth import verify_password
 from backend.services.engagement_service import build_engagement_progress
+from backend.services.file_storage import FileStorageService
 from backend.services.media_access import retention_has_expired
+from backend.services.storage_provider import get_storage_provider
 
 router = APIRouter()
+
+
+def _delete_project_and_media(db: Session, project: models_db.DubbingProject) -> None:
+    storage = FileStorageService()
+    provider = get_storage_provider()
+    exports = db.query(models_db.DubbingExport).filter(
+        models_db.DubbingExport.project_id == project.id
+    ).all()
+
+    for export in exports:
+        safe_id = storage._validate_uuid(export.output_video_id, "Çıktı videosu")
+        filename = f"{safe_id}.mp4"
+        try:
+            metadata = storage.get_output_metadata(safe_id)
+        except HTTPException as error:
+            if error.status_code != status.HTTP_404_NOT_FOUND:
+                raise
+        else:
+            filename = str(metadata.get("stored_filename") or filename)
+
+        if Path(filename).name != filename:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Çıktı videosu depolama bilgisi geçersiz.",
+            )
+        if not provider.delete_file(filename):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Proje dosyaları silinemedi. Lütfen daha sonra tekrar deneyin.",
+            )
+
+        try:
+            output_path = storage.get_output_path(safe_id)
+        except HTTPException as error:
+            if error.status_code != status.HTTP_404_NOT_FOUND:
+                raise
+        else:
+            output_path.unlink(missing_ok=True)
+        (METADATA_DIR / f"output-{safe_id}.json").unlink(missing_ok=True)
+
+        db.delete(export)
+
+    db.query(models_db.DubbingLike).filter(
+        models_db.DubbingLike.project_id == project.id
+    ).delete(synchronize_session=False)
+    db.query(models_db.DubbingComment).filter(
+        models_db.DubbingComment.project_id == project.id
+    ).delete(synchronize_session=False)
+    db.query(models_db.ContentReport).filter(
+        models_db.ContentReport.project_id == project.id
+    ).delete(synchronize_session=False)
+    db.delete(project)
 
 
 @router.get("/engagement", response_model=schemas.EngagementProgressResponse)
@@ -31,6 +88,22 @@ def delete_account(body: schemas.AccountDeleteRequest, db: Session = Depends(get
     ):
         raise HTTPException(status_code=400, detail="Geçersiz şifre.")
 
+    projects = db.query(models_db.DubbingProject).filter(
+        models_db.DubbingProject.user_id == current_user.id
+    ).all()
+    for project in projects:
+        _delete_project_and_media(db, project)
+
+    FileStorageService().delete_owned_uploads(current_user.id)
+    db.query(models_db.DubbingLike).filter(
+        models_db.DubbingLike.user_id == current_user.id
+    ).delete(synchronize_session=False)
+    db.query(models_db.DubbingComment).filter(
+        models_db.DubbingComment.user_id == current_user.id
+    ).delete(synchronize_session=False)
+    db.query(models_db.ContentReport).filter(
+        models_db.ContentReport.reporter_user_id == current_user.id
+    ).delete(synchronize_session=False)
     db.delete(current_user)
     db.commit()
     return None
@@ -84,6 +157,11 @@ def update_user_project(project_id: str, project_update: schemas.ProjectUpdate, 
         project.title = project_update.title.strip()
     if project_update.visibility is not None:
         if project_update.visibility == "public":
+            if project.moderation_status != "visible":
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="İnceleme nedeniyle gizlenen proje yeniden yayınlanamaz. Destek ekibine itiraz edebilirsiniz.",
+                )
             export = db.query(models_db.DubbingExport).filter(
                 models_db.DubbingExport.project_id == project.id
             ).order_by(models_db.DubbingExport.created_at.desc()).first()
@@ -133,40 +211,7 @@ def delete_user_project(project_id: str, db: Session = Depends(get_db), current_
     if not project:
         raise HTTPException(status_code=404, detail="Proje bulunamadı.")
 
-    from backend.services.file_storage import FileStorageService
-    storage = FileStorageService()
-
-    exports = db.query(models_db.DubbingExport).filter(models_db.DubbingExport.project_id == project_id).all()
-    for exp in exports:
-        if exp.output_video_id:
-            filename = f"{exp.output_video_id}.mp4"
-            try:
-                meta = storage.get_output_metadata(exp.output_video_id)
-                filename = str(meta.get("stored_filename") or filename)
-            except HTTPException:
-                pass
-
-            from backend.services.storage_provider import get_storage_provider
-            get_storage_provider().delete_file(filename)
-
-            try:
-                video_path = storage.get_output_path(exp.output_video_id)
-                video_path.unlink(missing_ok=True)
-            except HTTPException:
-                pass
-
-            try:
-                # Delete metadata
-                from backend.config import METADATA_DIR
-                safe_id = storage._validate_uuid(exp.output_video_id, "id")
-                meta_path = METADATA_DIR / f"output-{safe_id}.json"
-                meta_path.unlink(missing_ok=True)
-            except Exception:
-                pass
-
-        db.delete(exp)
-
-    db.delete(project)
+    _delete_project_and_media(db, project)
     db.commit()
     return None
 

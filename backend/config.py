@@ -250,6 +250,17 @@ def get_jwt_expire_minutes() -> int:
 def is_shopier_enabled() -> bool:
     return _boolean_setting("SHOPIER_ENABLED", False)
 
+def is_commercial_readiness_confirmed() -> bool:
+    """Keep checkout disabled until legal and live-payment readiness is confirmed."""
+    return _boolean_setting("COMMERCIAL_READINESS_CONFIRMED", False)
+
+def is_checkout_available() -> bool:
+    return is_shopier_enabled() and is_commercial_readiness_confirmed()
+
+def is_product_metrics_enabled() -> bool:
+    """Keep anonymous aggregate product metrics disabled until privacy notice is ready."""
+    return _boolean_setting("PRODUCT_METRICS_ENABLED", False)
+
 def get_shopier_api_key() -> str:
     return os.getenv("SHOPIER_API_KEY", "")
 

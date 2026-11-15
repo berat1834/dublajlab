@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ipaddress
+import hashlib
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta, timezone
 from threading import RLock
@@ -23,15 +24,23 @@ class DailyExportRateLimiter:
 
     def __init__(self, clock: Callable[[], datetime] | None = None) -> None:
         self._clock = clock or (lambda: datetime.now(timezone.utc))
-        self._counts: dict[tuple[str, str], int] = {}
+        self._counts: dict[tuple[str, str, str], int] = {}
         self._lock = RLock()
         
         redis_url = get_redis_url()
         self._redis = redis.from_url(redis_url, decode_responses=True) if redis_url else None
 
-    async def consume(self, client_id: str, limit: int) -> RateLimitResult:
+    async def consume(
+        self,
+        client_id: str,
+        limit: int,
+        *,
+        namespace: str = "export",
+    ) -> RateLimitResult:
         if limit < 1:
-            raise ValueError("Export limiti en az 1 olmalıdır.")
+            raise ValueError("İstek limiti en az 1 olmalıdır.")
+        if not namespace.isalnum():
+            raise ValueError("Rate limit namespace geçersiz.")
 
         now = self._clock()
         if now.tzinfo is None:
@@ -44,8 +53,9 @@ class DailyExportRateLimiter:
             tzinfo=timezone.utc,
         )
         retry_after = max(1, int((reset_at - now).total_seconds()))
-        redis_key = f"rate_limit:export:{client_id}:{day}"
-        mem_key = (client_id, day)
+        client_key = hashlib.sha256(client_id.encode("utf-8")).hexdigest()
+        redis_key = f"rate_limit:{namespace}:{client_key}:{day}"
+        mem_key = (namespace, client_key, day)
 
         if self._redis:
             try:
@@ -71,7 +81,7 @@ class DailyExportRateLimiter:
             self._counts = {
                 stored_key: count
                 for stored_key, count in self._counts.items()
-                if stored_key[1] == day
+                if stored_key[2] == day
             }
             current = self._counts.get(mem_key, 0)
             if current >= limit:
@@ -88,7 +98,7 @@ class DailyExportRateLimiter:
             
         if self._redis:
             try:
-                keys = await self._redis.keys("rate_limit:export:*")
+                keys = await self._redis.keys("rate_limit:*")
                 if keys:
                     await self._redis.delete(*keys)
             except Exception:

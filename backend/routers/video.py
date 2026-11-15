@@ -106,6 +106,7 @@ async def upload_video(
                 "duration_seconds": info.duration_seconds,
                 "size_bytes": size,
                 "has_audio": info.has_audio,
+                "owner_user_id": current_user.id if current_user else None,
             },
         )
     except HTTPException:

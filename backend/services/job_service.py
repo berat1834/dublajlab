@@ -128,6 +128,35 @@ class JobRegistry:
         await self._save_to_redis(updated)
         return updated.model_copy(deep=True)
 
+    async def recover_interrupted_jobs(self) -> int:
+        """Mark Redis-backed jobs interrupted by a process restart as terminal failures."""
+        if not self._redis:
+            return 0
+
+        recovered = 0
+        try:
+            async for key in self._redis.scan_iter(match="job:*"):
+                data = await self._redis.get(key)
+                if not data:
+                    continue
+                job = JobResponse.model_validate_json(data)
+                if job.status not in {JobStatus.QUEUED, JobStatus.PROCESSING}:
+                    continue
+                failed = job.model_copy(update={
+                    "status": JobStatus.FAILED,
+                    "message": "Sunucu yeniden başlatıldığı için export kesildi.",
+                    "error": "İşlem tamamlanamadı. Lütfen yeniden deneyin.",
+                })
+                with self._lock:
+                    self._jobs[job.job_id] = failed
+                await self._save_to_redis(failed)
+                recovered += 1
+        except Exception:
+            logger.exception("Could not recover interrupted jobs from Redis.")
+            raise
+
+        return recovered
+
 
 class DubbingJobService:
     def __init__(

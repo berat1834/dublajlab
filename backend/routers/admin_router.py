@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Literal
 from datetime import datetime, timedelta, timezone
 
 from backend.database import get_db
+from backend import config
 import backend.models_db as models_db
 import backend.schemas as schemas
 from backend.routers.auth_router import get_current_user
@@ -129,6 +130,20 @@ def update_report_status(
     report.reviewed_at = datetime.now(timezone.utc)
     report.reviewed_by = admin.id
     _record_audit(db, admin, "report_status_updated", "report", report.id, f"status={status}")
+    if status == "action_taken":
+        project = db.query(models_db.DubbingProject).filter(
+            models_db.DubbingProject.id == report.project_id
+        ).first()
+        if project:
+            project.moderation_status = "hidden"
+            _record_audit(
+                db,
+                admin,
+                "project_moderation_updated",
+                "project",
+                project.id,
+                f"moderation_status=hidden; report_id={report.id}",
+            )
     db.commit()
     db.refresh(report)
     return report
@@ -278,6 +293,18 @@ async def get_ops_metrics(
         func.max(models_db.EmailDeliveryEvent.occurred_at)
     ).scalar()
 
+    product_metrics_since = now.date() - timedelta(days=29)
+    product_metrics = db.query(
+        models_db.ProductMetricDaily.event_date,
+        models_db.ProductMetricDaily.event_name,
+        models_db.ProductMetricDaily.event_count,
+    ).filter(
+        models_db.ProductMetricDaily.event_date >= product_metrics_since,
+    ).order_by(
+        models_db.ProductMetricDaily.event_date.desc(),
+        models_db.ProductMetricDaily.event_name,
+    ).all() if config.is_product_metrics_enabled() else []
+
     # 3. Recent failed jobs (projects with status=failed)
     recent_failed = db.query(models_db.DubbingProject).filter(models_db.DubbingProject.status == "failed").order_by(models_db.DubbingProject.created_at.desc()).limit(10).all()
     recent_failed_list = [
@@ -306,6 +333,8 @@ async def get_ops_metrics(
         "lipsync_enabled": lip_sync_enabled,
         "lipsync_provider": lip_sync_provider,
         "shopier_enabled": is_shopier_enabled(),
+        "shopier_checkout_available": config.is_checkout_available(),
+        "product_metrics_enabled": config.is_product_metrics_enabled(),
         "resend_webhook_configured": bool(os.getenv("RESEND_WEBHOOK_SECRET", "").strip()),
 
         "total_users": total_users,
@@ -326,6 +355,14 @@ async def get_ops_metrics(
         "email_complained_24h": email_event_counts.get("email.complained", 0),
         "email_failed_24h": email_event_counts.get("email.failed", 0),
         "email_last_event_at": email_last_event_at.isoformat() if email_last_event_at else None,
+        "product_metrics_30d": [
+            {
+                "date": event_date.isoformat(),
+                "event": event_name,
+                "count": event_count,
+            }
+            for event_date, event_name, event_count in product_metrics
+        ],
 
         "recent_failed_jobs": recent_failed_list
     }
