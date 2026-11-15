@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { router, type Href } from 'expo-router';
 
 import { ActionButton, BrandHeader, EmptyState, Screen } from '@/components/ui';
@@ -72,13 +72,15 @@ export default function CommunityScreen() {
             <View style={styles.reactionRow}>
               <Text style={styles.stats}>▶ {item.view_count}</Text>
               <Pressable
-                disabled={!token}
                 accessibilityLabel={item.liked_by_me ? 'Beğeniyi kaldır' : 'Beğen'}
                 onPress={async () => {
-                  if (!token) return;
+                  if (!token) {
+                    router.navigate('/account');
+                    return;
+                  }
                   const liking = !item.liked_by_me;
                   setDubs((current) => current.map((dub) => dub.project_id === item.project_id ? { ...dub, liked_by_me: liking, like_count: Math.max(0, dub.like_count + (liking ? 1 : -1)) } : dub));
-                  try { await api.likeDub(item.project_id, liking, token); } catch { void loadDubs(); }
+                  try { await api.likeDub(item.project_id, liking, token); } catch (reason) { Alert.alert('Beğeni güncellenemedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); void loadDubs(); }
                 }}>
                 <Text style={[styles.like, item.liked_by_me && styles.liked]}>♥ {item.like_count}</Text>
               </Pressable>

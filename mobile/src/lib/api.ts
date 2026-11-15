@@ -1,5 +1,6 @@
 import { fetch as expoFetch } from 'expo/fetch';
 import { File, Paths } from 'expo-file-system';
+import type { VideoSource } from 'expo-video';
 import type { DubComment, DubbingExport, DubbingProject, EngagementProgress, JobResponse, MembershipPlan, PublicDub, TimelineLine, UploadResponse, User, VideoTemplate, VoiceStyle } from '@/types';
 
 export const API_BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.dublajlab.com.tr').replace(/\/$/, '');
@@ -39,6 +40,11 @@ async function request<T>(path: string, init: RequestInit = {}, token?: string |
 function json(body: unknown): RequestInit { return { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }; }
 function authHeaders(token?: string | null) { return token ? { Authorization: `Bearer ${token}` } : undefined; }
 export function absoluteApiUrl(path: string) { return /^https?:\/\//i.test(path) ? path : `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`; }
+export function videoSource(path: string, token?: string | null): VideoSource {
+  const uri = absoluteApiUrl(path);
+  const isApiUrl = new URL(uri).origin === new URL(API_BASE_URL).origin;
+  return token && isApiUrl ? { uri, headers: { Authorization: `Bearer ${token}` } } : uri;
+}
 export function templateMediaUrl(path: string) { return /^https?:\/\//i.test(path) ? path : `${WEB_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`; }
 export function voicePreviewUrl(style: VoiceStyle) { return `${API_BASE_URL}/api/video/voice-preview/${encodeURIComponent(style)}`; }
 
@@ -55,6 +61,14 @@ async function uploadTemplateVideo(template: VideoTemplate, token?: string | nul
   const destination = new File(Paths.cache, `${template.id}${extension}`);
   const file = await File.downloadFileAsync(templateMediaUrl(template.video_url), destination, { idempotent: true });
   return uploadFile(file.uri, `${template.id}${extension}`, 'video/mp4', token);
+}
+
+async function downloadExport(path: string, fileName: string, token: string) {
+  const uri = absoluteApiUrl(path);
+  const headers = new URL(uri).origin === new URL(API_BASE_URL).origin
+    ? { Authorization: 'Bearer ' + token }
+    : undefined;
+  return File.downloadFileAsync(uri, new File(Paths.document, fileName), { idempotent: true, headers });
 }
 
 export type ExportOptions = { muteOriginalAudio: boolean; burnSubtitles: boolean; applyLipSync: boolean };
@@ -96,14 +110,18 @@ export const api = {
   engagement: (token: string) => request<EngagementProgress>('/api/me/engagement', {}, token),
   projects: (token: string) => request<DubbingProject[]>('/api/me/projects', {}, token),
   exports: (token: string) => request<DubbingExport[]>('/api/me/exports', {}, token),
+  downloadExport,
   updateProject: (id: string, update: { title?: string; visibility?: 'private' | 'public' }, token: string) => request<DubbingProject>(`/api/me/projects/${id}`, { method: 'PATCH', ...json(update) }, token),
   deleteProject: (id: string, token: string) => request<void>(`/api/me/projects/${id}`, { method: 'DELETE' }, token),
+  deleteAccount: (confirmation: string, password: string | null, token: string) => request<void>('/api/me/account', { method: 'DELETE', ...json({ confirmation, password }) }, token),
   updateProfile: (displayName: string, avatarUrl: string | null, token: string) => request<User>('/api/me/profile', { method: 'PATCH', ...json({ display_name: displayName, avatar_url: avatarUrl }) }, token),
+  startAdminMfaSetup: (password: string, token: string) => request<{ secret: string; otpauth_uri: string }>('/api/auth/mfa/setup', { method: 'POST', ...json({ password }) }, token),
+  confirmAdminMfaSetup: (code: string, token: string) => request<{ recovery_codes: string[] }>('/api/auth/mfa/setup/confirm', { method: 'POST', ...json({ code }) }, token),
   register: (email: string, password: string, displayName: string) => request<User>('/api/auth/register', { method: 'POST', ...json({ email, password, display_name: displayName }) }),
   resendVerification: (email: string) => request<{ message: string }>('/api/auth/resend-verification', { method: 'POST', ...json({ email }) }),
   login: (email: string, password: string) => request<{ access_token: string; token_type: string }>('/api/auth/mobile/login', { method: 'POST', ...json({ email, password }) }),
   forgotPassword: (email: string) => request<{ message: string }>('/api/auth/forgot-password', { method: 'POST', ...json({ email, language: 'TR' }) }),
-  membershipPlans: () => request<MembershipPlan[]>('/api/membership/plans'),
+  membershipPlans: () => request<{ plans: MembershipPlan[] }>('/api/membership/plans'),
   checkout: (token: string) => request<{ checkout_url: string }>('/api/payments/checkout?plan=monthly', { method: 'POST' }, token),
   oauthLoginUrl: (provider: 'google' | 'discord') => `${API_BASE_URL}/api/auth/${provider}/login?return_to=${encodeURIComponent(MOBILE_OAUTH_CALLBACK)}`,
   uploadFile, uploadTemplateVideo, submitRecordings, submitAi,

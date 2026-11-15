@@ -491,6 +491,7 @@ def read_users_me(current_user: models_db.User = Depends(get_current_user)):
     return response.model_copy(update={
         "has_active_vip": has_active_vip(current_user),
         "has_password": bool(current_user.password_hash),
+        "discord_linked": bool(current_user.discord_id),
     })
 
 

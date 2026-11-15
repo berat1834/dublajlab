@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, type Href } from 'expo-router';
 
@@ -29,7 +29,20 @@ export default function AccountScreen() {
   const [progress, setProgress] = useState<EngagementProgress | null>(null);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [displayName, setDisplayName] = useState('');
-  const [profileName, setProfileName] = useState('');
+  const [profileName, setProfileName] = useState(user?.display_name ?? '');
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url || '');
+  const [previousUser, setPreviousUser] = useState(user);
+  const [profileBusy, setProfileBusy] = useState(false);
+  const [verificationBusy, setVerificationBusy] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteName, setDeleteName] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [mfaPassword, setMfaPassword] = useState('');
+  const [mfaSecret, setMfaSecret] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaRecoveryCodes, setMfaRecoveryCodes] = useState<string[]>([]);
+  const [mfaBusy, setMfaBusy] = useState(false);
 
   const normalizedEmail = email.trim().toLocaleLowerCase('tr-TR');
   const credentialsValid = useMemo(
@@ -104,11 +117,81 @@ export default function AccountScreen() {
     void loadProgress();
   }, [loadProgress]);
 
-  useEffect(() => {
-    // Mirror the authenticated profile after session hydration.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (user) setProfileName(user.display_name);
-  }, [user]);
+  if (user && user !== previousUser) {
+    setPreviousUser(user);
+    setProfileName(user.display_name);
+    setAvatarUrl(user.avatar_url || '');
+  }
+
+  const saveProfile = useCallback(async () => {
+    if (!token || !user) return;
+    const trimmedAvatar = avatarUrl.trim();
+    if (trimmedAvatar) {
+      try {
+        const parsed = new URL(trimmedAvatar);
+        if (!['http:', 'https:'].includes(parsed.protocol)) throw new Error('URL scheme');
+      } catch {
+        Alert.alert('Profil kaydedilemedi', 'Avatar için http:// veya https:// ile başlayan geçerli bir görsel bağlantısı gir.');
+        return;
+      }
+    }
+    setProfileBusy(true);
+    try {
+      await api.updateProfile(profileName.trim(), trimmedAvatar || null, token);
+      await refreshUser();
+      Alert.alert('Kaydedildi', 'Profilin güncellendi.');
+    } catch (reason) {
+      Alert.alert('Kaydedilemedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.');
+    } finally {
+      setProfileBusy(false);
+    }
+  }, [avatarUrl, profileName, refreshUser, token, user]);
+
+  const deleteAccount = useCallback(async () => {
+    if (!token || !user) return;
+    setDeleting(true);
+    try {
+      await api.deleteAccount(deleteName, deletePassword || null, token);
+      await logout();
+      setShowDeleteConfirm(false);
+      Alert.alert('Hesap silindi', 'Hesap erişimin kapatıldı. Topluluk paylaşımları ile yasal olarak saklanması gereken işlem kayıtları korunabilir.');
+    } catch (reason) {
+      Alert.alert('Hesap silinemedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.');
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteName, deletePassword, logout, token, user]);
+
+  const startMfaSetup = useCallback(async () => {
+    if (!token) return;
+    setMfaBusy(true);
+    try {
+      const result = await api.startAdminMfaSetup(mfaPassword, token);
+      setMfaSecret(result.secret);
+      setMfaPassword('');
+    } catch (reason) {
+      Alert.alert('MFA kurulumu başlatılamadı', reason instanceof Error ? reason.message : 'Tekrar deneyin.');
+    } finally {
+      setMfaBusy(false);
+    }
+  }, [mfaPassword, token]);
+
+  const confirmMfaSetup = useCallback(async () => {
+    if (!token) return;
+    setMfaBusy(true);
+    try {
+      const result = await api.confirmAdminMfaSetup(mfaCode.trim(), token);
+      setMfaRecoveryCodes(result.recovery_codes);
+      setMfaSecret('');
+      setMfaCode('');
+      await refreshUser();
+      Alert.alert('Yönetici MFA etkin', 'Kurtarma kodlarını güvenli bir yere kaydet. Bu kodlar tekrar gösterilmez.');
+    } catch (reason) {
+      Alert.alert('MFA doğrulanamadı', reason instanceof Error ? reason.message : 'Tekrar deneyin.');
+    } finally {
+      setMfaBusy(false);
+    }
+  }, [mfaCode, refreshUser, token]);
 
   const completionPercent = useMemo(() => {
     if (!progress?.tasks.length) return 0;
@@ -195,6 +278,23 @@ export default function AccountScreen() {
           </View>
         ) : (
           <>
+            <View style={styles.accountIdentity}>
+              {user.avatar_url ? (
+                <Image source={{ uri: user.avatar_url }} style={styles.accountAvatar} />
+              ) : (
+                <View style={styles.accountAvatarFallback}>
+                  <Text style={styles.accountInitial}>{user.display_name.charAt(0).toLocaleUpperCase('tr-TR')}</Text>
+                </View>
+              )}
+              <View style={styles.identityCopy}>
+                <Text style={styles.identityName}>{user.display_name}</Text>
+                <Text style={styles.identityEmail}>{user.email}</Text>
+                <Text style={styles.identityTier}>{user.has_active_vip ? 'VIP üye' : 'Acemi Denek · Ücretsiz'}</Text>
+              </View>
+              <Pressable onPress={() => router.navigate('/profile' as Href)} style={styles.profileLink}>
+                <Text style={styles.profileLinkText}>Profilim</Text>
+              </Pressable>
+            </View>
             <View style={styles.profile}>
               <View><Text style={styles.label}>ÜYELİK</Text><Text style={styles.value}>{user.has_active_vip ? 'VIP' : 'Ücretsiz'}</Text></View>
               <View><Text style={styles.label}>BUGÜN</Text><Text style={styles.value}>{progress?.today_xp ?? 0} XP</Text></View>
@@ -203,9 +303,109 @@ export default function AccountScreen() {
             <View style={styles.panel}>
               <Text style={styles.sectionTitle}>Profil ayarları</Text>
               <TextInput value={profileName} onChangeText={setProfileName} maxLength={50} placeholder="Görünen ad" placeholderTextColor={theme.muted} style={styles.input} />
-              <ActionButton label="Profili kaydet" disabled={profileName.trim().length < 2 || profileName.trim() === user.display_name} onPress={async () => { if (!token) return; try { await api.updateProfile(profileName.trim(), user.avatar_url || null, token); await refreshUser(); Alert.alert('Kaydedildi', 'Profilin güncellendi.'); } catch (reason) { Alert.alert('Kaydedilemedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); } }} />
-              {!user.has_active_vip ? <ActionButton label="VIP üyeliği incele" onPress={async () => { if (!token) return; try { const result = await api.checkout(token); await Linking.openURL(result.checkout_url); } catch (reason) { Alert.alert('Ödeme açılamadı', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); } }} /> : <Text style={styles.vipActive}>✓ VIP özelliklerin aktif</Text>}
-              {!user.email_verified ? <ActionButton label="Doğrulama e-postasını tekrar gönder" onPress={async () => { try { const result = await api.resendVerification(user.email); Alert.alert('Gönderildi', result.message); } catch (reason) { Alert.alert('Gönderilemedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); } }} /> : null}
+              <Text style={styles.fieldLabel}>Avatar görsel bağlantısı</Text>
+              <TextInput
+                autoCapitalize="none"
+                keyboardType="url"
+                value={avatarUrl}
+                onChangeText={setAvatarUrl}
+                maxLength={255}
+                placeholder="https://..."
+                placeholderTextColor={theme.muted}
+                style={styles.input}
+              />
+              <Text style={styles.hint}>Bio ve hesabı gizleme ayarları web’de de henüz kullanıma açık değil.</Text>
+              <ActionButton
+                label={profileBusy ? 'Kaydediliyor…' : 'Değişiklikleri kaydet'}
+                disabled={profileBusy || profileName.trim().length < 2 || (profileName.trim() === user.display_name && avatarUrl.trim() === (user.avatar_url || ''))}
+                onPress={() => void saveProfile()}
+              />
+            </View>
+            <View style={styles.panel}>
+              <Text style={styles.sectionTitle}>Üyelik ve güvenlik</Text>
+              <Text style={styles.copy}>{user.has_active_vip ? 'VIP özelliklerin aktif.' : 'Ücretsiz üyelik kullanıyorsun. VIP ile 1080p dışa aktarma ve AI ses özelliklerine erişebilirsin.'}</Text>
+              <ActionButton label="Üyelik ayrıntıları" onPress={() => router.navigate('/membership' as Href)} />
+              <Text style={user.email_verified ? styles.verified : styles.unverified}>
+                {user.email_verified ? '✓ E-posta adresin doğrulandı' : 'E-posta adresin henüz doğrulanmadı'}
+              </Text>
+              {!user.email_verified ? <ActionButton
+                label={verificationBusy ? 'Gönderiliyor…' : 'Doğrulama e-postasını tekrar gönder'}
+                disabled={verificationBusy}
+                onPress={async () => {
+                  setVerificationBusy(true);
+                  try {
+                    const result = await api.resendVerification(user.email);
+                    Alert.alert('Doğrulama e-postası', result.message);
+                  } catch (reason) {
+                    Alert.alert('Gönderilemedi', reason instanceof Error ? reason.message : 'Tekrar deneyin.');
+                  } finally {
+                    setVerificationBusy(false);
+                  }
+                }}
+              /> : null}
+              <Pressable onPress={() => void Linking.openURL('mailto:destek@dublajlab.com.tr?subject=%C5%9Eifre%20S%C4%B1f%C4%B1rlama')}>
+                <Text style={styles.supportLink}>Parola ve güvenlik yardımı için destekle iletişime geç</Text>
+              </Pressable>
+            </View>
+            <View style={styles.panel}>
+              <Text style={styles.sectionTitle}>Discord bağlantısı</Text>
+              <Text style={styles.copy}>Discord hesabını bağlayarak sosyal giriş seçeneklerini kullanabilirsin.</Text>
+              {user.discord_linked ? (
+                <Text style={styles.discordConnected}>✓ Discord hesabı bağlı</Text>
+              ) : (
+                <Text style={styles.hint}>Güvenli hesap bağlama akışı tamamlanana kadar mevcut hesaba Discord ekleme mobilde kapalıdır. Discord ile giriş, giriş ekranından ayrı bir oturum olarak kullanılabilir.</Text>
+              )}
+            </View>
+            {user.role === 'admin' ? (
+              <View style={styles.panel}>
+                <Text style={styles.sectionTitle}>Yönetici MFA</Text>
+                <Text style={user.mfa_enabled ? styles.verified : styles.copy}>
+                  {user.mfa_enabled ? '✓ Çok faktörlü kimlik doğrulama etkin' : 'Yönetici hesabını authenticator uygulamasıyla koru.'}
+                </Text>
+                {!user.mfa_enabled && !mfaSecret ? (
+                  user.has_password ? (
+                    <>
+                      <TextInput
+                        autoComplete="current-password"
+                        secureTextEntry
+                        value={mfaPassword}
+                        onChangeText={setMfaPassword}
+                        placeholder="Mevcut parolan"
+                        placeholderTextColor={theme.muted}
+                        style={styles.input}
+                      />
+                      <ActionButton label={mfaBusy ? 'Başlatılıyor…' : 'MFA kurulumunu başlat'} disabled={mfaBusy || !mfaPassword} onPress={() => void startMfaSetup()} />
+                    </>
+                  ) : <Text style={styles.unverified}>MFA kurmak için hesabında parola bulunmalı.</Text>
+                ) : null}
+                {!user.mfa_enabled && mfaSecret ? (
+                  <>
+                    <Text style={styles.copy}>Authenticator uygulamasına bu gizli anahtarı ekle:</Text>
+                    <Text selectable style={styles.mfaSecret}>{mfaSecret}</Text>
+                    <TextInput
+                      keyboardType="number-pad"
+                      autoComplete="one-time-code"
+                      value={mfaCode}
+                      onChangeText={setMfaCode}
+                      placeholder="6 haneli doğrulama kodu"
+                      placeholderTextColor={theme.muted}
+                      style={styles.input}
+                    />
+                    <ActionButton label={mfaBusy ? 'Doğrulanıyor…' : 'MFA’yı etkinleştir'} disabled={mfaBusy || mfaCode.trim().length < 6} onPress={() => void confirmMfaSetup()} />
+                  </>
+                ) : null}
+                {mfaRecoveryCodes.length ? (
+                  <View style={styles.recoveryPanel}>
+                    <Text style={styles.recoveryTitle}>Kurtarma kodları — şimdi güvenli yere kaydet</Text>
+                    <Text selectable style={styles.recoveryCodes}>{mfaRecoveryCodes.join('\n')}</Text>
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+            <View style={styles.panel}>
+              <Text style={styles.sectionTitle}>Gizlilik</Text>
+              <Text style={styles.copy}>Hesap gizleme seçeneği web’de henüz kullanıma açık değil. Paylaştığın dublajların görünürlüğünü Kütüphanem’den yönetebilirsin.</Text>
+              <Pressable onPress={() => router.navigate('/library')}><Text style={styles.supportLink}>Kütüphanemi aç</Text></Pressable>
             </View>
             <Text style={styles.sectionTitle}>Günlük görevler · %{completionPercent}</Text>
             {progress?.tasks.map((task) => (
@@ -217,9 +417,58 @@ export default function AccountScreen() {
                 </View>
               </View>
             ))}
+            <View style={styles.dangerPanel}>
+              <Text style={styles.dangerTitle}>Hesabı sil</Text>
+              <Text style={styles.dangerCopy}>Hesap erişimini ve profilini kalıcı olarak kapatır. Toplulukta paylaştığın dublajlar ile ödeme/işlem kayıtları yasal ve operasyonel gereklilikler nedeniyle korunabilir. Bu işlem geri alınamaz.</Text>
+              {!showDeleteConfirm ? (
+                <Pressable onPress={() => setShowDeleteConfirm(true)} style={styles.dangerButton}>
+                  <Text style={styles.dangerButtonText}>Hesabımı kalıcı olarak sil</Text>
+                </Pressable>
+              ) : (
+                <View style={styles.deleteForm}>
+                  <Text style={styles.dangerCopy}>Devam etmek için görünen adını aynen yaz: {user.display_name}</Text>
+                  <TextInput value={deleteName} onChangeText={setDeleteName} placeholder="Görünen ad" placeholderTextColor={theme.muted} style={styles.input} />
+                  {user.has_password ? <TextInput
+                    autoComplete="current-password"
+                    secureTextEntry
+                    value={deletePassword}
+                    onChangeText={setDeletePassword}
+                    placeholder="Mevcut parolan"
+                    placeholderTextColor={theme.muted}
+                    style={styles.input}
+                  /> : null}
+                  <Text style={styles.dangerCopy}>OAuth hesabıysa parola istenmez. Hesap silindiğinde açık oturum da kapatılır.</Text>
+                  <ActionButton
+                    label={deleting ? 'Hesap siliniyor…' : 'Silme işlemini onayla'}
+                    disabled={deleting || deleteName !== user.display_name || (Boolean(user.has_password) && !deletePassword)}
+                    onPress={() => void deleteAccount()}
+                  />
+                  <Pressable disabled={deleting} onPress={() => { setShowDeleteConfirm(false); setDeleteName(''); setDeletePassword(''); }} style={styles.cancelDelete}>
+                    <Text style={styles.cancelDeleteText}>Vazgeç</Text>
+                  </Pressable>
+                </View>
+              )}
+            </View>
             <View style={styles.logout}><ActionButton label="Çıkış yap" onPress={() => void logout()} /></View>
           </>
         )}
+        <View style={styles.panel}>
+          <Text style={styles.sectionTitle}>Diğer bölümler</Text>
+          <Pressable onPress={() => router.navigate('/daily')} style={styles.navRow}><Text style={styles.navText}>Günün Dublajı, görevler ve başarımlar</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push('/help')} style={styles.navRow}><Text style={styles.navText}>Nasıl kullanılır? · Yardım</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/preview/[feature]', params: { feature: 'favorites' } })} style={styles.navRow}><Text style={styles.navText}>Favoriler · yakında</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/preview/[feature]', params: { feature: 'scenes' } })} style={styles.navRow}><Text style={styles.navText}>Kullanıcı sahneleri · yakında</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/preview/[feature]', params: { feature: 'credits' } })} style={styles.navRow}><Text style={styles.navText}>Krediler · yakında</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/preview/[feature]', params: { feature: 'room' } })} style={styles.navRow}><Text style={styles.navText}>Çok oyunculu oda · yakında</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Text style={styles.legalLabel}>Bilgi ve yasal metinler · taslak</Text>
+          <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'about' } })} style={styles.navRow}><Text style={styles.navText}>Hakkımızda</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'contact' } })} style={styles.navRow}><Text style={styles.navText}>İletişim ve destek</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'privacy' } })} style={styles.navRow}><Text style={styles.navText}>Gizlilik politikası</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'terms' } })} style={styles.navRow}><Text style={styles.navText}>Kullanım koşulları</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'copyright' } })} style={styles.navRow}><Text style={styles.navText}>Telif bildirimi</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'refund' } })} style={styles.navRow}><Text style={styles.navText}>İade ve iptal koşulları</Text><Text style={styles.chevron}>›</Text></Pressable>
+          <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'distance_selling' } })} style={styles.navRow}><Text style={styles.navText}>Mesafeli satış sözleşmesi</Text><Text style={styles.chevron}>›</Text></Pressable>
+        </View>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="DublajLab stüdyo konumunu haritada göster"
@@ -243,8 +492,40 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   content: { paddingBottom: 35 },
   loader: { flex: 1 },
+  accountIdentity: { flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: 20, marginTop: 8, marginBottom: 6 },
+  accountAvatar: { width: 58, height: 58, borderRadius: 16 },
+  accountAvatarFallback: { width: 58, height: 58, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: theme.greenDark, borderWidth: 1, borderColor: '#426715' },
+  accountInitial: { color: theme.green, fontSize: 23, fontWeight: '900' },
+  identityCopy: { flex: 1 },
+  identityName: { color: theme.text, fontSize: 17, fontWeight: '900' },
+  identityEmail: { color: theme.muted, fontSize: 12, marginTop: 2 },
+  identityTier: { color: theme.green, fontSize: 11, fontWeight: '800', marginTop: 4 },
+  profileLink: { padding: 10, borderRadius: 11, backgroundColor: theme.surfaceRaised },
+  profileLinkText: { color: theme.text, fontSize: 12, fontWeight: '900' },
   panel: { margin: 20, marginTop: 8, padding: 18, gap: 13, backgroundColor: theme.surface, borderRadius: 22, borderWidth: 1, borderColor: theme.border },
   copy: { color: theme.muted, lineHeight: 22, marginBottom: 5 },
+  fieldLabel: { color: theme.text, fontSize: 13, fontWeight: '800', marginBottom: -6 },
+  hint: { color: theme.muted, fontSize: 12, lineHeight: 18 },
+  verified: { color: theme.green, fontWeight: '800', lineHeight: 20 },
+  unverified: { color: '#fbbf24', fontWeight: '800', lineHeight: 20 },
+  supportLink: { color: theme.green, fontWeight: '800', lineHeight: 20, textDecorationLine: 'underline' },
+  navRow: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: theme.border },
+  navText: { flex: 1, color: theme.text, fontWeight: '700', paddingVertical: 10 },
+  chevron: { color: theme.muted, fontSize: 24, paddingLeft: 10 },
+  legalLabel: { color: theme.muted, fontSize: 11, fontWeight: '900', letterSpacing: 0.8, textTransform: 'uppercase', paddingTop: 10 },
+  discordConnected: { color: '#c7d2fe', fontWeight: '900', padding: 12, textAlign: 'center', backgroundColor: '#202441', borderRadius: 13 },
+  mfaSecret: { color: theme.green, backgroundColor: theme.background, borderRadius: 12, padding: 14, fontFamily: 'monospace', overflow: 'hidden' },
+  recoveryPanel: { padding: 14, borderRadius: 14, backgroundColor: '#2a210c', borderWidth: 1, borderColor: '#854d0e' },
+  recoveryTitle: { color: '#fde68a', fontWeight: '900', lineHeight: 19, marginBottom: 8 },
+  recoveryCodes: { color: theme.text, fontFamily: 'monospace', lineHeight: 23 },
+  dangerPanel: { marginHorizontal: 20, marginTop: 20, padding: 18, gap: 12, borderRadius: 20, backgroundColor: '#260f14', borderWidth: 1, borderColor: '#7f1d1d' },
+  dangerTitle: { color: '#fb7185', fontSize: 18, fontWeight: '900' },
+  dangerCopy: { color: '#fda4af', lineHeight: 20 },
+  dangerButton: { alignSelf: 'flex-start', borderRadius: 12, padding: 12, backgroundColor: '#4c101d', borderWidth: 1, borderColor: '#7f1d1d' },
+  dangerButtonText: { color: '#fecdd3', fontWeight: '900' },
+  deleteForm: { gap: 12 },
+  cancelDelete: { alignItems: 'center', padding: 12 },
+  cancelDeleteText: { color: theme.muted, fontWeight: '800' },
   input: { minHeight: 52, color: theme.text, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, borderRadius: 15, paddingHorizontal: 15 },
   passwordRow: { minHeight: 52, flexDirection: 'row', alignItems: 'center', backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, borderRadius: 15, overflow: 'hidden' },
   passwordInput: { flex: 1, minHeight: 52, color: theme.text, paddingLeft: 15, paddingRight: 8 },

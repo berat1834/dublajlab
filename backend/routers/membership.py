@@ -22,12 +22,18 @@ def get_membership_plans() -> dict[str, object]:
                 "name": "Ücretsiz",
                 "max_export_resolution": "720p",
                 "ai_voice": False,
+                "price_amount": 0,
+                "price_currency": config.get_vip_price_currency(),
+                "billing_period": "month",
             },
             {
                 "id": "vip",
                 "name": "VIP",
                 "max_export_resolution": "1080p",
                 "ai_voice": True,
+                "price_amount": config.get_vip_price_amount(),
+                "price_currency": config.get_vip_price_currency(),
+                "billing_period": "month",
             },
         ]
     }
@@ -41,6 +47,7 @@ def get_my_membership(
     return response.model_copy(update={
         "has_active_vip": has_active_vip(current_user),
         "has_password": bool(current_user.password_hash),
+        "discord_linked": bool(current_user.discord_id),
     })
 
 @router.post("/shopier-webhook")

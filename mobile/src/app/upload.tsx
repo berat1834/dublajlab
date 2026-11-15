@@ -8,15 +8,15 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import { ActionButton, BrandHeader, Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
 import { useAuth } from '@/context/AuthContext';
-import { absoluteApiUrl, api } from '@/lib/api';
+import { api, videoSource } from '@/lib/api';
 import { notifyDubReady } from '@/lib/notifications';
 import type { JobResponse, TimelineLine, UploadResponse, VoiceStyle } from '@/types';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const newLine = (index: number, duration: number): TimelineLine => ({ id: `line-${Date.now()}-${index}`, start: index ? Math.min(duration, index * 2) : 0, end: Math.min(duration, (index + 1) * 2), text: '' });
 
-function ResultVideo({ uri }: { uri: string }) {
-  const resultPlayer = useVideoPlayer(absoluteApiUrl(uri));
+function ResultVideo({ uri, token }: { uri: string; token?: string | null }) {
+  const resultPlayer = useVideoPlayer(videoSource(uri, token));
   return <VideoView player={resultPlayer} style={styles.video} nativeControls contentFit="contain" fullscreenOptions={{ enable: true }} />;
 }
 
@@ -36,6 +36,7 @@ export default function UploadStudioScreen() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const player = useVideoPlayer(localUri);
 
   const validLines = useMemo(() => lines.length > 0 && lines.every((line) => line.text.trim() && line.start >= 0 && line.end > line.start && (!upload || line.end <= upload.duration_seconds + 0.05)), [lines, upload]);
@@ -43,6 +44,7 @@ export default function UploadStudioScreen() {
   const ready = mode === 'ai' ? Boolean(validLines && token && user?.has_active_vip) : allRecorded;
 
   const pickVideo = useCallback(async () => {
+    if (!rightsConfirmed) return;
     const picked = await DocumentPicker.getDocumentAsync({ type: ['video/mp4', 'video/quicktime', 'video/webm'], copyToCacheDirectory: true });
     if (picked.canceled) return;
     const asset = picked.assets[0];
@@ -52,7 +54,7 @@ export default function UploadStudioScreen() {
       setLocalUri(asset.uri); setUpload(next); setLines([newLine(0, next.duration_seconds)]); setRecordings({}); setJob(null);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Video yüklenemedi.'); }
     finally { setBusy(''); }
-  }, [token]);
+  }, [rightsConfirmed, token]);
 
   const updateLine = useCallback((id: string, update: Partial<TimelineLine>) => setLines((current) => current.map((line) => line.id === id ? { ...line, ...update } : line)), []);
   const addLine = useCallback(() => { if (!upload) return; setLines((current) => [...current, newLine(current.length, upload.duration_seconds)]); }, [upload]);
@@ -86,7 +88,19 @@ export default function UploadStudioScreen() {
   return <Screen><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
     <Pressable onPress={() => router.back()}><Text style={styles.back}>← Sahneler</Text></Pressable>
     <BrandHeader eyebrow="Özel proje" title="Kendi videonu dublajla" />
-    {!localUri ? <View style={styles.picker}><Text style={styles.pickerCopy}>MP4, MOV veya WebM videonu seç. Dosya boyutu ve süre sınırları sunucu kurallarına göre doğrulanır.</Text><ActionButton label={busy || 'Video seç'} disabled={Boolean(busy)} onPress={() => void pickVideo()} /></View> : <>
+    {!localUri ? <View style={styles.picker}>
+      <Text style={styles.pickerCopy}>MP4, MOV veya WebM videonu seç. Dosya boyutu ve süre sınırları sunucu kurallarına göre doğrulanır. Yüklediğin video işlenmek üzere sunucuya gönderilir; saklama süresini Kütüphanem’de görebilirsin.</Text>
+      <View style={styles.ethics}>
+        <Text style={styles.ethicsTitle}>Yükleme öncesi güvenlik ve haklar</Text>
+        <Text style={styles.pickerCopy}>Yalnızca kullanma hakkına sahip olduğun içerikleri yükle. Rıza dışı mahrem görüntüler, çocukların cinsel istismarı, gerçek kişileri yanıltıcı biçimde taklit eden veya kişisel verileri ihlal eden içerikleri yükleme ya da paylaşma. Uygunsuz topluluk içerikleri bildirilebilir.</Text>
+        <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: rightsConfirmed }} onPress={() => setRightsConfirmed((current) => !current)} style={styles.confirmRow}>
+          <View style={[styles.checkbox, rightsConfirmed && styles.checkboxChecked]}><Text style={styles.checkboxText}>{rightsConfirmed ? '✓' : ''}</Text></View>
+          <Text style={styles.confirmText}>Bu içerik için gerekli haklara sahibim ve kurallara uyacağım.</Text>
+        </Pressable>
+      </View>
+      <ActionButton label={busy || 'Video seç'} disabled={Boolean(busy) || !rightsConfirmed} onPress={() => void pickVideo()} />
+      <Pressable onPress={() => router.push({ pathname: '/legal/[page]', params: { page: 'copyright' } })}><Text style={styles.legalLink}>Telif ve içerik kurallarını oku</Text></Pressable>
+    </View> : <>
       <VideoView player={player} style={styles.video} nativeControls contentFit="contain" fullscreenOptions={{ enable: true }} />
       <Pressable onPress={() => void pickVideo()}><Text style={styles.change}>Başka video seç</Text></Pressable>
       <Text style={styles.heading}>Ses yöntemi</Text><View style={styles.row}><Pressable style={[styles.choice, mode === 'recording' && styles.active]} onPress={() => setMode('recording')}><Text style={styles.choiceText}>Kendi sesim</Text></Pressable><Pressable style={[styles.choice, mode === 'ai' && styles.active]} onPress={() => { if (!token || !user?.has_active_vip) { Alert.alert('VIP gerekli', 'AI ses için giriş yapmış aktif VIP hesabı gerekir.'); return; } setMode('ai'); }}><Text style={styles.choiceText}>AI ses · VIP</Text></Pressable></View>
@@ -101,7 +115,7 @@ export default function UploadStudioScreen() {
       <Pressable style={styles.add} onPress={addLine}><Text style={styles.addText}>+ Replik ekle</Text></Pressable>
       <Text style={styles.heading}>Export ayarları</Text>
       {[{ key: 'muteOriginalAudio', label: 'Orijinal sesi kapat' }, { key: 'burnSubtitles', label: 'Altyazı göm' }, { key: 'applyLipSync', label: 'Lip-sync · VIP' }].map((item) => <View key={item.key} style={styles.setting}><Text style={styles.settingText}>{item.label}</Text><Switch value={options[item.key as keyof typeof options]} onValueChange={(value) => { if (item.key === 'applyLipSync' && value && !user?.has_active_vip) { Alert.alert('VIP gerekli'); return; } setOptions((current) => ({ ...current, [item.key]: value })); }} thumbColor={options[item.key as keyof typeof options] ? theme.green : theme.muted} /></View>)}
-      {job?.status === 'completed' && job.download_url ? <ResultVideo uri={job.download_url} /> : null}
+      {job?.status === 'completed' && job.download_url ? <ResultVideo uri={job.download_url} token={token} /> : null}
       <ActionButton label={busy || (ready ? 'Dublajı oluştur' : mode === 'ai' ? 'Metin, giriş ve VIP gerekli' : 'Metinleri yaz ve kayıtları tamamla')} disabled={!ready || Boolean(busy)} onPress={() => void create()} />
     </>}
     {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -111,6 +125,7 @@ export default function UploadStudioScreen() {
 const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 45 }, back: { color: theme.green, fontWeight: '900', paddingVertical: 8 }, picker: { padding: 20, gap: 16, backgroundColor: theme.surface, borderRadius: 20, borderWidth: 1, borderColor: theme.border }, pickerCopy: { color: theme.muted, lineHeight: 22 }, video: { width: '100%', aspectRatio: 16 / 9, borderRadius: 18, backgroundColor: '#000' }, change: { color: theme.purple, textAlign: 'center', fontWeight: '800', padding: 12 },
   heading: { color: theme.text, fontSize: 19, fontWeight: '900', marginTop: 20, marginBottom: 10 }, row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }, choice: { flex: 1, padding: 13, borderRadius: 13, alignItems: 'center', backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }, active: { borderColor: theme.green, backgroundColor: theme.greenDark }, choiceText: { color: theme.text, fontWeight: '900' }, voice: { padding: 10, borderRadius: 10, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }, voiceText: { color: theme.text, fontSize: 11, fontWeight: '800' },
+  ethics: { padding: 15, gap: 10, borderRadius: 16, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border }, ethicsTitle: { color: theme.purple, fontWeight: '900' }, confirmRow: { flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 5 }, checkbox: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 7, borderWidth: 1, borderColor: theme.muted }, checkboxChecked: { backgroundColor: theme.green, borderColor: theme.green }, checkboxText: { color: theme.background, fontWeight: '900' }, confirmText: { flex: 1, color: theme.text, lineHeight: 19, fontSize: 13 }, legalLink: { color: theme.green, textAlign: 'center', fontWeight: '800', padding: 10 },
   line: { padding: 15, borderRadius: 17, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border, marginBottom: 10 }, lineHead: { flexDirection: 'row', justifyContent: 'space-between' }, lineLabel: { color: theme.purple, fontSize: 11, fontWeight: '900' }, remove: { color: '#fda4af', fontWeight: '800' }, input: { minHeight: 65, color: theme.text, textAlignVertical: 'top', marginVertical: 10, padding: 11, borderRadius: 12, backgroundColor: theme.background }, time: { width: 72, color: theme.text, textAlign: 'center', padding: 10, borderRadius: 10, backgroundColor: theme.background }, to: { color: theme.muted }, record: { alignItems: 'center', marginTop: 11, padding: 12, borderRadius: 12, backgroundColor: theme.surfaceRaised }, recording: { backgroundColor: '#4c101d' }, recordText: { color: theme.text, fontWeight: '900' }, add: { alignItems: 'center', padding: 13, borderRadius: 13, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.green }, addText: { color: theme.green, fontWeight: '900' },
   setting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 13, borderRadius: 13, backgroundColor: theme.surface, marginBottom: 8 }, settingText: { color: theme.text, fontWeight: '800' }, error: { color: '#fecdd3', backgroundColor: '#3f1019', borderRadius: 14, padding: 13, lineHeight: 20, marginTop: 12 },
 });

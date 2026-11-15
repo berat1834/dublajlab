@@ -25,6 +25,7 @@ class UserResponse(BaseModel):
     has_active_vip: bool = False
     has_password: bool = False
     mfa_enabled: bool = False
+    discord_linked: bool = False
     email_verified: bool = False
     email_verification_required: bool = False
     created_at: datetime

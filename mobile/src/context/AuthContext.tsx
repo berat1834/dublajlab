@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const query = url.split('?', 2)[1]?.split('#', 1)[0] ?? '';
     const activeToken = new URLSearchParams(fragment).get('token')
       ?? new URLSearchParams(query).get('token');
-    if (!activeToken) throw new Error('Google giriş yanıtında oturum bilgisi bulunamadı.');
+    if (!activeToken) throw new Error('Sosyal giriş yanıtında oturum bilgisi bulunamadı.');
     await finishLogin(activeToken);
   }, [finishLogin]);
 

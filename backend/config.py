@@ -259,6 +259,12 @@ def get_shopier_api_secret() -> str:
 def get_shopier_payment_url() -> str:
     return os.getenv("SHOPIER_PAYMENT_URL", "").strip()
 
+def get_vip_price_amount() -> int:
+    return _positive_int_setting("VIP_PRICE_AMOUNT", 199)
+
+def get_vip_price_currency() -> str:
+    return os.getenv("VIP_PRICE_CURRENCY", "TRY").strip().upper() or "TRY"
+
 def get_shopier_callback_secret() -> str:
     return os.getenv("SHOPIER_CALLBACK_SECRET", "")
 

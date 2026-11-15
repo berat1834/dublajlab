@@ -36,6 +36,28 @@ def test_profile_update_is_persisted(auth_headers_factory, db_session):
     assert response.json()["display_name"] == "Yeni Ad"
     assert response.json()["avatar_url"] == "https://example.com/avatar.png"
     assert response.json()["has_password"] is True
+    assert response.json()["discord_linked"] is False
+
+
+def test_me_exposes_linked_discord_account(db_session):
+    user = models_db.User(
+        email="discord-linked@dublajlab.com",
+        password_hash=None,
+        display_name="Discord Linked",
+        discord_id="discord-user-123",
+        email_verified=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+
+    response = client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {auth.create_access_token({'sub': user.id})}"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["discord_linked"] is True
 
 
 def test_password_account_delete_requires_matching_name(auth_headers_factory):

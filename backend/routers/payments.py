@@ -11,6 +11,8 @@ from backend.database import get_db
 from backend.models_db import User, Payment
 from backend.routers.auth_router import get_current_user
 from backend.config import (
+    get_vip_price_amount,
+    get_vip_price_currency,
     is_shopier_enabled,
     get_shopier_api_secret,
     get_shopier_payment_url,
@@ -18,8 +20,6 @@ from backend.config import (
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
-VIP_PRICE = 199 # Example price in TRY
 
 @router.post("/checkout")
 async def create_checkout(
@@ -50,11 +50,13 @@ async def create_checkout(
         )
 
     # 1. Create Payment Record
+    vip_price = get_vip_price_amount()
+    vip_currency = get_vip_price_currency()
     payment = Payment(
         user_id=current_user.id,
         provider="shopier",
-        amount=VIP_PRICE,
-        currency="TRY",
+        amount=vip_price,
+        currency=vip_currency,
         plan=plan,
         status="pending"
     )
@@ -71,8 +73,8 @@ async def create_checkout(
     return {
         "status": "success",
         "payment_id": payment.id,
-        "amount": VIP_PRICE,
-        "currency": "TRY",
+        "amount": vip_price,
+        "currency": vip_currency,
         "order_id": payment.id, # Using our payment ID as order ID
         "checkout_url": payment_url,
         "message": "Ödeme kaydı oluşturuldu."

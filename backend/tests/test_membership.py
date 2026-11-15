@@ -32,6 +32,10 @@ def test_membership_plans_describe_free_and_vip() -> None:
     assert plans[0]["max_export_resolution"] == "720p"
     assert plans[1]["max_export_resolution"] == "1080p"
     assert plans[1]["ai_voice"] is True
+    assert plans[0]["price_amount"] == 0
+    assert plans[1]["price_amount"] == 199
+    assert plans[1]["price_currency"] == "TRY"
+    assert plans[1]["billing_period"] == "month"
 
 
 def test_new_user_is_free() -> None:

@@ -51,6 +51,7 @@ def update_profile(
     return response.model_copy(update={
         "has_active_vip": has_active_vip(current_user),
         "has_password": bool(current_user.password_hash),
+        "discord_linked": bool(current_user.discord_id),
     })
 
 @router.get("/projects", response_model=List[schemas.ProjectResponse])

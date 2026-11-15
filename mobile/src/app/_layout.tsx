@@ -18,6 +18,11 @@ export default function RootLayout() {
             <Stack.Screen name="upload" />
             <Stack.Screen name="studio-location" />
             <Stack.Screen name="oauth-callback" />
+            <Stack.Screen name="profile" />
+            <Stack.Screen name="membership" />
+            <Stack.Screen name="help" />
+            <Stack.Screen name="legal/[page]" />
+            <Stack.Screen name="preview/[feature]" />
           </Stack>
         </AuthProvider>
       </SafeAreaProvider>

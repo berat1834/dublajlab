@@ -2,7 +2,7 @@
   "expo": {
     "name": "DublajLab",
     "slug": "dublajlab-mobile",
-    "version": "1.4.4",
+    "version": "1.5.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dublajlab",
@@ -20,7 +20,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "tr.com.dublajlab.mobile",
-      "versionCode": 10,
+      "versionCode": 11,
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
@@ -64,7 +64,8 @@
         {
           "locationWhenInUsePermission": "DublajLab stüdyo konumunu ve size göre yol tarifini göstermek için konum erişimi ister."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
