@@ -6,6 +6,18 @@ import type { DubComment, DubbingExport, DubbingProject, EngagementProgress, Job
 export const API_BASE_URL = (process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.dublajlab.com.tr').replace(/\/$/, '');
 export const WEB_BASE_URL = (process.env.EXPO_PUBLIC_WEB_BASE_URL || 'https://www.dublajlab.com.tr').replace(/\/$/, '');
 export const MOBILE_OAUTH_CALLBACK = 'dublajlab://oauth-callback';
+
+export function getMobileOAuthToken(url: string): string | null {
+  try {
+    const callback = new URL(url);
+    if (callback.protocol !== 'dublajlab:' || callback.hostname !== 'oauth-callback') return null;
+    return callback.searchParams.get('token')
+      ?? new URLSearchParams(callback.hash.slice(1)).get('token');
+  } catch {
+    return null;
+  }
+}
+
 type ApiErrorBody = { detail?: string; errors?: { message: string }[] };
 const REQUEST_TIMEOUT_MS = 20_000;
 

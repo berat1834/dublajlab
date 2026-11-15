@@ -1,7 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 
-import { api, MOBILE_OAUTH_CALLBACK } from '@/lib/api';
+import { api, getMobileOAuthToken, MOBILE_OAUTH_CALLBACK } from '@/lib/api';
 import { getStoredToken, removeStoredToken, setStoredToken } from '@/lib/token-storage';
 import type { User } from '@/types';
 
@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const oauthCompletions = useRef(new Map<string, Promise<void>>());
 
   const refreshUser = useCallback(async () => {
     const activeToken = token ?? (await getStoredToken());
@@ -53,12 +54,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [finishLogin]);
 
   const completeOAuthCallback = useCallback(async (url: string) => {
-    const fragment = url.split('#', 2)[1] ?? '';
-    const query = url.split('?', 2)[1]?.split('#', 1)[0] ?? '';
-    const activeToken = new URLSearchParams(fragment).get('token')
-      ?? new URLSearchParams(query).get('token');
+    const activeToken = getMobileOAuthToken(url);
     if (!activeToken) throw new Error('Sosyal giriş yanıtında oturum bilgisi bulunamadı.');
-    await finishLogin(activeToken);
+    const existingCompletion = oauthCompletions.current.get(activeToken);
+    if (existingCompletion) return existingCompletion;
+
+    const completion = finishLogin(activeToken).finally(() => {
+      oauthCompletions.current.delete(activeToken);
+    });
+    oauthCompletions.current.set(activeToken, completion);
+    await completion;
   }, [finishLogin]);
 
   const loginWithProvider = useCallback(async (provider: 'google' | 'discord') => {

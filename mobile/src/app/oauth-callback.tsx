@@ -1,22 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as Linking from 'expo-linking';
 
 import { Screen } from '@/components/ui';
 import { theme } from '@/constants/app-theme';
 import { useAuth } from '@/context/AuthContext';
+import { getMobileOAuthToken, MOBILE_OAUTH_CALLBACK } from '@/lib/api';
 
 export default function OAuthCallbackScreen() {
   const callbackUrl = Linking.useURL();
+  const { token: routeToken } = useLocalSearchParams<{ token?: string | string[] }>();
   const { completeOAuthCallback } = useAuth();
   const [error, setError] = useState('');
+  const [initialUrl, setInitialUrl] = useState<string | null>(null);
+  const processedUrl = useRef<string | null>(null);
+  const token = Array.isArray(routeToken) ? routeToken[0] : routeToken;
+  const routeUrl = token ? `${MOBILE_OAUTH_CALLBACK}?token=${encodeURIComponent(token)}` : null;
+  const oauthUrl = [routeUrl, callbackUrl, initialUrl].find(
+    (candidate): candidate is string => Boolean(candidate && getMobileOAuthToken(candidate)),
+  ) ?? null;
 
   useEffect(() => {
-    if (!callbackUrl) return;
-    let active = true;
+    Linking.getInitialURL().then(setInitialUrl).catch(() => setInitialUrl(null));
+  }, []);
 
-    completeOAuthCallback(callbackUrl)
+  useEffect(() => {
+    if (!oauthUrl || processedUrl.current === oauthUrl) return;
+    processedUrl.current = oauthUrl;
+    let active = true;
+    setError('');
+
+    completeOAuthCallback(oauthUrl)
       .then(() => {
         if (active) router.replace('/account');
       })
@@ -27,7 +42,15 @@ export default function OAuthCallbackScreen() {
       });
 
     return () => { active = false; };
-  }, [callbackUrl, completeOAuthCallback]);
+  }, [completeOAuthCallback, oauthUrl]);
+
+  useEffect(() => {
+    if (oauthUrl || error) return;
+    const timeout = setTimeout(() => {
+      setError('OAuth dönüş bilgisi alınamadı. Giriş ekranına dönüp tekrar deneyin.');
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [error, oauthUrl]);
 
   return (
     <Screen>
@@ -44,7 +67,7 @@ export default function OAuthCallbackScreen() {
         ) : (
           <>
             <ActivityIndicator size="large" color={theme.green} />
-            <Text style={styles.title}>Google girişi tamamlanıyor</Text>
+            <Text style={styles.title}>Sosyal giriş tamamlanıyor</Text>
             <Text style={styles.copy}>Hesabın doğrulanıyor, lütfen bekle.</Text>
           </>
         )}

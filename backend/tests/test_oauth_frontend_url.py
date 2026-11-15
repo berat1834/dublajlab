@@ -153,13 +153,13 @@ def test_mobile_oauth_callback_is_exactly_allowlisted():
     assert oauth_router.resolve_return_origin("dublajlab://oauth-callback.evil") is None
 
 
-def test_mobile_oauth_redirect_returns_fragment_token_even_in_cookie_only_mode(monkeypatch):
+def test_mobile_oauth_redirect_returns_query_token_even_in_cookie_only_mode(monkeypatch):
     monkeypatch.setattr(oauth_router, "cookie_only_enabled", lambda: True)
     response = oauth_router._frontend_redirect(
         "dublajlab://oauth-callback", "mobile-secret-token"
     )
     assert response.headers["location"] == (
-        "dublajlab://oauth-callback#token=mobile-secret-token"
+        "dublajlab://oauth-callback?token=mobile-secret-token"
     )
 
 

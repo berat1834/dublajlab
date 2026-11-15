@@ -123,9 +123,10 @@ def _decode_state(state: str | None) -> tuple[str | None, str]:
 def _frontend_redirect(origin: str | None, token: str) -> RedirectResponse:
     frontend_url = origin or get_frontend_url()
     if frontend_url == MOBILE_OAUTH_CALLBACK:
-        # Native apps cannot use the web session cookie. The token is returned
-        # in the URL fragment so it is not sent to servers or intermediary logs.
-        location = f"{MOBILE_OAUTH_CALLBACK}#token={token}"
+        # Expo Router exposes query parameters reliably on native callback
+        # routes. This is a custom app scheme, so the URL is not sent to an
+        # intermediary web server.
+        location = f"{MOBILE_OAUTH_CALLBACK}?{urlencode({'token': token})}"
     else:
         location = (
             f"{frontend_url}/oauth-callback"
