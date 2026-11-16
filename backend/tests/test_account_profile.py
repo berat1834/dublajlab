@@ -161,7 +161,7 @@ def test_account_delete_removes_owned_projects_exports_and_social_data(
             return True
 
     provider = FakeStorageProvider()
-    monkeypatch.setattr(user_router, "get_storage_provider", lambda: provider)
+    monkeypatch.setattr(user_router.storage_provider, "get_storage_provider", lambda: provider)
 
     response = client.request(
         "DELETE",

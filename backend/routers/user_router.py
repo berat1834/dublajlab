@@ -14,14 +14,14 @@ from backend.auth import verify_password
 from backend.services.engagement_service import build_engagement_progress
 from backend.services.file_storage import FileStorageService
 from backend.services.media_access import retention_has_expired
-from backend.services.storage_provider import get_storage_provider
+from backend.services import storage_provider
 
 router = APIRouter()
 
 
 def _delete_project_and_media(db: Session, project: models_db.DubbingProject) -> None:
     storage = FileStorageService()
-    provider = get_storage_provider()
+    provider = storage_provider.get_storage_provider()
     exports = db.query(models_db.DubbingExport).filter(
         models_db.DubbingExport.project_id == project.id
     ).all()
