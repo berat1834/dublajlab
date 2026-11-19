@@ -19,6 +19,9 @@ def test_timeline_subtitles_only_cover_their_line_intervals(tmp_path: Path) -> N
 
     document = destination.read_text(encoding="utf-8-sig")
 
+    assert "PlayResX: 1920" in document
+    assert "PlayResY: 1080" in document
+    assert "Style: Subtitle,Arial,68" in document
     assert "Dialogue: 0,0:00:00.50,0:00:01.50,Subtitle" in document
     assert "Dialogue: 0,0:00:03.00,0:00:04.25,Subtitle" in document
     assert "Dialogue: 0,0:00:00.00,0:00:06.00,Subtitle" not in document

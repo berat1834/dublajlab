@@ -104,7 +104,10 @@ export function VoiceCards({ value, onChange, disabled = false }: VoiceCardsProp
   return (
     <fieldset disabled={disabled}>
       <legend className="mb-3 text-sm font-semibold text-zinc-200">{t('voice.title')}</legend>
-      <p className="mb-3 text-xs text-zinc-500">{t('voice.preview_hint')}</p>
+      <div className="mb-3 rounded-xl border border-violet/15 bg-violet/[0.05] px-3 py-2.5">
+        <p className="text-xs text-zinc-400">{t('voice.preview_hint')}</p>
+        <p className="mt-1 text-[11px] italic text-zinc-500">“{t('voice.preview_sample')}”</p>
+      </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-5">
         {voices.map((voice) => {
           const Icon = voice.icon
@@ -138,7 +141,9 @@ export function VoiceCards({ value, onChange, disabled = false }: VoiceCardsProp
               <button
                 type="button"
                 onClick={() => handlePreview(voice.id)}
-                className="flex w-full items-center justify-center gap-1.5 border-t border-white/10 px-2 py-2 text-[11px] font-bold transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={disabled}
+                aria-pressed={playing}
+                className="flex w-full items-center justify-center gap-1.5 border-t border-white/10 bg-black/20 px-2 py-2.5 text-xs font-bold transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label={`${t(playing ? 'voice.preview_stop' : 'voice.preview_play')} — ${t(voice.labelKey)}`}
               >
                 {loading ? (

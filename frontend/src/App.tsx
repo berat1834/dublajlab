@@ -9,6 +9,7 @@ import {
   Crown,
   Download,
   Film,
+  FolderOpen,
   Layers,
   LockKeyhole,
   LoaderCircle,
@@ -33,6 +34,7 @@ import { TemplateGallery } from './components/TemplateGallery'
 import { Toggle } from './components/Toggle'
 import { UploadZone } from './components/UploadZone'
 import { VoiceCards } from './components/VoiceCards'
+import { ResultVideoPlayer } from './components/ResultVideoPlayer'
 import { PlatformNavbar } from './components/PlatformNavbar'
 import { PlatformFooter } from './components/PlatformFooter'
 import { HowToModal } from './components/HowToModal'
@@ -250,6 +252,7 @@ const FEATURES = [
 function App() {
   const { t, language } = useLanguage()
   const videoRef = useRef<HTMLVideoElement>(null)
+  const outputSectionRef = useRef<HTMLElement>(null)
   const retryActionRef = useRef<null | (() => Promise<void>)>(null)
   const activeJobControllerRef = useRef<AbortController | null>(null)
   const toastTimerRef = useRef<number | null>(null)
@@ -271,6 +274,7 @@ function App() {
   const [selectingTemplateId, setSelectingTemplateId] = useState('')
   const [text, setText] = useState('')
   const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>('dramatic')
+  const [lastAiProcessSignature, setLastAiProcessSignature] = useState<string | null>(null)
   const [muteOriginal, setMuteOriginal] = useState(true)
   const [burnSubtitles, setBurnSubtitles] = useState(true)
   const [applyLipSync, setApplyLipSync] = useState(false)
@@ -289,6 +293,14 @@ function App() {
   const [detailTemplateId, setDetailTemplateId] = useState<string | null>(initialRoute.templateId)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const hasVip = Boolean(currentUser?.has_active_vip)
+  const aiDraftSignature = JSON.stringify([
+    upload?.video_id ?? '',
+    text.trim(),
+    voiceStyle,
+    muteOriginal,
+    burnSubtitles,
+    applyLipSync,
+  ])
 
   const refreshCurrentMembership = useCallback(async () => {
     const refreshedUser = await refreshMembershipUser(currentUser, getMeFromSessionCookie)
@@ -416,6 +428,14 @@ function App() {
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current)
   }, [])
 
+  useEffect(() => {
+    if (!outputUrl || stage !== 'completed') return
+    const frame = window.requestAnimationFrame(() => {
+      outputSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [outputUrl, stage])
+
   const localPreviewUrl = useMemo(
     () => (selectedFile ? URL.createObjectURL(selectedFile) : ''),
     [selectedFile],
@@ -470,6 +490,7 @@ function App() {
     setSelectedTemplate(null)
     setSelectedFile(file)
     setUpload(null)
+    setLastAiProcessSignature(null)
     setOutputUrl('')
     clearFeedback()
     setStage('uploading')
@@ -497,6 +518,7 @@ function App() {
     clearFeedback()
     setSelectingTemplateId(templateId)
     setOutputUrl('')
+    setLastAiProcessSignature(null)
     let loadedTemplate: VideoTemplate | null = null
     try {
       const template = localizeTemplate(await fetchTemplate(templateId), language)
@@ -646,6 +668,7 @@ function App() {
       setError(t('action.script_required'))
       return
     }
+    const submittedSignature = aiDraftSignature
     const retry = () => handleAiProcess()
     beginProcessing()
     try {
@@ -662,6 +685,7 @@ function App() {
       if (!completedJob.download_url) {
         throw new Error(t('action.no_output'))
       }
+      setLastAiProcessSignature(submittedSignature)
       completeProcessing(completedJob.download_url)
     } catch (processError) {
       if (isPollingAbort(processError)) return
@@ -700,6 +724,7 @@ function App() {
     setSelectedTemplate(null)
     setSelectingTemplateId('')
     setText('')
+    setLastAiProcessSignature(null)
     setApplyLipSync(false)
     setOutputUrl('')
     setJobProgress(0)
@@ -1189,6 +1214,7 @@ function App() {
                 videoAvailable={Boolean(inputPreview)}
                 exportUnavailableReason={upload ? '' : t('action.template_export_unavailable')}
                 disabled={busy}
+                completed={stage === 'completed'}
                 onRecordingStart={() => trackProductEvent('recording_started')}
                 onError={showEditorError}
                 onProcess={handleRecordingProcess}
@@ -1246,7 +1272,7 @@ function App() {
                 </div>
                 <button
                   type="button"
-                  disabled={!text.trim() || busy}
+                  disabled={!text.trim() || busy || (stage === 'completed' && aiDraftSignature === lastAiProcessSignature)}
                   onClick={() => void handleAiProcess()}
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet px-5 py-3.5 text-sm font-extrabold text-white transition hover:bg-violet/90 disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600"
                 >
@@ -1291,7 +1317,7 @@ function App() {
 
         {/* ═══════════════════════════ OUTPUT SECTION ═══════════════════════════ */}
         {outputUrl && (
-          <section className="mt-5 overflow-hidden rounded-2xl border border-lime/25 bg-panel/95 shadow-glow-lg">
+          <section ref={outputSectionRef} className="mt-5 scroll-mt-24 overflow-hidden rounded-2xl border border-lime/25 bg-panel/95 shadow-glow-lg">
             <div className="flex flex-col justify-between gap-4 border-b border-white/10 p-4 sm:flex-row sm:items-center sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-lime text-ink">
@@ -1314,12 +1340,7 @@ function App() {
             </div>
             <div className="grid lg:grid-cols-[minmax(0,1fr)_280px] 3xl:grid-cols-[minmax(0,1fr)_320px]">
               <div className="bg-black p-3 sm:p-5">
-                <video
-                  className="mx-auto max-h-[70vh] w-full rounded-xl object-contain"
-                  src={outputUrl}
-                  controls
-                  playsInline
-                />
+                <ResultVideoPlayer sourceUrl={outputUrl} />
               </div>
               <div className="flex flex-col justify-center gap-3 border-t border-white/10 p-4 lg:border-l lg:border-t-0 lg:p-5">
                 <p className="text-sm font-bold text-white">{t('studio.export.next')}</p>
@@ -1327,11 +1348,26 @@ function App() {
                   {t('studio.export.description')}
                 </p>
                 <div className="grid grid-cols-2 gap-2 mt-1 mb-2">
-                  {typeof (navigator as unknown as ShareCapableNavigator).share === 'function' && (
-                    <button onClick={() => void shareOutput()} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-lime/25 bg-lime/10 px-3 py-2.5 text-[11px] font-bold text-lime transition hover:bg-lime/20">
-                      <Share2 className="h-3.5 w-3.5" /> {t('studio.export.share')}
+                  {currentUser ? (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('library')}
+                      className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-lime px-3 py-3 text-xs font-extrabold text-ink transition hover:bg-[#d5ff78]"
+                    >
+                      <FolderOpen className="h-4 w-4" /> {t('studio.export.open_library')}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('login')}
+                      className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-lime/25 bg-lime/10 px-3 py-3 text-xs font-bold text-lime transition hover:bg-lime/20"
+                    >
+                      <FolderOpen className="h-4 w-4" /> {t('studio.export.login_to_save')}
                     </button>
                   )}
+                  <button onClick={() => void shareOutput()} className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-lime/25 bg-lime/10 px-3 py-2.5 text-[11px] font-bold text-lime transition hover:bg-lime/20">
+                    <Share2 className="h-3.5 w-3.5" /> {t('studio.export.share')}
+                  </button>
                   <button onClick={() => void copyOutput()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-3 py-2.5 text-[11px] font-bold text-white transition hover:bg-white/20">
                     <Link className="h-3.5 w-3.5" /> {t('studio.export.copy')}
                   </button>

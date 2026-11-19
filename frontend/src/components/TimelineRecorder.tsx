@@ -31,6 +31,7 @@ interface TimelineRecorderProps {
   videoAvailable?: boolean
   exportUnavailableReason?: string
   disabled?: boolean
+  completed?: boolean
   onRecordingStart?: () => void
   onError: (message: string) => void
   onProcess: (
@@ -53,6 +54,7 @@ export function TimelineRecorder({
   videoAvailable = true,
   exportUnavailableReason = '',
   disabled = false,
+  completed = false,
   onRecordingStart,
   onError,
   onProcess,
@@ -67,6 +69,7 @@ export function TimelineRecorder({
   const [activeLineId, setActiveLineId] = useState<string | null>(null)
   const [muteOriginalAudio, setMuteOriginalAudio] = useState(true)
   const [burnSubtitles, setBurnSubtitles] = useState(true)
+  const [hasChangesSinceCompletion, setHasChangesSinceCompletion] = useState(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const stopTimerRef = useRef<number | null>(null)
@@ -76,6 +79,10 @@ export function TimelineRecorder({
   useEffect(() => {
     clipsRef.current = clips
   }, [clips])
+
+  useEffect(() => {
+    if (completed) setHasChangesSinceCompletion(false)
+  }, [completed])
 
   useEffect(() => {
     return () => {
@@ -111,8 +118,11 @@ export function TimelineRecorder({
   )
   const completionPercent = Math.round((completedCount / lines.length) * 100)
   const timelineDurationError = t('timeline.duration_error')
+  const completedWithoutChanges = completed && !hasChangesSinceCompletion
   const exportBlockReason = exportUnavailableReason
     ? exportUnavailableReason
+    : completedWithoutChanges
+      ? t('timeline.already_created')
     : disabled
       ? t('timeline.locked')
     : activeLineId
@@ -126,9 +136,17 @@ export function TimelineRecorder({
           : ''
 
   const updateLine = (id: string, patch: Partial<TimelineLine>) => {
+    setHasChangesSinceCompletion(true)
     setLines((current) =>
       current.map((line) => (line.id === id ? { ...line, ...patch } : line)),
     )
+  }
+
+  const formatTimelineTime = (seconds: number) => {
+    const safeSeconds = Math.max(0, seconds)
+    const minutes = Math.floor(safeSeconds / 60)
+    const remainingSeconds = safeSeconds - minutes * 60
+    return `${minutes}:${remainingSeconds.toFixed(1).padStart(4, '0')}`
   }
 
   const previewLine = (line: TimelineLine) => {
@@ -184,6 +202,7 @@ export function TimelineRecorder({
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
         if (blob.size) {
+          setHasChangesSinceCompletion(true)
           setClips((current) => {
             const next = new Map(current)
             const previous = next.get(line.id)
@@ -233,6 +252,7 @@ export function TimelineRecorder({
       return
     }
     const lastEnd = lines[lines.length - 1]?.end ?? 0
+    setHasChangesSinceCompletion(true)
     setLines((current) => [
       ...current,
       createNextTimelineLine(duration, lastEnd, `line-${crypto.randomUUID()}`),
@@ -241,6 +261,7 @@ export function TimelineRecorder({
 
   const removeLine = (id: string) => {
     if (lines.length === 1) return
+    setHasChangesSinceCompletion(true)
     const clip = clips.get(id)
     if (clip) URL.revokeObjectURL(clip.url)
     setClips((current) => {
@@ -440,9 +461,19 @@ export function TimelineRecorder({
                   )}
                 </button>
                 {clip && (
-                  <div className="flex w-full min-w-0 flex-1 items-center gap-2 overflow-hidden rounded-lg bg-black/20 px-2 py-1">
-                    <Headphones className="h-3.5 w-3.5 shrink-0 text-lime" />
-                    <audio className="h-8 min-w-0 max-w-full flex-1" src={clip.url} controls />
+                  <div className="w-full min-w-0 flex-1 rounded-lg border border-lime/15 bg-black/20 px-2 py-2">
+                    <div className="mb-1.5 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-lime">
+                      <Clock3 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="min-w-0 break-words">
+                        {t('timeline.recorded_range')
+                          .replace('{start}', formatTimelineTime(line.start))
+                          .replace('{end}', formatTimelineTime(line.end))}
+                      </span>
+                    </div>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Headphones className="h-3.5 w-3.5 shrink-0 text-lime" />
+                      <audio className="h-8 min-w-0 max-w-full flex-1" src={clip.url} controls />
+                    </div>
                   </div>
                 )}
                 {isRecording && (
@@ -461,7 +492,10 @@ export function TimelineRecorder({
           <input
             type="checkbox"
             checked={muteOriginalAudio}
-            onChange={(event) => setMuteOriginalAudio(event.target.checked)}
+            onChange={(event) => {
+              setMuteOriginalAudio(event.target.checked)
+              setHasChangesSinceCompletion(true)
+            }}
             disabled={disabled}
             className="accent-lime"
           />
@@ -471,7 +505,10 @@ export function TimelineRecorder({
           <input
             type="checkbox"
             checked={burnSubtitles}
-            onChange={(event) => setBurnSubtitles(event.target.checked)}
+            onChange={(event) => {
+              setBurnSubtitles(event.target.checked)
+              setHasChangesSinceCompletion(true)
+            }}
             disabled={disabled}
             className="accent-lime"
           />
@@ -482,7 +519,7 @@ export function TimelineRecorder({
       <button
         type="button"
         onClick={() => void submit()}
-        disabled={disabled || Boolean(activeLineId) || Boolean(invalidLineIds.size) || Boolean(missingCount) || Boolean(exportUnavailableReason)}
+        disabled={completedWithoutChanges || disabled || Boolean(activeLineId) || Boolean(invalidLineIds.size) || Boolean(missingCount) || Boolean(exportUnavailableReason)}
         className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-lime px-5 py-3.5 text-sm font-extrabold text-ink shadow-glow transition hover:bg-[#d5ff78] disabled:cursor-not-allowed disabled:bg-zinc-800 disabled:text-zinc-600 disabled:shadow-none"
       >
         <WandSparkles className="h-5 w-5" /> {t('timeline.create')}

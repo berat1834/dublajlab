@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Download, Play, Trash2, Clock, CheckCircle2, AlertCircle, Globe, Lock } from 'lucide-react'
+import { Download, Play, Trash2, Clock, CheckCircle2, AlertCircle, Globe, Lock, Share2 } from 'lucide-react'
 import { getUserProjects, getUserExports, deleteUserProject, updateProjectVisibility, absoluteApiUrl } from '../lib/api'
 import type { DubbingProject, DubbingExport, Tab } from '../types'
 import { VideoPreviewModal, VideoThumbnail } from './VideoPreviewModal'
@@ -19,6 +19,8 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
     sourceUrl: string
     title: string
     retentionLabel: string
+    projectId: string
+    isPublic: boolean
   } | null>(null)
 
   useEffect(() => {
@@ -73,6 +75,21 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
     }
   }
 
+  const handleShare = async (projectId: string, title: string) => {
+    const url = `${window.location.origin}/dublajlar?dub=${encodeURIComponent(projectId)}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, url })
+        return
+      }
+      await navigator.clipboard.writeText(url)
+      onToast(t('video.link_copied'))
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return
+      onToast(t('action.failed'))
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto py-12 px-4 flex justify-center">
@@ -123,11 +140,12 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
           title={preview.title}
           retentionLabel={preview.retentionLabel}
           onClose={() => setPreview(null)}
+          onShare={preview.isPublic ? () => void handleShare(preview.projectId, preview.title) : undefined}
         />
       )}
       <div className="mb-12">
-        <h1 className="text-3xl font-black text-white tracking-tight">{t('library.title')}</h1>
-        <p className="text-zinc-400 mt-2">{t('library.subtitle').replace('{count}', String(projects.length))}</p>
+        <h1 className="break-words text-3xl font-black tracking-tight text-white">{t('library.title')}</h1>
+        <p className="mt-2 break-words text-zinc-400">{t('library.subtitle').replace('{count}', String(projects.length))}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4">
@@ -150,13 +168,13 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
           })
 
           return (
-            <div key={project.id} className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row gap-5 items-start sm:items-center transition-colors hover:bg-white/10">
+            <div key={project.id} className="flex min-w-0 flex-col items-stretch gap-4 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-4 transition-colors hover:bg-white/10 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
               <div className="w-full flex-shrink-0 sm:w-40">
                 {mediaUrl ? (
                   <VideoThumbnail
                     sourceUrl={mediaUrl}
                     title={project.title}
-                    onOpen={() => setPreview({ sourceUrl: mediaUrl, title: project.title, retentionLabel })}
+                    onOpen={() => setPreview({ sourceUrl: mediaUrl, title: project.title, retentionLabel, projectId: project.id, isPublic: project.visibility === 'public' })}
                   />
                 ) : (
                   <div className="grid aspect-video place-items-center rounded-xl bg-black/40">
@@ -167,13 +185,13 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-semibold text-white truncate" title={project.title}>
+                <h3 className="break-words text-lg font-semibold leading-6 text-white sm:truncate" title={project.title}>
                   {project.title}
                 </h3>
-                <div className="flex items-center gap-4 mt-2 text-sm text-white/50">
-                  <span className="flex items-center gap-1.5">
-                    <Clock className="w-4 h-4" />
-                    {dateStr}
+                <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2 text-sm text-white/50">
+                  <span className="flex min-w-0 items-start gap-1.5">
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span className="min-w-0 break-words">{dateStr}</span>
                   </span>
                   {project.status === 'completed' && (
                     <span className="flex items-center gap-1.5 text-lime-400">
@@ -208,22 +226,22 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0 flex-wrap justify-end">
+              <div className="mt-2 grid w-full min-w-0 grid-cols-2 gap-2 sm:mt-0 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
                 {project.status === 'completed' && relatedExport && (
                   relatedExport.download_url ? (
                     <>
                       <button
                         onClick={() => handleToggleVisibility(project, relatedExport)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl font-medium transition-colors border ${project.visibility === 'public' ? 'bg-lime-400/10 text-lime-400 border-lime-400/30 hover:bg-lime-400/20' : 'bg-white/5 text-zinc-300 border-white/10 hover:bg-white/10'}`}
+                        className={`flex min-w-0 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-center text-sm font-medium leading-5 transition-colors ${project.visibility === 'public' ? 'bg-lime-400/10 text-lime-400 border-lime-400/30 hover:bg-lime-400/20' : 'bg-white/5 text-zinc-300 border-white/10 hover:bg-white/10'}`}
                         title={project.visibility === 'public' ? t('library.public_tooltip') : t('library.private_tooltip')}
                       >
                         {project.visibility === 'public' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                        <span className="hidden sm:inline">{project.visibility === 'public' ? t('library.public') : t('library.private')}</span>
+                        <span className="min-w-0 break-words">{project.visibility === 'public' ? t('library.public') : t('library.private')}</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => setPreview({ sourceUrl: mediaUrl, title: project.title, retentionLabel })}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 font-bold text-zinc-200 transition hover:bg-white/10 sm:flex-none"
+                        onClick={() => setPreview({ sourceUrl: mediaUrl, title: project.title, retentionLabel, projectId: project.id, isPublic: project.visibility === 'public' })}
+                        className="flex min-w-0 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-center text-sm font-bold text-zinc-200 transition hover:bg-white/10"
                       >
                         <Play className="h-4 w-4 fill-current" />
                         {t('library.play')}
@@ -231,11 +249,21 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                       <a
                         href={mediaUrl}
                         download
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-lime text-ink font-extrabold rounded-xl hover:brightness-110 transition-colors"
+                        className="flex min-w-0 items-center justify-center gap-2 rounded-xl bg-lime px-3 py-2 text-center text-sm font-extrabold text-ink transition-colors hover:brightness-110"
                       >
                         <Download className="w-4 h-4" />
                         {t('library.download')}
                       </a>
+                      {project.visibility === 'public' && (
+                        <button
+                          type="button"
+                          onClick={() => void handleShare(project.id, project.title)}
+                          className="flex min-w-0 items-center justify-center gap-2 rounded-xl border border-lime/25 bg-lime/10 px-3 py-2 text-center text-sm font-bold text-lime transition hover:bg-lime/20"
+                        >
+                          <Share2 className="h-4 w-4 shrink-0" />
+                          <span className="min-w-0 break-words">{t('library.share')}</span>
+                        </button>
+                      )}
                     </>
                   ) : (
                     <div className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 text-zinc-400 font-medium rounded-xl cursor-not-allowed" title={t('library.file_expired_desc')}>
@@ -246,7 +274,7 @@ export function UserLibrary({ onToast, setActiveTab }: UserLibraryProps) {
                 )}
                 <button
                   onClick={() => handleDelete(project.id)}
-                  className="p-2 text-white/40 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-colors"
+                  className="col-span-2 justify-self-end rounded-xl p-2 text-white/40 transition-colors hover:bg-red-400/10 hover:text-red-400 sm:col-span-1"
                   title={t('library.delete')}
                   aria-label={t('library.delete')}
                 >
