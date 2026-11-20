@@ -3,11 +3,11 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View
 import type { ScrollViewInstance } from 'react-native';
 import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
-import * as Sharing from 'expo-sharing';
 import { AudioModule, RecordingPresets, setAudioModeAsync, useAudioPlayer, useAudioRecorder, useAudioRecorderState } from 'expo-audio';
 import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { ActionButton, BrandHeader, Screen } from '@/components/ui';
+import { DubResultActions } from '@/components/DubResultActions';
 import { theme } from '@/constants/app-theme';
 import { useAuth } from '@/context/AuthContext';
 import { api, videoSource, voicePreviewUrl } from '@/lib/api';
@@ -121,17 +121,6 @@ export default function UploadStudioScreen() {
     } catch (reason) { setBusy(''); setError(reason instanceof Error ? reason.message : 'Dublaj oluşturulamadı.'); }
   }, [currentSignature, lines, mode, options, ready, recordings, token, upload, voiceStyle]);
 
-  const shareCompleted = useCallback(async () => {
-    if (!job?.download_url || !token) return;
-    try {
-      const file = await api.downloadExport(job.download_url, `dublajlab-${job.output_video_id || 'video'}.mp4`, token);
-      if (!await Sharing.isAvailableAsync()) throw new Error('Bu cihazda dosya paylaşımı kullanılamıyor.');
-      await Sharing.shareAsync(file.uri, { dialogTitle: 'Dublajını kaydet veya paylaş', mimeType: 'video/mp4' });
-    } catch (reason) {
-      Alert.alert('Paylaşım açılamadı', reason instanceof Error ? reason.message : 'Tekrar deneyin.');
-    }
-  }, [job, token]);
-
   return <Screen><ScrollView ref={scrollViewRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
     <Pressable onPress={() => router.back()}><Text style={styles.back}>← Sahneler</Text></Pressable>
     <BrandHeader eyebrow="Özel proje" title="Kendi videonu dublajla" />
@@ -172,11 +161,14 @@ export default function UploadStudioScreen() {
       {job?.status === 'completed' && job.download_url ? <View style={styles.resultBlock}>
         <Text style={styles.resultTitle}>Dublajın hazır</Text>
         <ResultVideo uri={job.download_url} token={token} />
-        <View style={styles.resultActions}>
-          {token ? <Pressable style={styles.resultButton} onPress={() => router.navigate('/(tabs)/library')}><Text style={styles.resultButtonText}>Kütüphaneme ekle ve aç</Text></Pressable> : <Pressable style={styles.resultButton} onPress={() => router.navigate('/account')}><Text style={styles.resultButtonText}>Giriş yapıp kütüphaneye kaydet</Text></Pressable>}
-          <Pressable style={styles.resultButton} onPress={() => void shareCompleted()}><Text style={styles.resultButtonText}>İndir / paylaş</Text></Pressable>
-        </View>
-        <Pressable style={styles.tryAgain} onPress={() => { setJob(null); setLastCompletedSignature(null); requestAnimationFrame(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })); }}><Text style={styles.tryAgainText}>Aynı video ile yeniden dene</Text></Pressable>
+        <DubResultActions
+          downloadUrl={job.download_url}
+          fileName={`dublajlab-${job.output_video_id || 'video'}.mp4`}
+          token={token}
+          hasVip={Boolean(user?.has_active_vip)}
+          onRetrySame={() => { setJob(null); setLastCompletedSignature(null); requestAnimationFrame(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })); }}
+          onNewVideo={() => { setJob(null); setLastCompletedSignature(null); setLocalUri(null); setUpload(null); setLines([]); setRecordings({}); setError(''); requestAnimationFrame(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })); }}
+        />
       </View> : null}
       <ActionButton label={busy || (job?.status === 'completed' && currentSignature === lastCompletedSignature ? 'Bu dublaj oluşturuldu · Değişiklik yapın' : ready ? 'Dublajı oluştur' : mode === 'ai' ? 'Metin, giriş ve VIP gerekli' : 'Metinleri yaz ve kayıtları tamamla')} disabled={!ready || Boolean(busy)} onPress={() => void create()} />
     </>}
@@ -192,5 +184,5 @@ const styles = StyleSheet.create({
   setting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 13, borderRadius: 13, backgroundColor: theme.surface, marginBottom: 8 }, settingText: { color: theme.text, fontWeight: '800' }, error: { color: '#fecdd3', backgroundColor: '#3f1019', borderRadius: 14, padding: 13, lineHeight: 20, marginTop: 12 },
   voiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, voiceCard: { width: '48%', borderRadius: 13, overflow: 'hidden', backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }, voiceCardSelected: { borderColor: theme.green, backgroundColor: theme.greenDark }, voiceSelect: { padding: 12 }, voiceChoiceText: { color: theme.text, fontWeight: '900', fontSize: 13 }, voicePreview: { alignItems: 'center', paddingVertical: 9, borderTopWidth: 1, borderTopColor: theme.border, backgroundColor: theme.surfaceRaised }, voicePreviewText: { color: theme.green, fontWeight: '900', fontSize: 12 },
   rangeText: { color: theme.green, fontSize: 12, lineHeight: 18, marginTop: 10 }, seekRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }, seekButton: { paddingHorizontal: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border }, seekText: { color: theme.text, fontWeight: '900', fontSize: 12 }, seekStatus: { flex: 1, alignItems: 'center' }, seekStatusText: { color: theme.muted, fontVariant: ['tabular-nums'], fontSize: 12 },
-  resultBlock: { marginTop: 16, padding: 14, gap: 12, borderRadius: 18, borderWidth: 1, borderColor: theme.green, backgroundColor: theme.surface }, resultTitle: { color: theme.text, fontSize: 18, fontWeight: '900' }, resultActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, resultButton: { flexGrow: 1, minWidth: 140, alignItems: 'center', padding: 12, borderRadius: 12, backgroundColor: theme.greenDark, borderWidth: 1, borderColor: theme.green }, resultButtonText: { color: theme.green, fontWeight: '900', textAlign: 'center' }, tryAgain: { alignItems: 'center', padding: 11, borderRadius: 12, borderWidth: 1, borderColor: theme.border }, tryAgainText: { color: theme.muted, fontWeight: '800' },
+  resultBlock: { marginTop: 16, padding: 14, gap: 12, borderRadius: 18, borderWidth: 1, borderColor: theme.green, backgroundColor: theme.surface }, resultTitle: { color: theme.text, fontSize: 18, fontWeight: '900' },
 });

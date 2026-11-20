@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   AudioModule,
@@ -12,6 +13,7 @@ import {
 import { useVideoPlayer, VideoView } from 'expo-video';
 
 import { ActionButton, EmptyState, Screen } from '@/components/ui';
+import { DubResultActions } from '@/components/DubResultActions';
 import { theme } from '@/constants/app-theme';
 import { useAuth } from '@/context/AuthContext';
 import { absoluteApiUrl, api, templateMediaUrl, voicePreviewUrl } from '@/lib/api';
@@ -38,7 +40,7 @@ function VoiceChoice({ item, selected, onSelect }: { item: { id: VoiceStyle; lab
 function ResultVideo({ uri }: { uri: string }) {
   const player = useVideoPlayer(uri);
   return (
-    <View style={styles.resultPanel}>
+    <>
       <Text style={styles.resultTitle}>Dublajın hazır!</Text>
       <VideoView
         player={player}
@@ -47,7 +49,7 @@ function ResultVideo({ uri }: { uri: string }) {
         contentFit="contain"
         fullscreenOptions={{ enable: true }}
       />
-    </View>
+    </>
   );
 }
 
@@ -57,6 +59,7 @@ export default function SceneStudioScreen() {
   const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(recorder, 150);
   const mounted = useRef(true);
+  const scrollViewRef = useRef<ScrollViewInstance>(null);
   const [template, setTemplate] = useState<VideoTemplate | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeLineId, setActiveLineId] = useState<string | null>(null);
@@ -178,13 +181,12 @@ export default function SceneStudioScreen() {
     );
   }
 
-  const resultUrl = job?.status === 'completed' && job.download_url
-    ? absoluteApiUrl(job.download_url)
-    : null;
+  const resultPath = job?.status === 'completed' ? job.download_url : null;
+  const resultUrl = resultPath ? absoluteApiUrl(resultPath) : null;
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView ref={scrollViewRef} contentContainerStyle={styles.content}>
         <View style={styles.topBar}>
           <Pressable onPress={() => router.back()}><Text style={styles.back}>← Sahneler</Text></Pressable>
           <Text style={styles.counter}>{recordedCount}/{template.lines.length} kayıt</Text>
@@ -258,14 +260,24 @@ export default function SceneStudioScreen() {
             <Text style={styles.progressValue}>%{job?.progress ?? 0}</Text>
           </View>
         ) : null}
-        {!resultUrl ? (
+        {!resultUrl || !resultPath ? (
           <ActionButton
             label={busyMessage || (canExport ? 'Dublajı oluştur' : mode === 'ai' ? 'VIP ve giriş gerekli' : `${template.lines.length - recordedCount} kayıt kaldı`)}
             disabled={!canExport || Boolean(busyMessage) || Boolean(activeLineId)}
             onPress={() => void exportDub()}
           />
         ) : (
-          <ResultVideo uri={resultUrl} />
+          <View style={styles.resultPanel}>
+            <ResultVideo uri={resultUrl} />
+            <DubResultActions
+              downloadUrl={resultPath}
+              fileName={`dublajlab-${job?.output_video_id || template.id}.mp4`}
+              token={token}
+              hasVip={Boolean(user?.has_active_vip)}
+              onRetrySame={() => { setJob(null); setError(''); requestAnimationFrame(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })); }}
+              onNewVideo={() => router.navigate('/(tabs)')}
+            />
+          </View>
         )}
       </ScrollView>
     </Screen>

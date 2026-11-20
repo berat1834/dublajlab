@@ -75,9 +75,9 @@ async function uploadTemplateVideo(template: VideoTemplate, token?: string | nul
   return uploadFile(file.uri, `${template.id}${extension}`, 'video/mp4', token);
 }
 
-async function downloadExport(path: string, fileName: string, token: string) {
+async function downloadExport(path: string, fileName: string, token?: string | null) {
   const uri = absoluteApiUrl(path);
-  const headers = new URL(uri).origin === new URL(API_BASE_URL).origin
+  const headers = token && new URL(uri).origin === new URL(API_BASE_URL).origin
     ? { Authorization: 'Bearer ' + token }
     : undefined;
   return File.downloadFileAsync(uri, new File(Paths.document, fileName), { idempotent: true, headers });
