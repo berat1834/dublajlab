@@ -5,6 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 from backend import config as app_config
@@ -239,6 +240,30 @@ def test_recording_job_is_created_after_files_are_saved(
     assert response.status_code == 202
     assert response.json()["status"] == "queued"
     assert saved_recording.is_file()
+
+
+def test_recording_timeline_allows_blank_text_when_subtitles_are_disabled() -> None:
+    lines, recording_ids = jobs_router.validate_recording_timeline(
+        '[{"id":"line-1","start":0.5,"end":2.0,"text":""}]',
+        '["line-1"]',
+        5.0,
+        False,
+    )
+
+    assert lines[0].text == ""
+    assert recording_ids == ["line-1"]
+
+
+def test_recording_timeline_rejects_blank_text_when_subtitles_are_enabled() -> None:
+    with pytest.raises(HTTPException) as exc_info:
+        jobs_router.validate_recording_timeline(
+            '[{"id":"line-1","start":0.5,"end":2.0,"text":""}]',
+            '["line-1"]',
+            5.0,
+            True,
+        )
+
+    assert exc_info.value.status_code == 422
 
 
 def test_lip_sync_is_locked_for_free_recording_job(

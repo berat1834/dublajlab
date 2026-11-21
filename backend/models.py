@@ -89,13 +89,11 @@ class DubbingLine(BaseModel):
     id: str = Field(min_length=1, max_length=80, pattern=r"^[a-zA-Z0-9_-]+$")
     start: float = Field(ge=0)
     end: float = Field(gt=0)
-    text: str = Field(min_length=1, max_length=300)
+    text: str = Field(default="", max_length=300)
 
     @field_validator("text")
     @classmethod
-    def line_text_must_not_be_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("Replik metni boş bırakılamaz.")
+    def normalize_line_text(cls, value: str) -> str:
         return value.strip()
 
 
@@ -129,6 +127,8 @@ class VideoTemplate(BaseModel):
 
     @model_validator(mode="after")
     def validate_timeline(self) -> "VideoTemplate":
+        if any(not line.text for line in self.lines):
+            raise ValueError("Template replik metni boş bırakılamaz.")
         line_ids = [line.id for line in self.lines]
         if len(set(line_ids)) != len(line_ids):
             raise ValueError("Template replik kimlikleri benzersiz olmalıdır.")

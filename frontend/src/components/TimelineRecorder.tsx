@@ -22,6 +22,7 @@ const TIMELINE_DURATION_EPSILON_SECONDS = 0.001
 interface RecordedClip {
   blob: Blob
   url: string
+  durationSeconds: number
 }
 
 interface TimelineRecorderProps {
@@ -73,6 +74,7 @@ export function TimelineRecorder({
   const recorderRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const stopTimerRef = useRef<number | null>(null)
+  const recordingStartedAtRef = useRef(0)
   const previousMutedRef = useRef(false)
   const clipsRef = useRef(clips)
 
@@ -103,14 +105,14 @@ export function TimelineRecorder({
         lines
           .filter(
             (line) =>
-              !line.text.trim() ||
+              (burnSubtitles && !line.text.trim()) ||
               line.start < 0 ||
               line.end <= line.start ||
               line.end > duration + TIMELINE_DURATION_EPSILON_SECONDS,
           )
           .map((line) => line.id),
       ),
-    [duration, lines],
+    [burnSubtitles, duration, lines],
   )
   const missingCount = lines.length - completedCount
   const hasDurationOverflow = lines.some(
@@ -180,7 +182,7 @@ export function TimelineRecorder({
       onError(timelineDurationError)
       return
     }
-    if (!line.text.trim() || line.end <= line.start) {
+    if ((burnSubtitles && !line.text.trim()) || line.end <= line.start) {
       onError(t('timeline.check_line'))
       return
     }
@@ -202,12 +204,16 @@ export function TimelineRecorder({
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' })
         if (blob.size) {
+          const durationSeconds = Math.max(
+            0.1,
+            (performance.now() - recordingStartedAtRef.current) / 1000,
+          )
           setHasChangesSinceCompletion(true)
           setClips((current) => {
             const next = new Map(current)
             const previous = next.get(line.id)
             if (previous) URL.revokeObjectURL(previous.url)
-            next.set(line.id, { blob, url: URL.createObjectURL(blob) })
+            next.set(line.id, { blob, url: URL.createObjectURL(blob), durationSeconds })
             return next
           })
         }
@@ -219,6 +225,7 @@ export function TimelineRecorder({
       streamRef.current = stream
       recorderRef.current = recorder
       setActiveLineId(line.id)
+      recordingStartedAtRef.current = performance.now()
       recorder.start(200)
       onRecordingStart?.()
 
@@ -231,7 +238,7 @@ export function TimelineRecorder({
       }
       stopTimerRef.current = window.setTimeout(
         stopRecording,
-        Math.max(250, (line.end - line.start) * 1000),
+        Math.max(250, (duration - line.start) * 1000),
       )
     } catch (error) {
       if (error instanceof DOMException && ['NotAllowedError', 'SecurityError'].includes(error.name)) {
@@ -334,6 +341,16 @@ export function TimelineRecorder({
           const clip = clips.get(line.id)
           const isRecording = activeLineId === line.id
           const isInvalid = invalidLineIds.has(line.id)
+          const slotDuration = Math.max(0, line.end - line.start)
+          const recordingOverflows = Boolean(clip && clip.durationSeconds > slotDuration + 0.1)
+          const nextLineStart = lines[index + 1]?.start ?? duration
+          const latestEnd = Math.min(duration, nextLineStart)
+          const fittedEnd = clip
+            ? Math.min(duration, line.start + clip.durationSeconds)
+            : line.end
+          const canFitRecording = Boolean(
+            clip && fittedEnd <= latestEnd + TIMELINE_DURATION_EPSILON_SECONDS,
+          )
           return (
             <article
               key={line.id}
@@ -386,7 +403,10 @@ export function TimelineRecorder({
               <textarea
                 aria-label={t('timeline.text_aria').replace('{number}', String(index + 1))}
                 value={line.text}
-                placeholder={t('timeline.default_line').replace('{number}', String(index + 1))}
+                placeholder={(burnSubtitles
+                  ? t('timeline.default_line')
+                  : t('timeline.optional_line')
+                ).replace('{number}', String(index + 1))}
                 maxLength={300}
                 rows={2}
                 disabled={disabled || Boolean(activeLineId)}
@@ -474,11 +494,30 @@ export function TimelineRecorder({
                       <Headphones className="h-3.5 w-3.5 shrink-0 text-lime" />
                       <audio className="h-8 min-w-0 max-w-full flex-1" src={clip.url} controls />
                     </div>
+                    <p className={`mt-2 text-[11px] ${recordingOverflows ? 'text-amber-300' : 'text-zinc-500'}`}>
+                      {t('timeline.recording_duration')
+                        .replace('{duration}', clip.durationSeconds.toFixed(1))
+                        .replace('{slot}', slotDuration.toFixed(1))}
+                    </p>
+                    {recordingOverflows && (
+                      <div className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/[0.06] p-2 text-[11px] leading-4 text-amber-200">
+                        <p>{canFitRecording ? t('timeline.recording_can_fit') : t('timeline.recording_will_trim')}</p>
+                        {canFitRecording && (
+                          <button
+                            type="button"
+                            className="mt-2 rounded-md bg-amber-300 px-2.5 py-1.5 font-bold text-amber-950"
+                            onClick={() => updateLine(line.id, { end: Number(fittedEnd.toFixed(2)) })}
+                          >
+                            {t('timeline.fit_recording')}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
                 {isRecording && (
                   <span className="flex items-center gap-2 text-xs font-semibold text-red-300">
-                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" /> {t('timeline.auto_stop')}
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" /> {t('timeline.record_until_stop')}
                   </span>
                 )}
               </div>

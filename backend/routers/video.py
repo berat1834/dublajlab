@@ -222,6 +222,11 @@ async def process_recordings(
         raise HTTPException(status_code=422, detail="Ses kaydı kimlikleri geçersiz.")
     if not 1 <= len(lines) <= 20:
         raise HTTPException(status_code=422, detail="1 ile 20 arasında replik ekleyin.")
+    if burn_subtitles and any(not line.text for line in lines):
+        raise HTTPException(
+            status_code=422,
+            detail="Altyazı gömülürken replik metni boş bırakılamaz.",
+        )
 
     line_ids = [line.id for line in lines]
     if len(set(line_ids)) != len(line_ids):

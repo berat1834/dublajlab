@@ -164,6 +164,7 @@ def validate_recording_timeline(
     timeline: str,
     recording_ids: str,
     duration: float,
+    burn_subtitles: bool = True,
 ) -> tuple[list[DubbingLine], list[str]]:
     try:
         lines = timeline_adapter.validate_json(timeline)
@@ -180,6 +181,11 @@ def validate_recording_timeline(
         raise HTTPException(status_code=422, detail="Ses kaydı kimlikleri geçersiz.")
     if not 1 <= len(lines) <= 20:
         raise HTTPException(status_code=422, detail="1 ile 20 arasında replik ekleyin.")
+    if burn_subtitles and any(not line.text for line in lines):
+        raise HTTPException(
+            status_code=422,
+            detail="Altyazı gömülürken replik metni boş bırakılamaz.",
+        )
     line_ids = [line.id for line in lines]
     if len(set(line_ids)) != len(line_ids):
         raise HTTPException(status_code=422, detail="Replik kimlikleri benzersiz olmalıdır.")
@@ -274,6 +280,7 @@ async def create_recording_job(
         timeline,
         recording_ids,
         float(metadata["duration_seconds"]),
+        burn_subtitles,
     )
     await enforce_public_demo_export_limit(request, current_user)
     job = await job_registry.create("Mikrofon kayıtları export sırasına alındı.")

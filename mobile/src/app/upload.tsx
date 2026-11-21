@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import type { ScrollViewInstance } from 'react-native';
 import { router } from 'expo-router';
@@ -33,12 +33,65 @@ function formatTime(seconds: number) {
 }
 
 function ResultVideo({ uri, token }: { uri: string; token?: string | null }) {
-  const resultPlayer = useVideoPlayer(videoSource(uri, token));
+  const resultPlayer = useVideoPlayer(videoSource(uri, token), (player) => {
+    player.timeUpdateEventInterval = 0.25;
+  });
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [seekBarWidth, setSeekBarWidth] = useState(0);
+  const progress = duration > 0 ? Math.min(1, Math.max(0, currentTime / duration)) : 0;
+
+  useEffect(() => {
+    const updateDuration = () => setDuration(resultPlayer.duration);
+    const timeSubscription = resultPlayer.addListener('timeUpdate', ({ currentTime: nextTime }) => {
+      setCurrentTime(nextTime);
+      updateDuration();
+    });
+    const statusSubscription = resultPlayer.addListener('statusChange', updateDuration);
+    updateDuration();
+    return () => {
+      timeSubscription.remove();
+      statusSubscription.remove();
+    };
+  }, [resultPlayer]);
+
+  const seekToX = (x: number) => {
+    if (duration <= 0 || seekBarWidth <= 0) return;
+    const nextTime = Math.min(1, Math.max(0, x / seekBarWidth)) * duration;
+    resultPlayer.seekBy(nextTime - resultPlayer.currentTime);
+    setCurrentTime(nextTime);
+  };
+
+  const handleSeekAccessibilityAction = (actionName: string) => {
+    const nextTime = Math.min(duration, Math.max(0, currentTime + (actionName === 'increment' ? 5 : -5)));
+    resultPlayer.seekBy(nextTime - resultPlayer.currentTime);
+    setCurrentTime(nextTime);
+  };
+
   return <View>
     <VideoView player={resultPlayer} style={styles.video} nativeControls contentFit="contain" fullscreenOptions={{ enable: true }} />
+    <View
+      accessible
+      accessibilityRole="adjustable"
+      accessibilityLabel="Videonun konumu"
+      accessibilityValue={{ min: 0, max: duration, now: currentTime, text: `${formatTime(currentTime)} / ${formatTime(duration)}` }}
+      accessibilityActions={[{ name: 'increment', label: '5 saniye ileri' }, { name: 'decrement', label: '5 saniye geri' }]}
+      onAccessibilityAction={(event) => handleSeekAccessibilityAction(event.nativeEvent.actionName)}
+      onLayout={(event) => setSeekBarWidth(event.nativeEvent.layout.width)}
+      onStartShouldSetResponder={() => duration > 0}
+      onMoveShouldSetResponder={() => duration > 0}
+      onResponderGrant={(event) => seekToX(event.nativeEvent.locationX)}
+      onResponderMove={(event) => seekToX(event.nativeEvent.locationX)}
+      style={styles.seekBarTouch}
+    >
+      <View style={styles.seekBarTrack}>
+        <View style={[styles.seekBarFill, { width: `${progress * 100}%` }]} />
+        <View style={[styles.seekBarThumb, { left: `${progress * 100}%` }]} />
+      </View>
+    </View>
     <View style={styles.seekRow}>
       <Pressable style={styles.seekButton} onPress={() => resultPlayer.seekBy(-10)}><Text style={styles.seekText}>-10 sn</Text></Pressable>
-      <View style={styles.seekStatus}><Text style={styles.seekStatusText}>{formatTime(resultPlayer.currentTime)} / {formatTime(resultPlayer.duration)}</Text></View>
+      <View style={styles.seekStatus}><Text style={styles.seekStatusText}>{formatTime(currentTime)} / {formatTime(duration)}</Text></View>
       <Pressable style={styles.seekButton} onPress={() => resultPlayer.seekBy(10)}><Text style={styles.seekText}>+10 sn</Text></Pressable>
     </View>
   </View>;
@@ -54,6 +107,7 @@ export default function UploadStudioScreen() {
   const [upload, setUpload] = useState<UploadResponse | null>(null);
   const [lines, setLines] = useState<TimelineLine[]>([]);
   const [recordings, setRecordings] = useState<Record<string, string>>({});
+  const [recordingDurations, setRecordingDurations] = useState<Record<string, number>>({});
   const [activeLine, setActiveLine] = useState<string | null>(null);
   const [mode, setMode] = useState<'recording' | 'ai'>('recording');
   const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>('announcer');
@@ -64,8 +118,14 @@ export default function UploadStudioScreen() {
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [lastCompletedSignature, setLastCompletedSignature] = useState<string | null>(null);
   const player = useVideoPlayer(localUri);
+  const videoDuration = upload?.duration_seconds ?? 0;
 
-  const validLines = useMemo(() => lines.length > 0 && lines.every((line) => line.text.trim() && line.start >= 0 && line.end > line.start && (!upload || line.end <= upload.duration_seconds + 0.05)), [lines, upload]);
+  const validLines = useMemo(() => lines.length > 0 && lines.every((line) =>
+    ((mode === 'recording' && !options.burnSubtitles) || Boolean(line.text.trim()))
+    && line.start >= 0
+    && line.end > line.start
+    && (!upload || line.end <= upload.duration_seconds + 0.05)
+  ), [lines, mode, options.burnSubtitles, upload]);
   const allRecorded = useMemo(() => validLines && lines.every((line) => recordings[line.id]), [lines, recordings, validLines]);
   const currentSignature = useMemo(() => JSON.stringify({
     mode,
@@ -85,7 +145,7 @@ export default function UploadStudioScreen() {
     setBusy('Video güvenli biçimde yükleniyor…'); setError('');
     try {
       const next = await api.uploadFile(asset.uri, asset.name, asset.mimeType || 'video/mp4', token);
-      setLocalUri(asset.uri); setUpload(next); setLines([newLine(0, next.duration_seconds)]); setRecordings({}); setJob(null); setLastCompletedSignature(null);
+      setLocalUri(asset.uri); setUpload(next); setLines([newLine(0, next.duration_seconds)]); setRecordings({}); setRecordingDurations({}); setJob(null); setLastCompletedSignature(null);
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Video yüklenemedi.'); }
     finally { setBusy(''); }
   }, [rightsConfirmed, token]);
@@ -95,14 +155,18 @@ export default function UploadStudioScreen() {
 
   const toggleRecording = useCallback(async (id: string) => {
     if (activeLine === id) {
+      const durationSeconds = Math.max(0.1, recorderState.durationMillis / 1000);
       await recorder.stop();
-      if (recorder.uri) setRecordings((current) => ({ ...current, [id]: recorder.uri! }));
+      if (recorder.uri) {
+        setRecordings((current) => ({ ...current, [id]: recorder.uri! }));
+        setRecordingDurations((current) => ({ ...current, [id]: durationSeconds }));
+      }
       setActiveLine(null); await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: false }); return;
     }
     const permission = await AudioModule.requestRecordingPermissionsAsync();
     if (!permission.granted) { Alert.alert('Mikrofon izni gerekli', 'Kendi sesini kaydetmek için mikrofon izni vermelisin.'); return; }
     await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true }); await recorder.prepareToRecordAsync(); recorder.record(); setActiveLine(id);
-  }, [activeLine, recorder]);
+  }, [activeLine, recorder, recorderState.durationMillis]);
 
   const create = useCallback(async () => {
     if (!upload || !ready) return;
@@ -148,13 +212,32 @@ export default function UploadStudioScreen() {
         ['energetic', 'Enerjik'],
       ] as [VoiceStyle, string][]).map(([styleId, label]) => <VoiceChoice key={styleId} styleId={styleId} label={label} selected={voiceStyle === styleId} onSelect={() => setVoiceStyle(styleId)} />)}</View> : null}
       <Text style={styles.heading}>Zaman çizelgesi</Text>
-      {lines.map((line, index) => <View key={line.id} style={styles.line}>
-        <View style={styles.lineHead}><Text style={styles.lineLabel}>REPLİK {index + 1}</Text>{lines.length > 1 ? <Pressable onPress={() => setLines((current) => current.filter((item) => item.id !== line.id))}><Text style={styles.remove}>Sil</Text></Pressable> : null}</View>
-        <TextInput value={line.text} onChangeText={(text) => updateLine(line.id, { text })} maxLength={500} multiline placeholder="Repliği yaz" placeholderTextColor={theme.muted} style={styles.input} />
-        <View style={styles.row}><TextInput keyboardType="decimal-pad" value={String(line.start)} onChangeText={(value) => updateLine(line.id, { start: Number(value.replace(',', '.')) || 0 })} style={styles.time} /><Text style={styles.to}>–</Text><TextInput keyboardType="decimal-pad" value={String(line.end)} onChangeText={(value) => updateLine(line.id, { end: Number(value.replace(',', '.')) || 0 })} style={styles.time} /><Text style={styles.to}>sn</Text></View>
-        {recordings[line.id] ? <Text style={styles.rangeText}>Bu ses videoda {formatTime(line.start)} – {formatTime(line.end)} arasında oynar.</Text> : null}
-        {mode === 'recording' ? <Pressable style={[styles.record, activeLine === line.id && styles.recording]} onPress={() => void toggleRecording(line.id)}><Text style={styles.recordText}>{activeLine === line.id ? `Kaydı bitir · ${(recorderState.durationMillis / 1000).toFixed(1)} sn` : recordings[line.id] ? '✓ Tekrar kaydet' : 'Kayda başla'}</Text></Pressable> : null}
-      </View>)}
+      {lines.map((line, index) => {
+        const recordingDuration = recordingDurations[line.id] || 0;
+        const slotDuration = Math.max(0, line.end - line.start);
+        const recordingOverflows = recordingDuration > slotDuration + 0.1;
+        const latestEnd = Math.min(videoDuration, lines[index + 1]?.start ?? videoDuration);
+        const fittedEnd = Math.min(videoDuration, line.start + recordingDuration);
+        const canFitRecording = recordingOverflows && fittedEnd <= latestEnd + 0.05;
+        return <View key={line.id} style={styles.line}>
+        <View style={styles.lineHead}><Text style={styles.lineLabel}>REPLİK {index + 1}</Text>{lines.length > 1 ? <Pressable onPress={() => { setLines((current) => current.filter((item) => item.id !== line.id)); setRecordings((current) => { const next = { ...current }; delete next[line.id]; return next; }); setRecordingDurations((current) => { const next = { ...current }; delete next[line.id]; return next; }); }}><Text style={styles.remove}>Sil</Text></Pressable> : null}</View>
+        <TextInput value={line.text} onChangeText={(text) => updateLine(line.id, { text })} maxLength={500} multiline placeholder={mode === 'recording' && !options.burnSubtitles ? 'Altyazı kapalı; metin isteğe bağlı' : 'Repliği yaz'} placeholderTextColor={theme.muted} style={styles.input} />
+        <Text style={styles.timingLabel}>Kaydedilen sesin videoda çalacağı aralık</Text>
+        <View style={styles.row}>
+          <View style={styles.timeField}><Text style={styles.timeLabel}>Başlangıç (sn)</Text><TextInput accessibilityLabel={`Replik ${index + 1} başlangıç saniyesi`} keyboardType="decimal-pad" value={String(line.start)} onChangeText={(value) => updateLine(line.id, { start: Number(value.replace(',', '.')) || 0 })} style={styles.time} /></View>
+          <Text style={styles.to}>–</Text>
+          <View style={styles.timeField}><Text style={styles.timeLabel}>Bitiş (sn)</Text><TextInput accessibilityLabel={`Replik ${index + 1} bitiş saniyesi`} keyboardType="decimal-pad" value={String(line.end)} onChangeText={(value) => updateLine(line.id, { end: Number(value.replace(',', '.')) || 0 })} style={styles.time} /></View>
+        </View>
+        <Text style={styles.rangeText}>Dublaj oluşturulunca bu repliğin sesi videoda {formatTime(line.start)} – {formatTime(line.end)} arasında çalar.</Text>
+        {mode === 'recording' ? <>
+          <Pressable style={[styles.record, activeLine === line.id && styles.recording]} onPress={() => void toggleRecording(line.id)}><Text style={styles.recordText}>{activeLine === line.id ? `Kaydı bitir · ${(recorderState.durationMillis / 1000).toFixed(1)} sn` : recordings[line.id] ? '✓ Tekrar kaydet' : 'Kayda başla'}</Text></Pressable>
+          {recordings[line.id] ? <Text style={[styles.durationText, recordingOverflows && styles.durationWarning]}>Kayıt: {recordingDuration.toFixed(1)} sn · Ayrılan aralık: {slotDuration.toFixed(1)} sn</Text> : null}
+          {recordingOverflows ? <View style={styles.warningBox}>
+            <Text style={styles.warningText}>{canFitRecording ? 'Kayıt ayrılan süreden uzun. Bitişi kayda göre uzatabilirsin.' : 'Kayıt bu aralığa sığmıyor; oluşturulurken fazlası kesilir. Yeniden kaydet veya sonraki zamanları düzenle.'}</Text>
+            {canFitRecording ? <Pressable style={styles.fitButton} onPress={() => updateLine(line.id, { end: Number(fittedEnd.toFixed(2)) })}><Text style={styles.fitButtonText}>Bitişi kayda göre ayarla</Text></Pressable> : null}
+          </View> : null}
+        </> : null}
+      </View>;})}
       <Pressable style={styles.add} onPress={addLine}><Text style={styles.addText}>+ Replik ekle</Text></Pressable>
       <Text style={styles.heading}>Export ayarları</Text>
       {[{ key: 'muteOriginalAudio', label: 'Orijinal sesi kapat' }, { key: 'burnSubtitles', label: 'Altyazı göm' }, { key: 'applyLipSync', label: 'Lip-sync · VIP' }].map((item) => <View key={item.key} style={styles.setting}><Text style={styles.settingText}>{item.label}</Text><Switch value={options[item.key as keyof typeof options]} onValueChange={(value) => { if (item.key === 'applyLipSync' && value && !user?.has_active_vip) { Alert.alert('VIP gerekli'); return; } setOptions((current) => ({ ...current, [item.key]: value })); }} thumbColor={options[item.key as keyof typeof options] ? theme.green : theme.muted} /></View>)}
@@ -167,10 +250,10 @@ export default function UploadStudioScreen() {
           token={token}
           hasVip={Boolean(user?.has_active_vip)}
           onRetrySame={() => { setJob(null); setLastCompletedSignature(null); requestAnimationFrame(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })); }}
-          onNewVideo={() => { setJob(null); setLastCompletedSignature(null); setLocalUri(null); setUpload(null); setLines([]); setRecordings({}); setError(''); requestAnimationFrame(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })); }}
+          onNewVideo={() => { setJob(null); setLastCompletedSignature(null); setLocalUri(null); setUpload(null); setLines([]); setRecordings({}); setRecordingDurations({}); setError(''); requestAnimationFrame(() => scrollViewRef.current?.scrollTo({ y: 0, animated: true })); }}
         />
       </View> : null}
-      <ActionButton label={busy || (job?.status === 'completed' && currentSignature === lastCompletedSignature ? 'Bu dublaj oluşturuldu · Değişiklik yapın' : ready ? 'Dublajı oluştur' : mode === 'ai' ? 'Metin, giriş ve VIP gerekli' : 'Metinleri yaz ve kayıtları tamamla')} disabled={!ready || Boolean(busy)} onPress={() => void create()} />
+      <ActionButton label={busy || (job?.status === 'completed' && currentSignature === lastCompletedSignature ? 'Bu dublaj oluşturuldu · Değişiklik yapın' : ready ? 'Dublajı oluştur' : mode === 'ai' ? 'Metin, giriş ve VIP gerekli' : options.burnSubtitles ? 'Metinleri yaz ve kayıtları tamamla' : 'Kayıtları tamamla')} disabled={!ready || Boolean(busy)} onPress={() => void create()} />
     </>}
     {error ? <Text style={styles.error}>{error}</Text> : null}
   </ScrollView></Screen>;
@@ -180,9 +263,10 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 45 }, back: { color: theme.green, fontWeight: '900', paddingVertical: 8 }, picker: { padding: 20, gap: 16, backgroundColor: theme.surface, borderRadius: 20, borderWidth: 1, borderColor: theme.border }, pickerCopy: { color: theme.muted, lineHeight: 22 }, video: { width: '100%', aspectRatio: 16 / 9, borderRadius: 18, backgroundColor: '#000' }, change: { color: theme.purple, textAlign: 'center', fontWeight: '800', padding: 12 },
   heading: { color: theme.text, fontSize: 19, fontWeight: '900', marginTop: 20, marginBottom: 10 }, row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }, choice: { flex: 1, padding: 13, borderRadius: 13, alignItems: 'center', backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }, active: { borderColor: theme.green, backgroundColor: theme.greenDark }, choiceText: { color: theme.text, fontWeight: '900' },
   ethics: { padding: 15, gap: 10, borderRadius: 16, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border }, ethicsTitle: { color: theme.purple, fontWeight: '900' }, confirmRow: { flexDirection: 'row', alignItems: 'center', gap: 11, paddingVertical: 5 }, checkbox: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center', borderRadius: 7, borderWidth: 1, borderColor: theme.muted }, checkboxChecked: { backgroundColor: theme.green, borderColor: theme.green }, checkboxText: { color: theme.background, fontWeight: '900' }, confirmText: { flex: 1, color: theme.text, lineHeight: 19, fontSize: 13 }, legalLink: { color: theme.green, textAlign: 'center', fontWeight: '800', padding: 10 },
-  line: { padding: 15, borderRadius: 17, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border, marginBottom: 10 }, lineHead: { flexDirection: 'row', justifyContent: 'space-between' }, lineLabel: { color: theme.purple, fontSize: 11, fontWeight: '900' }, remove: { color: '#fda4af', fontWeight: '800' }, input: { minHeight: 65, color: theme.text, textAlignVertical: 'top', marginVertical: 10, padding: 11, borderRadius: 12, backgroundColor: theme.background }, time: { width: 72, color: theme.text, textAlign: 'center', padding: 10, borderRadius: 10, backgroundColor: theme.background }, to: { color: theme.muted }, record: { alignItems: 'center', marginTop: 11, padding: 12, borderRadius: 12, backgroundColor: theme.surfaceRaised }, recording: { backgroundColor: '#4c101d' }, recordText: { color: theme.text, fontWeight: '900' }, add: { alignItems: 'center', padding: 13, borderRadius: 13, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.green }, addText: { color: theme.green, fontWeight: '900' },
+  line: { padding: 15, borderRadius: 17, backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border, marginBottom: 10 }, lineHead: { flexDirection: 'row', justifyContent: 'space-between' }, lineLabel: { color: theme.purple, fontSize: 11, fontWeight: '900' }, remove: { color: '#fda4af', fontWeight: '800' }, input: { minHeight: 65, color: theme.text, textAlignVertical: 'top', marginVertical: 10, padding: 11, borderRadius: 12, backgroundColor: theme.background }, timingLabel: { color: theme.text, fontSize: 13, fontWeight: '800', marginTop: 4, marginBottom: 8 }, timeField: { gap: 5 }, timeLabel: { color: theme.muted, fontSize: 11, fontWeight: '700' }, time: { width: 100, color: theme.text, textAlign: 'center', padding: 10, borderRadius: 10, backgroundColor: theme.background }, to: { color: theme.muted, marginTop: 17 }, record: { alignItems: 'center', marginTop: 11, padding: 12, borderRadius: 12, backgroundColor: theme.surfaceRaised }, recording: { backgroundColor: '#4c101d' }, recordText: { color: theme.text, fontWeight: '900' }, add: { alignItems: 'center', padding: 13, borderRadius: 13, borderStyle: 'dashed', borderWidth: 1, borderColor: theme.green }, addText: { color: theme.green, fontWeight: '900' },
   setting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 13, borderRadius: 13, backgroundColor: theme.surface, marginBottom: 8 }, settingText: { color: theme.text, fontWeight: '800' }, error: { color: '#fecdd3', backgroundColor: '#3f1019', borderRadius: 14, padding: 13, lineHeight: 20, marginTop: 12 },
   voiceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, voiceCard: { width: '48%', borderRadius: 13, overflow: 'hidden', backgroundColor: theme.surface, borderWidth: 1, borderColor: theme.border }, voiceCardSelected: { borderColor: theme.green, backgroundColor: theme.greenDark }, voiceSelect: { padding: 12 }, voiceChoiceText: { color: theme.text, fontWeight: '900', fontSize: 13 }, voicePreview: { alignItems: 'center', paddingVertical: 9, borderTopWidth: 1, borderTopColor: theme.border, backgroundColor: theme.surfaceRaised }, voicePreviewText: { color: theme.green, fontWeight: '900', fontSize: 12 },
-  rangeText: { color: theme.green, fontSize: 12, lineHeight: 18, marginTop: 10 }, seekRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }, seekButton: { paddingHorizontal: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border }, seekText: { color: theme.text, fontWeight: '900', fontSize: 12 }, seekStatus: { flex: 1, alignItems: 'center' }, seekStatusText: { color: theme.muted, fontVariant: ['tabular-nums'], fontSize: 12 },
+  rangeText: { color: theme.green, fontSize: 12, lineHeight: 18, marginTop: 10 }, seekBarTouch: { height: 32, justifyContent: 'center', marginTop: 4 }, seekBarTrack: { height: 5, borderRadius: 3, backgroundColor: theme.border }, seekBarFill: { height: 5, borderRadius: 3, backgroundColor: theme.green }, seekBarThumb: { position: 'absolute', top: -5, width: 15, height: 15, marginLeft: -7, borderRadius: 8, backgroundColor: theme.green, borderWidth: 2, borderColor: theme.text }, seekRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 }, seekButton: { paddingHorizontal: 10, paddingVertical: 9, borderRadius: 10, backgroundColor: theme.surfaceRaised, borderWidth: 1, borderColor: theme.border }, seekText: { color: theme.text, fontWeight: '900', fontSize: 12 }, seekStatus: { flex: 1, alignItems: 'center' }, seekStatusText: { color: theme.muted, fontVariant: ['tabular-nums'], fontSize: 12 },
+  durationText: { color: theme.muted, fontSize: 12, marginTop: 9 }, durationWarning: { color: '#fcd34d' }, warningBox: { marginTop: 8, padding: 10, gap: 8, borderRadius: 11, borderWidth: 1, borderColor: '#92400e', backgroundColor: '#2d1b08' }, warningText: { color: '#fde68a', fontSize: 12, lineHeight: 18 }, fitButton: { alignSelf: 'flex-start', borderRadius: 9, backgroundColor: '#fcd34d', paddingHorizontal: 10, paddingVertical: 8 }, fitButtonText: { color: '#451a03', fontWeight: '900', fontSize: 12 },
   resultBlock: { marginTop: 16, padding: 14, gap: 12, borderRadius: 18, borderWidth: 1, borderColor: theme.green, backgroundColor: theme.surface }, resultTitle: { color: theme.text, fontSize: 18, fontWeight: '900' },
 });
